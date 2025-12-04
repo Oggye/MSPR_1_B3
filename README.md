@@ -9,17 +9,23 @@
     8. Documentation
 
 - Organisation :
-    - Recherche et sélection des sources de données
-    - Conteneur(docker)
-    - Extraction automatisée
-    - Nettoyage & Préparation
-    - Transformation
-    - Conception du Modèle Conceptuel (MCD)
-    - Création du MPD (Modèle Physique)
-    - Construction de la base 
-    - Chargement des données (L du ETL)
+    Djamil:
+        - Recherche et sélection des sources de données
+        - Extraction automatisée
+        - Conteneur(docker)
+    Nafissa:
+        - Nettoyage & Préparation
+        - Construction de la base
+        - Chargement des données (L du ETL)
+    Mariam:
+        - Transformation
+        - Conception du Modèle Conceptuel (MCD)
+        - Création du MPD (Modèle Physique)
+
+    Tous ensemble :
     - Développer l’API REST
-    - Concevoir le tableau de bord
+    - Concevoir le tableau de bord(Dashboard)
+    - KPI
 
 - langages:
     - Langage principal: Python
@@ -27,4 +33,10 @@
     - API REST: Node.js/FastAPI
     - Dashboard: Streamlit
 
-- Train :France + Allemange + Italie
+- Source :
+    - transport.data.gouv.fr(GTFS)
+    - mobilitydatabase.org(GTFS Europe)
+    - back-on-track.eu(Trains de nuit)
+    - transit.lan(API internationale)
+    - Eurostat(Données environnement / pays)
+
