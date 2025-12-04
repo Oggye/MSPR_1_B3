@@ -1,11 +1,12 @@
 - Taches :
     1. Choix des données
-    2. MCD/MPD
-    3. ETL complet
-    4. BDD
-    5. API REST
-    6. Dashboard
-    7. Documentation
+    2. Docker
+    3. MCD/MPD
+    4. ETL complet
+    5. BDD
+    6. API REST
+    7. Dashboard
+    8. Documentation
 
 - Organisation :
     - Recherche et sélection des sources de données
