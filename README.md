@@ -21,11 +21,12 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 
 ## 🔗 Sources de données utilisées
 
-* **transport.data.gouv.fr** – Données GTFS France
+* **transport.data.gouv.fr** – Données GTFS France   "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip"
+
 * **mobilitydatabase.org** – GTFS Europe
-* **back-on-track.eu** – Données sur les trains de nuit européens
-* **transit.land** – API internationale de transport
-* **Eurostat** – Données environnementales et pays
+* **back-on-track.eu** – Données sur les trains de nuit européens  "analiser mais rejeter"
+* **transit.land** – API internationale de transport  "https://transit.land/api/v2/rest/feeds"
+* **Eurostat** – Données environnementales et pays   "https://ec.europa.eu/eurostat/api/dissemination/files"
 
 ---
 
@@ -49,7 +50,7 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 * Mise en place de l’architecture Docker
 
 ### Nafissa
-
+    
 * Nettoyage et préparation des données
 * Construction de la base de données
 * Chargement des données (Load du ETL)
