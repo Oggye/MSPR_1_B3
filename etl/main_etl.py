@@ -1,0 +1,29 @@
+# =========================================================
+# etl/main_etl.py
+# Pipeline ETL principal – ObRail Europe (MSPR E6.1)
+# =========================================================
+
+from etl.extract.extract_gtfs_fr import extract_gtfs_fr
+from etl.extract.extract_transitland import extract_transitland
+from etl.extract.extract_eurostat import extract_eurostat
+
+
+def run_etl():
+    print("🚆 DÉMARRAGE DU PIPELINE ETL – ObRail Europe")
+
+    print("\n[1/3] Extraction GTFS France (SNCF)")
+    extract_gtfs_fr()
+
+    print("\n[2/3] Extraction Transit.land (Europe)")
+    extract_transitland()
+
+    print("\n[3/3] Extraction Eurostat (pays / contexte)")
+    extract_eurostat()
+
+    print("\n✅ EXTRACTION TERMINÉE – Données disponibles dans data/raw/")
+
+
+if __name__ == "__main__":
+    run_etl()
+
+
