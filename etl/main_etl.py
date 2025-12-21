@@ -3,9 +3,9 @@
 # Pipeline ETL principal – ObRail Europe (MSPR E6.1)
 # =========================================================
 
-from etl.extract.extract_gtfs_fr import extract_gtfs_fr
-from etl.extract.extract_transitland import extract_transitland
-from etl.extract.extract_eurostat import extract_eurostat
+from extract.extract_gtfs_fr import extract_gtfs_fr
+from extract.extract_transitland import extract_transitland
+from extract.extract_eurostat import extract_eurostat
 
 
 def run_etl():
