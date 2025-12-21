@@ -4,8 +4,6 @@
 # =========================================================
 
 from extract.extract_gtfs_fr import extract_gtfs_fr
-from extract.extract_transitland import extract_transitland
-from extract.extract_eurostat import extract_eurostat
 
 
 def run_etl():
@@ -14,11 +12,6 @@ def run_etl():
     print("\n[1/3] Extraction GTFS France (SNCF)")
     extract_gtfs_fr()
 
-    print("\n[2/3] Extraction Transit.land (Europe)")
-    extract_transitland()
-
-    print("\n[3/3] Extraction Eurostat (pays / contexte)")
-    extract_eurostat()
 
     print("\n✅ EXTRACTION TERMINÉE – Données disponibles dans data/raw/")
 
