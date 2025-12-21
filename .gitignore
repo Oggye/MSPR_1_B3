@@ -1,2 +1,5 @@
 node_modules/
 .env
+data\raw/
+etl\extract\__pycache__/
+etl\transform\__pycache__/
