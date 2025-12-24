@@ -29,8 +29,11 @@ Les scripts se trouvent dans "etl/extract/...." Pour récupérer les datasets
 il suffit de lancer les main situés dans "etl/main_etl.py": tout sera récupéré automatiquement.
 
 -Nettoyage des données :
-Pour plus de propreté, il est proposé de supprimer les données antérieures à 2010.
+Pour plus de propreté, je propose de supprimer les données antérieures à 2010.
 Les scripts de nettoyage et de transformation seront stockés dans "etl/transform" et utiliseront pandas.
 Les nouvelles données nettoyées seront stockées dans "data/processed/".
 
 -Après le nettoyage et la transformation, me prévenir avant de passer à l’étape suivante.
+
+pour l'instant pas de docker, c plus tard que je men occuperait
+lier les script de nettoyage et de transformation a "main_etl.py" pour tout automatiser, comme g fais pour les scriptsd'extracttion
