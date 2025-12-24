@@ -1,0 +1,36 @@
+Les données récupérées dans le cadre du MSPR :
+data/raw/
+├── gtfs_fr/
+├── eurostat/
+└── back_on_track/
+
+
+-Pourquoi ces données :
+GTFS France → horaires, gares, trains de jour
+Back-on-Track → itinéraires des trains de nuit européens
+Eurostat → statistiques trafic/fret par pays et type de train
+Elles couvrent tous les besoins : jour/nuit, micro/macro données, historique européen.
+
+-Comment elles se complètent :
+GTFS + Back-on-Track → réseau complet Europe jour/nuit
+GTFS + Eurostat → micro-données + statistiques
+Back-on-Track + Eurostat → trains de nuit vs trafic global
+
+-Extrait des données :
+Un extrait de chaque dataset est disponible dans le fichier extrais_dataset.txt, tu peux verifier et directement copier a GPT pour qu'il t'aide
+
+-But du projet :
+Nettoyer et centraliser des données ferroviaires européennes pour créer un entrepôt exploitable
+permettant d’analyser les trains de jour et de nuit et de mesurer leur rôle dans une mobilité durable. 
+On peut également les comparer avec les transports aériens pour plus de pertinence.
+
+-Fonctions d’extraction :
+Les scripts se trouvent dans "etl/extract/...." Pour récupérer les datasets
+il suffit de lancer les main situés dans "etl/main_etl.py": tout sera récupéré automatiquement.
+
+-Nettoyage des données :
+Pour plus de propreté, il est proposé de supprimer les données antérieures à 2010.
+Les scripts de nettoyage et de transformation seront stockés dans "etl/transform" et utiliseront pandas.
+Les nouvelles données nettoyées seront stockées dans "data/processed/".
+
+-Après le nettoyage et la transformation, me prévenir avant de passer à l’étape suivante.

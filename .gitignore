@@ -6,4 +6,3 @@ etl/load/__pycache__/
 data/raw/back_on_track/
 data/raw/eurostat/
 data/raw/gtfs_fr/
-deja-fais--a-faire.txt
