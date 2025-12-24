@@ -1,63 +1,47 @@
 version: "3.9"
 
 services:
+  # Dashboard Streamlit
   front:
-    build: ./deezer-platform/front
-    container_name: service_front
+    build: ./platform/front
+    container_name: obrail_front
     ports:
-      - "8081:80"
+      - "8501:8501"
     depends_on:
-      - create
-      - read
+      - api
     restart: always
 
-  create:
-    build: ./deezer-platform/server/create
-    container_name: service_create
+  # API REST FastAPI
+  api:
+    build: ./platform/server
+    container_name: obrail_api
     ports:
-      - "5001:5000"
+      - "8000:8000"
     environment:
       - DB_HOST=db
-      - DB_USER=user
+      - DB_PORT=5432
+      - DB_NAME=obrail
+      - DB_USER=obrail_user
       - DB_PASSWORD=1234
-      - DB_NAME=g4
-      - DB_PORT=3306
-    depends_on:
-      - db
-    restart: always
-
-  read:
-    build: ./deezer-platform/server/read
-    container_name: service_read
-    ports:
-      - "5002:5000"
-    environment:
-      - DB_HOST=db
-      - DB_USER=user
-      - DB_PASSWORD=1234
-      - DB_NAME=g4
-      - DB_PORT=3306
       - JWT_SECRET=supersecretkey
     depends_on:
       - db
     restart: always
 
+  # Base de données PostgreSQL
   db:
-    image: mysql:8.0
-    container_name: g4_db
+    image: postgres:15
+    container_name: obrail_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: g4
-      MYSQL_USER: user
-      MYSQL_PASSWORD: 1234
+      POSTGRES_USER: obrail_user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: obrail
     ports:
-      - "3307:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
 
 volumes:
   db_data:
-
-
