@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 .env
 etl/extract/__pycache__/
 etl/transform/__pycache__/
