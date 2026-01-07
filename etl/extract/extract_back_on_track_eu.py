@@ -1,5 +1,5 @@
 # =========================================================
-# etl/extract/extract_back_on_track_eu.py
+# ETL/extract/extract_back_on_track_eu.py
 # =========================================================
 
 import requests
@@ -26,7 +26,21 @@ def extract_back_on_track():
         df = pd.DataFrame.from_dict(data, orient='index')
         # Nettoyage éventuel des valeurs inutiles (#REF!)
         df = df[df.index != "#REF!"]
+        # Affichage des infrmations brutes
+        display_raw_data(df, table_name)
         # Sauvegarde
         out_file = RAW_DIR / f"{table_name}.csv"
         df.to_csv(out_file, index=False)
         print(f"{table_name} extrait et sauvegardé → {out_file}")
+
+
+
+def display_raw_data(df, source_name):
+    print(f"\n===== APERÇU DES DONNÉES : {source_name} =====")
+    print(df.head())
+
+    print(f"\n===== SCHÉMA DES DONNÉES : {source_name} =====")
+    print(df.info())
+
+    print(f"\n===== VALEURS MANQUANTES : {source_name} =====")
+    print(df.isna().sum())

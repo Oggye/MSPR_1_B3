@@ -6,3 +6,5 @@ etl/load/__pycache__/
 data/raw/back_on_track/
 data/raw/eurostat/
 data/raw/gtfs_fr/
+data/processed/
+data/warehouse/

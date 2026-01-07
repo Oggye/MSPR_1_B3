@@ -1,5 +1,5 @@
 # =========================================================
-# etl/extract/extract_eurostat.py
+# ETL/extract/extract_eurostat.py
 # =========================================================
 
 import requests
