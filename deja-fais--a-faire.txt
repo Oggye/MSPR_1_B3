@@ -30,4 +30,130 @@ il suffit de lancer le main situé dans "etl/main_etl.py": tout sera récupéré
 
 
 pour l'instant pas de docker, c plus tard que je men occuperait
-lier les script de nettoyage et de transformation a "main_etl.py" pour tout automatiser, comme g fais pour les scriptsd'extracttion
+lier les script de nettoyage et de transformation à "main_etl.py" pour tout automatiser, comme j'ai fais pour les scripts d'extraction
+
+
+
+
+---
+
+Nettoyage et préparation des données 
+
+Objectif
+
+Rendre les données :
+- propres
+- cohérentes
+- prêtes à être stockées en base de données
+
+Sans transformation métier.
+
+🔹 GTFS France – Nettoyage
+
+📂 Source :
+data/raw/gtfs_fr/
+
+📂 Sortie :
+data/processed/gtfs_fr/
+
+Fichiers nettoyés :
+- agency_clean.csv → opérateurs ferroviaires
+- routes_clean.csv → lignes ferroviaires (rail uniquement)
+- stops_clean.csv → gares (coordonnées, nom)
+
+Pourquoi seulement ces fichiers ?
+Les fichiers GTFS plus détaillés (trips, stop_times, calendar_dates) décrivent les horaires et événements : ils ne sont pas nécessaires pour construire
+l'entrepôt cible dans la portée de ce projet.
+
+Travail effectué :
+- lecture des CSV bruts,
+- suppression des doublons,
+- filtrage (ex. route_type == 2 pour ne conserver que le rail),
+- sélection des colonnes utiles et écriture en `data/processed/gtfs_fr/`.
+
+Remarque sur les années antérieures à 2010 :
+Nous avons choisi de **conserver** les données antérieures à 2010 afin de préserver l'historique pour les analyses longue durée (tendances, comparaisons temporelles) et garantir la reproductibilité. Si l'équipe souhaite réduire l'échelle temporelle, on pourra ajouter un filtre optionnel (`min_year=2010`) dans le pipeline, mais il ne s'appliquera pas par défaut.
+
+
+🔹 Eurostat – Nettoyage
+
+📂 Source :
+data/raw/eurostat/
+
+📂 Sortie :
+data/processed/eurostat/
+
+Fichiers produits :
+- rail_passengers_clean.csv
+- rail_traffic_clean.csv
+
+Travail effectué :
+- remplacement des symboles manquants par `pd.NA` (ex. ":"),
+- mise à plat (wide → long) pour obtenir `year` / `value`,
+- conversion des types (`year` int, `value` numérique),
+- suppression des doublons mais conservation des valeurs manquantes (pas de suppression de pays/années).
+
+Remarque : Eurostat est déjà normalisé, il n'est pas nécessaire de l'harmoniser davantage.
+
+
+🔹 Back-on-Track – Nettoyage & harmonisation
+
+📂 Sortie intermédiaire :
+data/processed/back_on_track/
+
+📂 Sortie finale :
+data/warehouse/
+
+Pourquoi harmoniser ?
+Les données Back-on-Track mélangent formats et entités (routes, villes, opérateurs, pays). Il a fallu :
+- nettoyer (trim(suppression des espaces en début et fin d'une chaîne (et parfois normalisation des espaces intermédiaires)), suppression lignes vides),
+- extraire et normaliser opérateurs (MAJ + strip),
+- découper les listes de pays, puis `explode`(développer une liste en plusieurs lignes(une ligne par élément), en dupliquant le reste des colonnes) pour obtenir une table route ↔ pays,
+- normaliser et dédoublonner les villes, produire `cities.csv`.
+
+Fichiers générés importants :
+- routes.csv (table des liaisons)
+- route_countries.csv (association route_id ↔ country_code)
+- cities.csv (city_id, city_name, country_code)
+- operators.csv (operator_name)
+- countries.csv (country_code)
+
+---
+
+🗂️ Rôle des dossiers ajoutés
+
+Dossier	Rôle
+etl/transform/	scripts de nettoyage et préparation
+data/processed/	données nettoyées par source (intermédiaires)
+data/warehouse/	données finales prêtes pour la base (Il manque les données de GTFS et de Eurostat qui seront ajoutées pour la partie chargement plus tard.)
+etl/main_etl.py	pipeline principal (extraction + nettoyage + harmonisation)
+
+
+Il suffit de lancer le script "etl/main_etl.py" à la racine pour exécuter les scripts par rapport au nettoyage et à la transformation.
+
+
+
+
+🔜 Étapes suivantes que je dois faire (En attente du MCD/MPD)
+
+- Construction du schéma PostgreSQL (fichier SQL d'initialisation : `sql/01_init.sql`).
+- Écriture des scripts de chargement (Load) pour insérer les fichiers de `data/warehouse/` dans la base.
+
+
+
+Idées de Tables qu'on pourrait mettre dans la bdd :
+- countries (utilisée par : Eurostat, Back-on-Track, gares)
+- operators (vient de agency_clean.csv + Back-on-Track)
+- stations (GTFS + Back-on-Track (villes / gares))
+- routes (GTFS + Back-on-Track (routes de nuit))
+- night_trains (Back-on-Track)
+- rail_passengers (Eurostat)
+- rail_traffic (Eurostat)
+-
+-
+-
+-
+...
+
+
+---
