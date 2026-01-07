@@ -37,3 +37,9 @@ Les nouvelles données nettoyées seront stockées dans "data/processed/".
 
 pour l'instant pas de docker, c plus tard que je men occuperait
 lier les script de nettoyage et de transformation a "main_etl.py" pour tout automatiser, comme g fais pour les scriptsd'extracttion
+
+
+
+
+
+emission CO2 dans le dataset
