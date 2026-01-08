@@ -72,7 +72,7 @@ Travail effectué :
 - sélection des colonnes utiles et écriture en `data/processed/gtfs_fr/`.
 
 Remarque sur les années antérieures à 2010 :
-Nous avons choisi de **conserver** les données antérieures à 2010 afin de préserver l'historique pour les analyses longue durée (tendances, comparaisons temporelles) et garantir la reproductibilité. Si l'équipe souhaite réduire l'échelle temporelle, on pourra ajouter un filtre optionnel (`min_year=2010`) dans le pipeline, mais il ne s'appliquera pas par défaut.
+J'ai choisi de **conserver** les données antérieures à 2010 afin de préserver l'historique pour les analyses longue durée (tendances, comparaisons temporelles) et garantir la reproductibilité. Si l'équipe souhaite réduire l'échelle temporelle, on pourra ajouter un filtre optionnel (`min_year=2010`) dans le pipeline, mais il ne s'appliquera pas par défaut.
 
 
 🔹 Eurostat – Nettoyage
