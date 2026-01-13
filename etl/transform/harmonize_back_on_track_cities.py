@@ -3,7 +3,6 @@
 # Harmonisation des villes Back-on-Track – ObRail Europe
 # =========================================================
 
-
 """
 Harmonisation des villes 'Back-on-Track'.
 
@@ -40,10 +39,15 @@ def harmonize_back_on_track_cities():
 
     file = PROCESSED_DIR / "view_ontd_cities.csv"
     print(f"Traitement : {file.name}")
-
+    
     # Lecture du fichier source
     df = pd.read_csv(file)
-
+    print(f"  Lignes dans le fichier source: {len(df)}")
+    
+    # Traitement des valeurs manquantes avant sélection
+    if "stop_cityname_romanized" in df.columns:
+        df["stop_cityname_romanized"] = df["stop_cityname_romanized"].fillna("Inconnu")
+    
     # Sélection des colonnes utiles et renommage vers le schéma cible
     cities = df[[
         "stop_id",
@@ -54,22 +58,35 @@ def harmonize_back_on_track_cities():
         "stop_cityname_romanized": "city_name",
         "stop_country": "country_code"
     })
-
-    # Nettoyage des chaînes : conversion en str (évite les NaN), suppression
-    # des espaces en début/fin
-    for col in ["city_name", "country_code"]:
-        cities[col] = cities[col].astype(str).str.strip()
-
+    
+    # Nettoyage des chaînes
+    cities["city_name"] = cities["city_name"].astype(str).str.strip()
+    cities["country_code"] = cities["country_code"].astype(str).str.strip()
+    
+    # Remplacer les chaînes vides par NaN
+    cities["city_name"] = cities["city_name"].replace(["", "nan", "NaN"], pd.NA)
+    cities["country_code"] = cities["country_code"].replace(["", "nan", "NaN"], pd.NA)
+    
+    # Supprimer les lignes où le nom de ville est NaN ou "Inconnu"
+    cities = cities[~cities["city_name"].isna()]
+    cities = cities[cities["city_name"] != "Inconnu"]
+    
     # Normalisation du code pays en majuscules pour cohérence
     cities["country_code"] = cities["country_code"].str.upper()
-
+    
     # Élimination des doublons sur l'association (city_name, country_code)
+    initial_count = len(cities)
     cities = cities.drop_duplicates(subset=["city_name", "country_code"])
-
+    duplicate_removed = initial_count - len(cities)
+    if duplicate_removed > 0:
+        print(f"  Doublons supprimés: {duplicate_removed}")
+    
     # Écriture du fichier harmonisé dans l'entrepôt
-    cities.to_csv(WAREHOUSE_DIR / "cities.csv", index=False)
-
-    print("✔ cities.csv généré")
+    output_file = WAREHOUSE_DIR / "cities.csv"
+    cities.to_csv(output_file, index=False)
+    
+    print(f"  Lignes finales: {len(cities)}")
+    print(f"✔ cities.csv généré → {output_file}")
 
 
 if __name__ == "__main__":

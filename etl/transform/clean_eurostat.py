@@ -38,8 +38,16 @@ def clean_eurostat_file(file_path):
     # Colonnes fixes (métadonnées)
     id_cols = [c for c in df.columns if not c.isdigit()]
 
-    # Colonnes années
-    year_cols = [c for c in df.columns if c.isdigit()]
+    # Colonnes années - FILTRER LES ANNÉES >= 2013
+    year_cols = [c for c in df.columns if c.isdigit() and int(c) >= 2013]
+    
+    # Vérifier si on a des données après 2012
+    if not year_cols:
+        print(f"  ⚠️  Aucune donnée après 2012 dans {file_path.name}")
+        return None
+
+    # Afficher les années conservées
+    print(f"  Années conservées (≥2013): {sorted(year_cols)}")
 
     # Reshape wide -> long
     df_long = df.melt(
@@ -64,11 +72,17 @@ def clean_eurostat():
 
     for file in RAW_DIR.glob("*.csv"):
         df_clean = clean_eurostat_file(file)
-
-        output = PROCESSED_DIR / file.name.replace(".csv", "_clean.csv")
-        df_clean.to_csv(output, index=False)
-
-        print(f" Sauvegardé : {output}")
+        
+        if df_clean is not None and not df_clean.empty:
+            output = PROCESSED_DIR / file.name.replace(".csv", "_clean.csv")
+            df_clean.to_csv(output, index=False)
+            
+            # Statistiques
+            print(f"  📊 Données conservées: {len(df_clean)} lignes")
+            print(f"  📅 Période: {df_clean['year'].min()} - {df_clean['year'].max()}")
+            print(f"  💾 Sauvegardé : {output}")
+        else:
+            print(f"  ❌ Aucune donnée valide après 2012 pour {file.name}")
 
 
 if __name__ == "__main__":
