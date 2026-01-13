@@ -4,20 +4,20 @@
 # =========================================================
 
 # --- EXTRACTION ---
-from etl.extract.extract_gtfs_fr import extract_gtfs_fr
-from etl.extract.extract_eurostat import extract_eurostat
-from etl.extract.extract_back_on_track_eu import extract_back_on_track
+from extract.extract_gtfs_fr import extract_gtfs_fr
+from extract.extract_eurostat import extract_eurostat
+from extract.extract_back_on_track_eu import extract_back_on_track
 
 # --- NETTOYAGE ---
-from etl.transform.clean_gtfs_fr import clean_agency, clean_routes, clean_stops
-from etl.transform.clean_eurostat import clean_eurostat
-from etl.transform.clean_back_on_track import clean_back_on_track
+from transform.clean_gtfs_fr import clean_agency, clean_routes, clean_stops
+from transform.clean_eurostat import clean_eurostat
+from transform.clean_back_on_track import clean_back_on_track
 
 # --- HARMONISATION ---
-from etl.transform.harmonize_back_on_track import harmonize_back_on_track
-from etl.transform.harmonize_back_on_track_cities import harmonize_back_on_track_cities
-from etl.transform.harmonize_operators import harmonize_operators
-from etl.transform.harmonize_countries import harmonize_countries
+from transform.harmonize_back_on_track import harmonize_back_on_track
+from transform.harmonize_back_on_track_cities import harmonize_back_on_track_cities
+from transform.harmonize_operators import harmonize_operators
+from transform.harmonize_countries import harmonize_countries
 
 
 def run_etl():

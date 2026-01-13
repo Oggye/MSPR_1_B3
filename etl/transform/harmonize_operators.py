@@ -1,3 +1,10 @@
+
+# =========================================================
+# ETL/transform/harmonize_operators.py
+# Harmonisation des opérateurs – ObRail Europe
+# =========================================================
+
+
 """
 Module d'harmonisation des opérateurs.
 

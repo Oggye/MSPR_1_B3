@@ -1,3 +1,9 @@
+# =========================================================
+# ETL/transform/harmonize_countries.py
+# Harmonisation des pays – ObRail Europe
+# =========================================================
+
+
 """
 Module d'harmonisation des pays.
 

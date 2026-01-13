@@ -1,3 +1,8 @@
+# =========================================================
+# ETL/transform/harmonize_back_on_track.py
+# harmonisation Back-on-Track – ObRail Europe
+# =========================================================
+
 """
 Harmonisation des données Back-on-Track.
 
