@@ -134,21 +134,3 @@ def get_data_structure():
         
     except Exception as e:
         print(f"Erreur lors de la récupération de la structure : {e}")
-
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Téléchargement des données Eurostat ENV_AIR_GGE")
-    print("=" * 60)
-    
-    # Télécharger toutes les données
-    download_eurostat_via_api()
-    
-    # Optionnel : télécharger des données filtrées
-    # download_filtered_data()
-    
-    # Optionnel : récupérer la structure
-    # get_data_structure()
-    
-    print("\n" + "=" * 60)
-    print("Téléchargement terminé!")
-    print("=" * 60)

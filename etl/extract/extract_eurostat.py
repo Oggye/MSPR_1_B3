@@ -36,6 +36,3 @@ def extract_eurostat():
         out_file = RAW_DIR / f"{name}.csv"
         df.to_csv(out_file, index=False)
         print(f"{name} extrait et sauvegardé → {out_file}")
-
-if __name__ == "__main__":
-    extract_eurostat()

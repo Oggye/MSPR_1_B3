@@ -67,6 +67,3 @@ def extract_gtfs_de():
     with open(RAW_DIR / "metadata.json", "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2, ensure_ascii=False)
 
-if __name__ == "__main__":
-    extract_gtfs_de()
-
