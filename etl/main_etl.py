@@ -15,19 +15,19 @@ from extract.extract_gtfs_de import extract_gtfs_de
 from extract.extract_emission_co2 import download_eurostat_via_api
 
 # --- TRANSFORMATION ---
-# (à compléter plus tard)
+from transform.main_transform import main as run_transform_pipeline
 
-# --- CHARGEMENT ---
-# (à compléter plus tard)
 
 def run_etl():
-    print("🚀 Lancement du pipeline ETL...")
+    print("🚀 Lancement du pipeline ETL ObRail Europe")
     print(f"Date et heure : {datetime.now()}")
-    print("=" * 50)
+    print("=" * 60)
     
-    # EXTRACTION
+    # =====================================================
+    # PHASE 1 : EXTRACTION
+    # =====================================================
     print("📥 PHASE 1 : EXTRACTION")
-    print("-" * 30)
+    print("-" * 40)
     
     extractors = [
         ("GTFS France", extract_gtfs_fr),
@@ -47,26 +47,36 @@ def run_etl():
             print(f"❌ Erreur lors de l'extraction de {name}: {e}")
         print()
     
-    print("✅ Extraction terminée")
-    print("=" * 50)
+    print("✅ PHASE EXTRACTION TERMINÉE")
+    print("=" * 60)
     
-    # TRANSFORMATION (à venir)
+    # =====================================================
+    # PHASE 2 : TRANSFORMATION
+    # =====================================================
     print("🔄 PHASE 2 : TRANSFORMATION")
-    print("-" * 30)
-    print("⏳ Phase transformation à implémenter...")
-    time.sleep(1)
-    print("✅ Transformation terminée (simulée)")
-    print("=" * 50)
+    print("-" * 40)
     
-    # CHARGEMENT (à venir)
+    try:
+        run_transform_pipeline()
+        print("✅ Transformation terminée avec succès")
+    except Exception as e:
+        print(f"❌ Erreur critique pendant la transformation : {e}")
+        raise
+    
+    print("=" * 60)
+    
+    # =====================================================
+    # PHASE 3 : CHARGEMENT (À VENIR)
+    # =====================================================
     print("💾 PHASE 3 : CHARGEMENT")
-    print("-" * 30)
-    print("⏳ Phase chargement à implémenter...")
+    print("-" * 40)
+    print("⏳ Phase chargement à implémenter (Data Warehouse / DB / BI)")
     time.sleep(1)
-    print("✅ Chargement terminé (simulé)")
-    print("=" * 50)
+    print("✅ Chargement terminé (placeholder)")
+    print("=" * 60)
     
-    print("🎉 Pipeline ETL terminé avec succès !")
+    print("🎉 PIPELINE ETL TERMINÉ AVEC SUCCÈS")
+
 
 if __name__ == "__main__":
     run_etl()
