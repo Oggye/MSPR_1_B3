@@ -1,14 +1,13 @@
 # =========================================================
-# diagnostic.py
-# Affiche les 20 premières lignes de chaque fichier extrait
+# diagnostic.py - Version avec aperçu
 # =========================================================
 
 import pandas as pd
 from pathlib import Path
 import glob
 
-# Répertoires des données extraites
-DATA_DIRECTORIES = {
+# Dossiers à analyser
+DOSSIERS = {
     "back_on_track": "data/raw/back_on_track/*.csv",
     "eurostat": "data/raw/eurostat/*.csv",
     "emission_co2": "data/raw/emission_co2/*.csv",
@@ -17,143 +16,177 @@ DATA_DIRECTORIES = {
     "gtfs_de": "data/raw/gtfs_de/*.csv",
 }
 
-def diagnose_files():
-    print("🔍 DIAGNOSTIC DES FICHIERS EXTRACTS")
-    print("=" * 60)
-    
-    for dataset_name, pattern in DATA_DIRECTORIES.items():
-        print(f"\n📁 {dataset_name.upper()}")
-        print("-" * 40)
+def analyser_fichier(chemin_fichier):
+    """Analyse un fichier sans tout charger en mémoire"""
+    try:
+        nom_fichier = Path(chemin_fichier).name
+        taille_kb = Path(chemin_fichier).stat().st_size / 1024
         
-        files = glob.glob(pattern)
+        # Lire seulement les premières lignes pour les infos
+        if chemin_fichier.endswith('.tsv'):
+            sep = '\t'
+        else:
+            sep = ','
         
-        if not files:
-            print(f"Aucun fichier trouvé pour {dataset_name}")
-            continue
-        
-        for file_path in files:
-            try:
-                # Essayer de lire le fichier
-                file_name = Path(file_path).name
-                print(f"\n📄 Fichier : {file_name}")
-                print(f"📊 Chemin : {file_path}")
-                
-                # Lire le fichier (gérer les différents formats)
-                if file_name.endswith('.tsv'):
-                    df = pd.read_csv(file_path, sep='\t', nrows=20)
-                else:
-                    df = pd.read_csv(file_path, nrows=20)
-                
-                # Informations de base
-                print(f"   Lignes totales : {len(pd.read_csv(file_path)) if file_name.endswith('.tsv') else len(pd.read_csv(file_path))}")
-                print(f"   Colonnes : {len(df.columns)}")
-                print(f"   Colonnes : {', '.join(df.columns.tolist())}")
-                
-                # Afficher les 20 premières lignes
-                print(f"\n   {'='*40}")
-                print("   20 PREMIÈRES LIGNES :")
-                print(f"   {'='*40}")
-                
-                # Afficher avec un formatage lisible
-                pd.set_option('display.max_columns', None)
-                pd.set_option('display.width', 1000)
-                pd.set_option('display.max_rows', 25)
-                
-                print(df.to_string())
-                print(f"   {'='*40}")
-                
-                # Statistiques de base pour les colonnes numériques
-                numeric_cols = df.select_dtypes(include=['number']).columns
-                if len(numeric_cols) > 0:
-                    print(f"\n   📈 Statistiques numériques :")
-                    print(df[numeric_cols].describe().round(2).to_string())
-                
-                # Informations sur les types de données
-                print(f"\n   🗂️  Types de données :")
-                dtypes = df.dtypes
-                for col in df.columns:
-                    print(f"      {col}: {dtypes[col]}")
-                
-                # Vérifier les valeurs nulles
-                null_counts = df.isnull().sum()
-                if null_counts.sum() > 0:
-                    print(f"\n   ⚠️  Valeurs nulles détectées :")
-                    for col, count in null_counts.items():
-                        if count > 0:
-                            print(f"      {col}: {count} valeurs nulles")
-                
-            except Exception as e:
-                print(f"   ❌ Erreur lors de la lecture de {file_name}: {e}")
-                print(f"   Type d'erreur : {type(e).__name__}")
-                
-                # Essayer de lire en texte brut pour voir le contenu
-                try:
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        lines = [next(f) for _ in range(5)]
-                        print(f"   📝 Contenu (5 premières lignes) :")
-                        for i, line in enumerate(lines, 1):
-                            print(f"      Ligne {i}: {line[:100]}...")
-                except:
-                    print("   Impossible de lire le fichier en texte brut")
-    
-    print("\n" + "=" * 60)
-    print("✅ DIAGNOSTIC TERMINÉ")
+        # Méthode 1: Essayer de lire les premières lignes
+        try:
+            # Lire juste l'en-tête et quelques lignes
+            df_sample = pd.read_csv(chemin_fichier, sep=sep, nrows=5)
+            nb_colonnes = len(df_sample.columns)
+            
+            # Compter les lignes de manière optimisée
+            with open(chemin_fichier, 'r', encoding='utf-8', errors='ignore') as f:
+                nb_lignes = sum(1 for _ in f) - 1  # -1 pour l'en-tête
+            
+            # Lire les 10 premières lignes pour l'aperçu
+            df_preview = pd.read_csv(chemin_fichier, sep=sep, nrows=10)
+            preview = df_preview
+            
+            return {
+                'nom': nom_fichier,
+                'lignes': nb_lignes,
+                'colonnes': nb_colonnes,
+                'taille_kb': taille_kb,
+                'preview': preview,
+                'erreur': None
+            }
+            
+        except pd.errors.ParserError as e:
+            # Méthode 2: Si échec, lire en mode texte
+            with open(chemin_fichier, 'r', encoding='utf-8', errors='ignore') as f:
+                lignes = [next(f) for _ in range(11)]  # 10 lignes + en-tête
+            
+            # Estimer les colonnes à partir de la première ligne
+            premiere_ligne = lignes[0].strip()
+            if sep == ',':
+                nb_colonnes = len(premiere_ligne.split(','))
+            else:
+                nb_colonnes = len(premiere_ligne.split('\t'))
+            
+            with open(chemin_fichier, 'r', encoding='utf-8', errors='ignore') as f:
+                nb_lignes = sum(1 for _ in f) - 1
+            
+            # Créer un aperçu texte
+            preview_text = "\n".join([f"      Ligne {i}: {ligne[:100].strip()}" 
+                                     for i, ligne in enumerate(lignes[:11], 1)])
+            
+            return {
+                'nom': nom_fichier,
+                'lignes': nb_lignes,
+                'colonnes': nb_colonnes,
+                'taille_kb': taille_kb,
+                'preview': preview_text,
+                'erreur': f'Format spécial: {str(e)[:30]}'
+            }
+            
+    except Exception as e:
+        return {
+            'nom': Path(chemin_fichier).name,
+            'lignes': 0,
+            'colonnes': 0,
+            'taille_kb': Path(chemin_fichier).stat().st_size / 1024,
+            'preview': None,
+            'erreur': str(e)[:50]
+        }
 
-def quick_summary():
-    """Affiche un résumé rapide de tous les fichiers"""
-    print("\n📋 RÉSUMÉ RAPIDE")
+def afficher_resume_avec_apercu():
+    """Affiche un résumé avec aperçu des 10 premières lignes"""
+    print("📊 RÉSUMÉ DES DONNÉES AVEC APERÇU")
     print("=" * 60)
     
-    total_files = 0
-    total_rows = 0
-    total_columns = 0
+    total_lignes = 0
+    total_fichiers = 0
     
-    for dataset_name, pattern in DATA_DIRECTORIES.items():
-        files = glob.glob(pattern)
-        if files:
-            print(f"\n📁 {dataset_name.upper()}:")
-            for file_path in files:
-                try:
-                    file_name = Path(file_path).name
-                    # Lire juste la première ligne pour compter les colonnes
-                    if file_name.endswith('.tsv'):
-                        df_sample = pd.read_csv(file_path, sep='\t', nrows=1)
-                        df_full = pd.read_csv(file_path, sep='\t')
-                    else:
-                        df_sample = pd.read_csv(file_path, nrows=1)
-                        df_full = pd.read_csv(file_path)
-                    
-                    rows = len(df_full)
-                    cols = len(df_sample.columns)
-                    
-                    print(f"   📄 {file_name}")
-                    print(f"      → Lignes: {rows:,}")
-                    print(f"      → Colonnes: {cols}")
-                    print(f"      → Taille: {Path(file_path).stat().st_size / 1024:.1f} KB")
-                    
-                    total_files += 1
-                    total_rows += rows
-                    total_columns += cols
-                    
-                except Exception as e:
-                    print(f"   📄 {Path(file_path).name}")
-                    print(f"      → ERREUR: {str(e)[:50]}...")
+    for nom, chemin in DOSSIERS.items():
+        fichiers = glob.glob(chemin)
+        
+        print(f"\n{'='*60}")
+        print(f"📁 {nom.upper()}:")
+        print(f"{'='*60}")
+        
+        if not fichiers:
+            print("   Aucun fichier")
+            continue
+            
+        for f in fichiers:
+            print(f"\n📄 Fichier: {Path(f).name}")
+            print(f"📁 Chemin: {f}")
+            
+            resultat = analyser_fichier(f)
+            total_fichiers += 1
+            
+            if resultat['erreur']:
+                print(f"   ⚠️  Erreur: {resultat['erreur']}")
+                print(f"   📏 Taille: {resultat['taille_kb']:.1f} KB")
+            else:
+                print(f"   ✅ Lignes: {resultat['lignes']:,}")
+                print(f"   🗂️  Colonnes: {resultat['colonnes']}")
+                print(f"   📏 Taille: {resultat['taille_kb']:.1f} KB")
+                total_lignes += resultat['lignes']
+                
+                # Afficher les 10 premières lignes
+                print(f"\n   👀 10 PREMIÈRES LIGNES:")
+                print(f"   {'-'*40}")
+                
+                if isinstance(resultat['preview'], pd.DataFrame):
+                    # Afficher le DataFrame
+                    pd.set_option('display.max_columns', None)
+                    pd.set_option('display.width', 120)
+                    print(resultat['preview'].to_string())
+                elif isinstance(resultat['preview'], str):
+                    # Afficher le texte brut
+                    print(resultat['preview'])
+                else:
+                    print("   (Aperçu non disponible)")
+                
+                print(f"   {'-'*40}")
     
-    print("\n" + "=" * 60)
-    print("📊 TOTAUX :")
-    print(f"   📁 Fichiers analysés: {total_files}")
-    print(f"   📈 Lignes totales: {total_rows:,}")
-    print(f"   🗂️  Colonnes totales: {total_columns}")
+    print(f"\n{'='*60}")
+    print(f"📈 SYNTHÈSE:")
+    print(f"   • {total_fichiers} fichiers analysés")
+    print(f"   • {total_lignes:,} lignes totales")
     print("=" * 60)
+
+def afficher_resume_rapide():
+    """Affiche seulement un résumé rapide"""
+    print("📋 RÉSUMÉ RAPIDE")
+    print("=" * 50)
+    
+    total_lignes = 0
+    total_fichiers = 0
+    
+    for nom, chemin in DOSSIERS.items():
+        fichiers = glob.glob(chemin)
+        
+        print(f"\n📁 {nom}:")
+        if not fichiers:
+            print("   Aucun fichier")
+            continue
+            
+        for f in fichiers:
+            resultat = analyser_fichier(f)
+            total_fichiers += 1
+            
+            if resultat['erreur']:
+                print(f"   ⚠️ {resultat['nom']}")
+                print(f"      Erreur: {resultat['erreur']}")
+            else:
+                print(f"   ✓ {resultat['nom']}")
+                print(f"      Lignes: {resultat['lignes']:,}")
+                print(f"      Colonnes: {resultat['colonnes']}")
+                total_lignes += resultat['lignes']
+    
+    print(f"\n{'='*50}")
+    print(f"📈 TOTAL: {total_fichiers} fichiers, {total_lignes:,} lignes")
+    print("=" * 50)
 
 if __name__ == "__main__":
     print("🔧 UTILISATION :")
-    print("   python diagnostic.py          # Diagnostic complet")
-    print("   python diagnostic.py --quick  # Résumé rapide")
+    print("   python diagnostic.py          # Résumé avec aperçu complet")
+    print("   python diagnostic.py --rapide # Résumé rapide seulement")
     
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "--quick":
-        quick_summary()
+    if len(sys.argv) > 1 and sys.argv[1] == "--rapide":
+        afficher_resume_rapide()
     else:
-        diagnose_files()
-        quick_summary()
+        afficher_resume_avec_apercu()
