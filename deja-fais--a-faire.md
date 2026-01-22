@@ -68,4 +68,77 @@ data/
 - ✅ **Conformité** : RGPD, traçabilité, documentation
 - ✅ **Automatisation** : Pipeline ETL reproductible
 
-**État actuel** : ✅ **TRANSFORMATION TERMINÉE** - Prêt pour le chargement en base de données ! 🎉
+**État actuel** : ✅ **TRANSFORMATION TERMINÉE**
+
+
+##  **PHASE 3 : CHARGEMENT DES DONNÉES (À RÉALISER)**
+
+### 🎯 **Objectif**
+
+Charger les données du **data warehouse** dans une **base de données PostgreSQL** en respectant une **architecture en étoile**, afin de permettre des requêtes analytiques performantes et l’exposition future via une API et un dashboard.
+
+### **Étapes à réaliser**
+
+1. **Création de l’architecture de la base de données**
+
+   * Définir le **schéma en étoile** (tables de faits et dimensions) dans PostgreSQL
+   * Implémenter cette structure dans le fichier :
+
+     ```
+     sql/01_init.sql
+     ```
+   * Création des tables :
+     * tables techniques si nécessaire (logs, métadonnées)
+
+2. **Scripts de chargement (Load)**
+
+   * Créer des scripts Python dans le dossier :
+
+     ```
+     etl/load/
+     ```
+   * Ces scripts devront :
+
+     * Lire les fichiers du dossier `data/warehouse/`
+     * Se connecter à PostgreSQL
+     * Insérer les données dans les tables correspondantes
+     * Gérer les clés primaires / étrangères
+     * Éviter les doublons (upsert si nécessaire)
+
+3. **Dockerisation et démarrage de l’environnement**
+
+   * S’assurer que **Docker est lancé**
+   * Démarrer les services avec la commande :
+
+     ```bash
+     docker compose up -d
+     ```
+   * En cas de problème :
+
+     * Vérifier les logs Docker
+     * Vérifier la configuration du fichier :
+
+       ```
+       docker-compose.yaml
+       ```
+
+4. **Tests et validation**
+
+   * Tester la connexion à PostgreSQL via le terminal
+   * Exécuter des **requêtes SQL de vérification**, par exemple :
+
+     * Nombre de trajets chargés
+     * Jointures entre table de faits et dimensions
+     * Vérification de la cohérence des données
+   * Confirmer que l’ensemble du pipeline **ETL → BDD** fonctionne correctement
+
+### ✅ **Résultat attendu**
+
+* Données du data warehouse correctement chargées dans PostgreSQL
+* Architecture en étoile fonctionnelle
+* Base prête pour :
+
+  * API REST
+  * Dashboard de visualisation
+  * Analyses avancées et comparaisons européennes
+
