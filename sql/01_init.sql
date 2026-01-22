@@ -1,3 +1,5 @@
+-- mettre ici le code sql puis faire tourner le server docker avec "docker-compose up -d", si t'as un problemme dit le moi
+
 -- 01_init.sql
 CREATE DATABASE IF NOT EXISTS MSPR1B1 CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE g4;
