@@ -1,9 +1,6 @@
- #==============================================================================
+#==============================================================================
 # Fichier: etl/transform/eurostat.py
 #==============================================================================
-
-
-
 
 """
 Transformation des données Eurostat (passagers et trafic)
@@ -12,7 +9,6 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import logging
-from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,6 +49,26 @@ def transform_eurostat(raw_dir: str, processed_dir: str) -> None:
         avg = passengers_df.loc[mask, 'passengers'].mean()
         passengers_df.loc[mask, 'passengers'] = passengers_df.loc[mask, 'passengers'].fillna(avg)
     
+    # Ajouter des noms de pays
+    country_names = {
+        'FR': 'France', 'DE': 'Germany', 'CH': 'Switzerland',
+        'IT': 'Italy', 'ES': 'Spain', 'UK': 'United Kingdom',
+        'BE': 'Belgium', 'NL': 'Netherlands', 'AT': 'Austria',
+        'AL': 'Albania', 'BG': 'Bulgaria', 'CZ': 'Czech Republic',
+        'DK': 'Denmark', 'EE': 'Estonia', 'FI': 'Finland',
+        'EL': 'Greece', 'HR': 'Croatia', 'HU': 'Hungary',
+        'IE': 'Ireland', 'IS': 'Iceland', 'LI': 'Liechtenstein',
+        'LT': 'Lithuania', 'LU': 'Luxembourg', 'LV': 'Latvia',
+        'ME': 'Montenegro', 'MK': 'North Macedonia', 'MT': 'Malta',
+        'NO': 'Norway', 'PL': 'Poland', 'PT': 'Portugal',
+        'RO': 'Romania', 'RS': 'Serbia', 'SE': 'Sweden',
+        'SI': 'Slovenia', 'SK': 'Slovakia', 'TR': 'Turkey',
+        'CY': 'Cyprus'
+    }
+    
+    passengers_df['country_name'] = passengers_df['geo'].map(country_names)
+    passengers_df['country_name'] = passengers_df['country_name'].fillna('Unknown')
+    
     # 2. Trafic ferroviaire
     traffic_path = Path(raw_dir) / "eurostat" / "rail_traffic.csv"
     traffic_df = pd.read_csv(traffic_path)
@@ -83,6 +99,10 @@ def transform_eurostat(raw_dir: str, processed_dir: str) -> None:
         avg = traffic_df.loc[mask, 'traffic'].mean()
         traffic_df.loc[mask, 'traffic'] = traffic_df.loc[mask, 'traffic'].fillna(avg)
     
+    # Ajouter des noms de pays
+    traffic_df['country_name'] = traffic_df['geo'].map(country_names)
+    traffic_df['country_name'] = traffic_df['country_name'].fillna('Unknown')
+    
     # Sauvegarder
     save_dir = Path(processed_dir) / "eurostat"
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -99,8 +119,8 @@ def transform_eurostat(raw_dir: str, processed_dir: str) -> None:
         'traffic_records': len(traffic_df),
         'countries_passengers': passengers_df['geo'].nunique(),
         'countries_traffic': traffic_df['geo'].nunique(),
-        'years_range_passengers': (passengers_df['year'].min(), passengers_df['year'].max()),
-        'years_range_traffic': (traffic_df['year'].min(), traffic_df['year'].max())
+        'years_range_passengers': (int(passengers_df['year'].min()), int(passengers_df['year'].max())),
+        'years_range_traffic': (int(traffic_df['year'].min()), int(traffic_df['year'].max()))
     }
     
     return quality_report
