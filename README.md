@@ -165,7 +165,7 @@ Les données passent dans `data/processed/`.
 
 ### 6️⃣ Chargement
 
-Le chargement dans PostgreSQL est organisé en plusieurs scripts spécialisés :
+Le chargement dans PostgreSQL est organisé en plusieurs scripts spécialisés 
 
 **Structure des scripts de chargement** (`etl/load/`) :
 * database.py # Gestion de la connexion PostgreSQL
