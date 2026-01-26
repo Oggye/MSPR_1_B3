@@ -163,13 +163,18 @@ Les données passent dans `data/processed/`.
 * Fusion des sources hétérogènes
 * Séparation trains de jour / trains de nuit
 
-### 6️⃣ Stockage
+### 6️⃣ Chargement
 
-Le script `etl/load/load_postgres.py` :
+Le chargement dans PostgreSQL est organisé en plusieurs scripts spécialisés :
 
-* se connecte à PostgreSQL
-* crée les tables (via `01_init.sql`)
-* charge les données finales depuis `data/warehouse/`
+**Structure des scripts de chargement** (`etl/load/`) :
+* database.py # Gestion de la connexion PostgreSQL
+* main_load.py # Orchestrateur principal du chargement
+* load_countries.py # Table dim_countries
+* load_years.py # Table dim_years
+* load_operators.py # Table dim_operators
+* load_night_trains.py # Table facts_night_trains
+* load_country_stats.py # Table facts_country_stats
 
 ---
 
@@ -177,7 +182,7 @@ Le script `etl/load/load_postgres.py` :
 
 * SGBD : PostgreSQL
 * Modélisation : MCD + MPD (dans `/docs`)
-* Tables principales : trains, gares, opérateurs, pays, horaires
+* Tables principales : dim_countries, dim_years, dim_operators, facts_night_trains, facts_country_stats
 
 ---
 
