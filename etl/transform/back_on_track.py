@@ -4,6 +4,7 @@
 
 """
 Transformation des données Back on Track (trains de nuit)
+Version améliorée avec meilleure extraction des pays
 """
 import pandas as pd
 import numpy as np
@@ -14,9 +15,117 @@ import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def extract_country_code_enhanced(route_name, itinerary, countries_field, route_long_name=None):
+    """
+    Extrait le code pays de manière intelligente avec priorité multiple
+    """
+    if pd.isna(route_name):
+        route_name = ''
+    if pd.isna(itinerary):
+        itinerary = ''
+    if pd.isna(countries_field):
+        countries_field = ''
+    if pd.isna(route_long_name):
+        route_long_name = ''
+    
+    # Concaténer tous les champs pour la recherche
+    text_to_search = f" {countries_field} {itinerary} {route_name} {route_long_name} ".upper()
+    
+    # Liste complète des codes pays européens
+    european_countries = {
+        'FR': 'France', 'DE': 'Germany', 'CH': 'Switzerland', 'IT': 'Italy',
+        'ES': 'Spain', 'GB': 'United Kingdom', 'UK': 'United Kingdom',
+        'BE': 'Belgium', 'NL': 'Netherlands', 'AT': 'Austria', 'HU': 'Hungary',
+        'CZ': 'Czech Republic', 'PL': 'Poland', 'DK': 'Denmark', 'SE': 'Sweden',
+        'NO': 'Norway', 'FI': 'Finland', 'PT': 'Portugal', 'GR': 'Greece',
+        'IE': 'Ireland', 'RO': 'Romania', 'BG': 'Bulgaria', 'RS': 'Serbia',
+        'HR': 'Croatia', 'SI': 'Slovenia', 'SK': 'Slovakia', 'LT': 'Lithuania',
+        'LV': 'Latvia', 'EE': 'Estonia', 'TR': 'Turkey', 'UA': 'Ukraine',
+        'BY': 'Belarus', 'MD': 'Moldova', 'ME': 'Montenegro', 'MK': 'North Macedonia',
+        'AL': 'Albania', 'BA': 'Bosnia and Herzegovina', 'XK': 'Kosovo', 'CY': 'Cyprus',
+        'LU': 'Luxembourg', 'IS': 'Iceland', 'MT': 'Malta'
+    }
+    
+    # 1. PRIORITÉ: chercher dans le champ countries (le plus fiable)
+    if countries_field and str(countries_field).strip():
+        countries_str = str(countries_field).upper().replace(' ', '')
+        # Séparer par virgule
+        country_codes = [c.strip() for c in countries_str.split(',') if c.strip()]
+        
+        # Chercher des codes pays dans la liste
+        for code in country_codes:
+            # Code à 2 lettres
+            if len(code) == 2 and code in european_countries:
+                return code
+            
+            # Code à 3 lettres, essayer de convertir
+            if len(code) == 3:
+                three_to_two = {
+                    'GBR': 'GB', 'FRA': 'FR', 'DEU': 'DE', 'ITA': 'IT', 'ESP': 'ES',
+                    'NLD': 'NL', 'BEL': 'BE', 'CHE': 'CH', 'AUT': 'AT', 'CZE': 'CZ',
+                    'POL': 'PL', 'SWE': 'SE', 'NOR': 'NO', 'DNK': 'DK', 'FIN': 'FI',
+                    'PRT': 'PT', 'GRC': 'GR', 'HUN': 'HU', 'ROU': 'RO', 'BGR': 'BG',
+                    'SRB': 'RS', 'HRV': 'HR', 'SVN': 'SI', 'SVK': 'SK', 'LTU': 'LT',
+                    'LVA': 'LV', 'EST': 'EE', 'TUR': 'TR', 'UKR': 'UA', 'BLR': 'BY',
+                    'MDA': 'MD', 'MNE': 'ME', 'MKD': 'MK', 'ALB': 'AL', 'BIH': 'BA',
+                    'XKX': 'XK', 'CYP': 'CY', 'LUX': 'LU', 'ISL': 'IS', 'MLT': 'MT'
+                }
+                if code in three_to_two:
+                    return three_to_two[code]
+    
+    # 2. Chercher des codes pays dans le texte
+    for code in european_countries.keys():
+        # Chercher le code pays entouré d'espaces ou de ponctuation
+        if re.search(r'[ ,\-]' + code + r'[ ,\-]', text_to_search):
+            return code
+    
+    # 3. Chercher le nom du pays (en anglais)
+    for code, country_name in european_countries.items():
+        if re.search(r'[ ,\-]' + country_name.upper() + r'[ ,\-]', text_to_search):
+            return code
+    
+    # 4. Chercher les noms de villes connus
+    city_country_mapping = {
+        'WIEN': 'AT', 'VIENNA': 'AT', 'BERLIN': 'DE', 'PARIS': 'FR', 'ROMA': 'IT',
+        'ROME': 'IT', 'MADRID': 'ES', 'BARCELONA': 'ES', 'LONDON': 'GB', 
+        'AMSTERDAM': 'NL', 'BRUSSELS': 'BE', 'BRUXELLES': 'BE', 'PRAGUE': 'CZ',
+        'PRAHA': 'CZ', 'BUDAPEST': 'HU', 'WARSAW': 'PL', 'WARSZAWA': 'PL',
+        'STOCKHOLM': 'SE', 'OSLO': 'NO', 'HELSINKI': 'FI', 'HELSINGFORS': 'FI',
+        'COPENHAGEN': 'DK', 'KOBENHAVN': 'DK', 'ZURICH': 'CH', 'GENEVA': 'CH',
+        'MILANO': 'IT', 'MILAN': 'IT', 'VENICE': 'IT', 'VENEZIA': 'IT',
+        'ATHENS': 'GR', 'LISBON': 'PT', 'LISBOA': 'PT', 'DUBLIN': 'IE',
+        'BUCHAREST': 'RO', 'BUCURESTI': 'RO', 'SOFIA': 'BG', 'ZAGREB': 'HR',
+        'BELGRADE': 'RS', 'BEOGRAD': 'RS', 'VILNIUS': 'LT', 'RIGA': 'LV',
+        'TALLINN': 'EE', 'ISTANBUL': 'TR', 'KYIV': 'UA', 'KIEV': 'UA',
+        'BRATISLAVA': 'SK', 'LJUBLJANA': 'SI', 'TIRANA': 'AL', 'PODGORICA': 'ME',
+        'SKOPJE': 'MK', 'SARAJEVO': 'BA', 'MINSK': 'BY', 'CHISINAU': 'MD',
+        'REYKJAVIK': 'IS', 'VALLETTA': 'MT', 'NICOSIA': 'CY', 'LUXEMBOURG': 'LU'
+    }
+    
+    for city, code in city_country_mapping.items():
+        if re.search(r'[ ,\-]' + city + r'[ ,\-]', text_to_search):
+            return code
+    
+    # 5. Chercher les indicatifs téléphoniques (dernier recours)
+    phone_country = {
+        '+43': 'AT', '+32': 'BE', '+359': 'BG', '+385': 'HR', '+357': 'CY',
+        '+420': 'CZ', '+45': 'DK', '+372': 'EE', '+358': 'FI', '+33': 'FR',
+        '+49': 'DE', '+30': 'GR', '+36': 'HU', '+354': 'IS', '+353': 'IE',
+        '+39': 'IT', '+371': 'LV', '+423': 'LI', '+370': 'LT', '+352': 'LU',
+        '+356': 'MT', '+31': 'NL', '+47': 'NO', '+48': 'PL', '+351': 'PT',
+        '+40': 'RO', '+421': 'SK', '+386': 'SI', '+34': 'ES', '+46': 'SE',
+        '+41': 'CH', '+90': 'TR', '+44': 'GB', '+380': 'UA'
+    }
+    
+    for prefix, code in phone_country.items():
+        if prefix in text_to_search:
+            return code
+    
+    return 'UNKNOWN'
+
 def transform_back_on_track(raw_dir: str, processed_dir: str) -> None:
     """
-    Transforme les données Back on Track
+    Transforme les données Back on Track avec amélioration des pays
     """
     logger.info("🚂 Transformation des données Back on Track...")
     
@@ -38,10 +147,18 @@ def transform_back_on_track(raw_dir: str, processed_dir: str) -> None:
     # Mapper les codes pays vers noms complets
     country_mapping = {
         'FR': 'France', 'DE': 'Germany', 'CH': 'Switzerland',
-        'IT': 'Italy', 'ES': 'Spain', 'GB': 'United Kingdom',
+        'IT': 'Italy', 'ES': 'Spain', 'GB': 'United Kingdom', 'UK': 'United Kingdom',
         'BE': 'Belgium', 'NL': 'Netherlands', 'AT': 'Austria',
         'HU': 'Hungary', 'CZ': 'Czech Republic', 'PL': 'Poland',
-        'DK': 'Denmark', 'SE': 'Sweden', 'NO': 'Norway'
+        'DK': 'Denmark', 'SE': 'Sweden', 'NO': 'Norway',
+        'FI': 'Finland', 'PT': 'Portugal', 'GR': 'Greece', 'EL': 'Greece',
+        'IE': 'Ireland', 'RO': 'Romania', 'BG': 'Bulgaria', 'RS': 'Serbia',
+        'HR': 'Croatia', 'SI': 'Slovenia', 'SK': 'Slovakia',
+        'LT': 'Lithuania', 'LV': 'Latvia', 'EE': 'Estonia',
+        'TR': 'Turkey', 'UA': 'Ukraine', 'MD': 'Moldova',
+        'ME': 'Montenegro', 'MK': 'North Macedonia', 'AL': 'Albania',
+        'BA': 'Bosnia and Herzegovina', 'XK': 'Kosovo', 'CY': 'Cyprus',
+        'LU': 'Luxembourg', 'IS': 'Iceland', 'MT': 'Malta'
     }
     
     # Convertir les codes pays (ex: FR, DE) en noms complets
@@ -50,6 +167,10 @@ def transform_back_on_track(raw_dir: str, processed_dir: str) -> None:
     
     # Créer un code pays standardisé
     cities_df['country_code'] = cities_df['stop_country'].str[:2].str.upper()
+    
+    # Correction spécifique pour UK
+    cities_df.loc[cities_df['stop_country'].str.upper() == 'UK', 'country_code'] = 'GB'
+    cities_df.loc[cities_df['stop_country'].str.upper() == 'UK', 'country_name'] = 'United Kingdom'
     
     # Sauvegarder
     save_path = Path(processed_dir) / "back_on_track" / "cities_processed.csv"
@@ -85,18 +206,29 @@ def transform_back_on_track(raw_dir: str, processed_dir: str) -> None:
     # Créer un identifiant unique pour chaque route
     trains_df['route_id'] = trains_df['route_id'].astype(str).str.strip()
     
-    # Extraire le pays de départ du nom du train
-    def extract_country_code(route_name):
-        if pd.isna(route_name):
-            return 'UNKNOWN'
-        route_name = str(route_name).upper()
-        # Chercher des codes pays dans le nom
-        for code in country_mapping.keys():
-            if f' {code} ' in f' {route_name} ' or route_name.endswith(f' {code}'):
-                return code
-        return 'UNKNOWN'
+    # NOUVEAU: Extraction améliorée du code pays
+    logger.info("🌍 Extraction des codes pays avec logique améliorée...")
     
-    trains_df['country_code'] = trains_df['night_train'].apply(extract_country_code)
+    # Appliquer la fonction d'extraction améliorée
+    trains_df['country_code'] = trains_df.apply(
+        lambda row: extract_country_code_enhanced(
+            row['night_train'],
+            row.get('itinerary', ''),
+            row.get('countries', ''),
+            row.get('route_long_name', '')
+        ),
+        axis=1
+    )
+    
+    # Statistiques sur les codes pays extraits
+    country_counts = trains_df['country_code'].value_counts()
+    logger.info(f"📊 Distribution des codes pays: {len(country_counts)} codes uniques")
+    logger.info(f"   - Trains avec pays reconnus: {(trains_df['country_code'] != 'UNKNOWN').sum()}")
+    logger.info(f"   - Trains avec pays inconnu: {(trains_df['country_code'] == 'UNKNOWN').sum()}")
+    
+    # Afficher les 10 codes pays les plus fréquents
+    for code, count in country_counts.head(10).items():
+        logger.info(f"   - {code}: {count} trains")
     
     # Sélectionner uniquement les données après 2010
     trains_df = trains_df[trains_df['year'] >= 2010]
@@ -117,7 +249,9 @@ def transform_back_on_track(raw_dir: str, processed_dir: str) -> None:
         'trains_total': len(trains_df),
         'trains_after_2010': len(trains_df[trains_df['year'] >= 2010]),
         'countries_covered': trains_df['country_code'].nunique(),
-        'years_range': (trains_df['year'].min(), trains_df['year'].max())
+        'years_range': (trains_df['year'].min(), trains_df['year'].max()),
+        'unknown_countries': (trains_df['country_code'] == 'UNKNOWN').sum(),
+        'country_distribution': country_counts.head(20).to_dict()
     }
     
     return quality_report

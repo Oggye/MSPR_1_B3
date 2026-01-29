@@ -7,3 +7,4 @@ geopandas>=0.12.0
 shapely>=2.0.0
 # Pour l'analyse géospatiale
 pyproj>=3.4.0
+psycopg2
