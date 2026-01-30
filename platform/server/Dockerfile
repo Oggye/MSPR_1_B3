@@ -1,12 +1,17 @@
-FROM node:18-alpine
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production
+COPY requirements.txt .
 
-COPY . .
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 5000
+COPY ./app ./app
 
-CMD ["node", "server.js"]
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
