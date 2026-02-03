@@ -1,16 +1,45 @@
-# SCHÉMAS: Modèles Pydantic pour les données statistiques
-# ========================================================
-# Rôle: Définir la structure des analyses et indicateurs
-#       pour garantir la cohérence des réponses analytiques.
+# app/schemas/statistics.py
+from pydantic import BaseModel
+from typing import List, Optional
+from .base import BaseSchema
 
-# Modèles définis:
-# - TimelinePoint : Point temporel pour les séries chronologiques
-# - CO2RankingItem : Élément de classement environnemental
-# - KPISummary : Indicateurs clés agrégés
 
-# Métriques standardisées:
-# - Passagers (en milliers)
-# - Émissions CO2 (en kilotonnes)
-# - Intensité carbone (kg CO2/passager)
+class DashboardMetricsResponse(BaseSchema):
+    country_name: str
+    country_code: str
+    avg_passengers: float
+    avg_co2_emissions: float
+    avg_co2_per_passenger: float
 
-# Utilisation: Endpoints statistiques, dashboard et analyses
+
+class KPIsResponse(BaseSchema):
+    total_countries: int
+    total_night_trains: int
+    total_operators: int
+    years_covered: str
+    avg_co2_per_passenger: float
+    total_passengers: float
+    total_co2_emissions: float
+
+
+class TimelineData(BaseSchema):
+    year: int
+    passengers: Optional[float] = None
+    co2_emissions: Optional[float] = None
+    co2_per_passenger: Optional[float] = None
+    night_trains_count: Optional[int] = None
+
+
+class CO2RankingItem(BaseSchema):
+    country_name: str
+    country_code: str
+    avg_co2_per_passenger: float
+    ranking: int
+    performance: str  # "good", "medium", "bad"
+
+
+class TrainTypeComparison(BaseSchema):
+    train_type: str  # "night", "day" (à extrapoler)
+    avg_passengers: float
+    avg_co2_per_passenger: float
+    efficiency_score: float
