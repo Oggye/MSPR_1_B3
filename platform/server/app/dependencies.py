@@ -1,3 +1,7 @@
+# Pas necessaire de faire ce code pour l'instant
+
+
+
 # DÉPENDANCES: Gestion des ressources partagées
 # =============================================
 # Rôle: Centraliser la gestion des ressources communes
