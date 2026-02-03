@@ -1,3 +1,4 @@
+# server\app\routers\countries.py
 # ROUTER: Endpoints pour les données pays et statistiques nationales
 # ==================================================================
 # Rôle: Fournir l'accès aux données statistiques par pays (passagers, CO2)

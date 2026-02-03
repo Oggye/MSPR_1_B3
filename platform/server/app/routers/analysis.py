@@ -1,3 +1,4 @@
+# server\app\routers\analysis.py
 # ROUTER: Endpoints d'analyse avancée et recommandations
 # =======================================================
 # Rôle: Produire des analyses comparatives et des recommandations

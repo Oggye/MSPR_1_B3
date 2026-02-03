@@ -1,3 +1,4 @@
+# server\app\routers\statistics.py
 # ROUTER: Endpoints d'analyse statistique avancée
 # ===============================================
 # Rôle: Fournir des analyses temporelles et comparatives

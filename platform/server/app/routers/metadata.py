@@ -1,3 +1,4 @@
+# server\app\routers\metadata.py
 # ROUTER: Endpoints de métadonnées et qualité des données
 # ========================================================
 # Rôle: Garantir la transparence et la traçabilité du processus ETL

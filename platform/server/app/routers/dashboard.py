@@ -1,3 +1,4 @@
+# server\app\routers\dashboard.py
 # ROUTER: Endpoints pour le tableau de bord ObRail
 # ================================================
 # Rôle: Alimenter le dashboard interactif avec des indicateurs synthétiques

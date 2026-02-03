@@ -1,3 +1,4 @@
+# server\app\routers\night_trains.py
 # ROUTER: Endpoints pour les trains de nuit européens
 # ====================================================
 # Rôle: Exposer le catalogue des trains de nuit avec leurs caractéristiques
