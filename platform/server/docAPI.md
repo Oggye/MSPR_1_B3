@@ -126,3 +126,30 @@
 ### **Vue `dashboard_metrics`** (41 enregistrements)
 - Utilisée par: Dashboard, indicateurs synthétiques
 - Champs: country_name, country_code, avg_passengers, avg_co2_emissions, avg_co2_per_passenger
+
+
+
+└── server/
+    ├── Dockerfile
+    ├── requirements.txt
+    └── app/
+        ├── __init__.py
+        ├── main.py              # Point d'entrée principal
+        ├── models.py            # Modèles SQLAlchemy
+        ├── database.py          # Configuration DB
+        ├── routers/             # Dossier des routeurs API
+        │   ├── __init__.py
+        │   ├── countries.py     # Endpoints pays
+        │   ├── night_trains.py  # Endpoints trains de nuit
+        │   ├── statistics.py    # Endpoints statistiques
+        │   ├── dashboard.py     # Endpoints dashboard
+        │   ├── analysis.py      # Endpoints analyse avancée
+        │   ├── operators.py     # Endpoints opérateurs
+        │   └── metadata.py      # Endpoints métadonnées
+        ├── schemas/             # Schémas Pydantic
+        │   ├── __init__.py
+        │   ├── base.py
+        │   ├── countries.py
+        │   ├── trains.py
+        │   └── statistics.py
+        └── dependencies.py      # Dépendances (sessions DB, etc.)
