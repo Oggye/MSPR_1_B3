@@ -96,7 +96,9 @@ project-root/
 │   │   │   ├── main.py
 │   │   │   ├── database.py
 │   │   │   ├── models.py
-│   │   │   └── routes/
+│   │   │   ├── dependencies.py
+│   │   │   ├── routes/
+│   │   │   └── schemas/
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
 │   │
