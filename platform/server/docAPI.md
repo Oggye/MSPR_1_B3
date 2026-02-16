@@ -57,7 +57,7 @@
   - **Source**: fichier `quality_reports.json` ou table dédiée
   - Montre la traçabilité ETL
 
-#### **I. Sources de données**✅(à vérifier)
+#### **I. Sources de données**✅
 - **GET** `/api/metadata/sources`
   - Liste et description des sources de données utilisées
   - Justification des choix (conforme au cahier des charges)
