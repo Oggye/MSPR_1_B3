@@ -61,6 +61,9 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 * Conception du **Modèle Conceptuel de Données (MCD)**
 * Création du **Modèle Physique de Données (MPD)**
 
+### Zeinab
+* a remplir
+
 ### Travail collectif
 
 * Développement de l’API REST
