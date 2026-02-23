@@ -43,7 +43,7 @@ def get_quality_report():
             # Rapport par défaut si le fichier n'existe pas
             report_data = {
                 "execution_date": datetime.now().isoformat(),
-                "project": "ObRail - Observatoire Européen du RailTest",
+                "project": "ObRail - Observatoire Européen du Rail",
                 "version": "1.0.0",
                 "quality_indicators": {
                     "completeness": 97.8,
@@ -141,7 +141,11 @@ def get_quality_report():
                     "years": {
                         "total": 15,
                         "range": "2010-2024",
+<<<<<<< HEAD
                         "continuous": True,
+=======
+                        "continuous": true,
+>>>>>>> aa175e2e33e3116bcdac02d07c0b6e7fe04a0451
                         "completeness": 100.0
                     },
                     "operators": {
@@ -219,9 +223,15 @@ def get_quality_report():
                     "total_records_extracted": 237458,
                     "compression_rate": 99.64,
                     "data_quality_score": 97.4,
+<<<<<<< HEAD
                     "rgpd_compliance": True,
                     "personal_data": False,
                     "success": True,
+=======
+                    "rgpd_compliance": true,
+                    "personal_data": false,
+                    "success": true,
+>>>>>>> aa175e2e33e3116bcdac02d07c0b6e7fe04a0451
                     "next_scheduled_update": "2026-02-23T08:30:00.000000"
                 }               
             }

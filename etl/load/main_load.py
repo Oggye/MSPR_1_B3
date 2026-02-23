@@ -13,6 +13,7 @@ from load_operators import load_operators
 from load_night_trains import load_night_trains
 from load_country_stats import load_country_stats
 
+
 def load_reports():
     """Charger quality_reports depuis data/warehouse vers platform/server/app/reports"""
     
@@ -41,7 +42,6 @@ def load_reports():
         json.dump(donnees_source, f, indent=2, ensure_ascii=False)
 
     return True
-
 
 def mainload():
     """Fonction principale"""
