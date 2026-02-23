@@ -1,0 +1,9 @@
+node_modules
+.env
+etl/extract/__pycache__/
+etl/transform/__pycache__/
+etl/load/__pycache__/
+data/raw/
+data/processed/
+data/warehouse/
+note_perso

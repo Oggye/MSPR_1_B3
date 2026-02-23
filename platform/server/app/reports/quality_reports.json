@@ -1,0 +1,146 @@
+{
+  "execution_date": "2026-02-23T12:08:43.810897",
+  "project": "ObRail Europe - MSPR E6.1",
+  "reports": [
+    {
+      "source": "back_on_track",
+      "cities_total": 722,
+      "cities_with_names": 722,
+      "trains_total": 196,
+      "trains_after_2010": 196,
+      "countries_covered": 20,
+      "years_range": [
+        2010,
+        2024
+      ],
+      "unknown_countries": 0,
+      "country_distribution": {
+        "UA": 50,
+        "DE": 24,
+        "PL": 17,
+        "RO": 16,
+        "IT": 15,
+        "AT": 11,
+        "FR": 9,
+        "SE": 9,
+        "BG": 8,
+        "HU": 7,
+        "TR": 7,
+        "GB": 6,
+        "NO": 4,
+        "FI": 4,
+        "SK": 4,
+        "HR": 3,
+        "CZ": 2,
+        "CH": 1,
+        "RS": 1,
+        "BE": 1
+      }
+    },
+    {
+      "source": "eurostat",
+      "passengers_records": 1605,
+      "traffic_records": 7812,
+      "countries_passengers": 37,
+      "countries_traffic": 37,
+      "years_range_passengers": [
+        2010,
+        2024
+      ],
+      "years_range_traffic": [
+        2013,
+        2024
+      ]
+    },
+    {
+      "source": "emissions",
+      "total_records": 92488,
+      "countries": 30,
+      "years_range": [
+        2010,
+        2023
+      ],
+      "missing_values_after": 0
+    },
+    {
+      "source": "gtfs_fr",
+      "agencies": 5,
+      "routes": 833,
+      "stops": 8969,
+      "trips_sample": 10000,
+      "night_trains": 0,
+      "missing_coords": {
+        "stop_lat": 0,
+        "stop_lon": 0
+      }
+    },
+    {
+      "source": "gtfs_ch",
+      "agencies": 478,
+      "routes": 9527,
+      "stops": 103480,
+      "trips_sample": 10000,
+      "night_trains": 0,
+      "missing_coords": {
+        "stop_lat": 0,
+        "stop_lon": 0
+      }
+    },
+    {
+      "source": "gtfs_de",
+      "agencies": 13,
+      "routes": 90,
+      "stops": 1218,
+      "trips_sample": 4670,
+      "night_trains": 0,
+      "missing_coords": {
+        "stop_lat": 0,
+        "stop_lon": 0
+      }
+    }
+  ],
+  "traceability": {
+    "transformations_applied": [
+      "Nettoyage des valeurs manquantes",
+      "Standardisation améliorée des formats de pays",
+      "Filtrage des donnees avant 2010",
+      "Creation des cles etrangeres",
+      "Calcul des metriques agregees",
+      "Completement des donnees manquantes avec valeurs realistes"
+    ],
+    "data_sources": [
+      "back_on_track",
+      "eurostat",
+      "emissions",
+      "gtfs_fr",
+      "gtfs_ch",
+      "gtfs_de"
+    ],
+    "tables_created": {
+      "dimensions": [
+        "dim_countries.csv",
+        "dim_years.csv",
+        "dim_operators.csv"
+      ],
+      "facts": [
+        "facts_night_trains.csv",
+        "facts_country_stats.csv"
+      ],
+      "dashboard": "dashboard_metrics.csv"
+    },
+    "data_quality": {
+      "total_countries": 48,
+      "unknown_countries": 1,
+      "total_years": 15,
+      "total_operators": 37,
+      "night_train_records": 196,
+      "country_stats_records": 611,
+      "dashboard_metrics_records": 41
+    }
+  },
+  "summary": {
+    "total_sources_processed": 6,
+    "total_records_estimated": 94589,
+    "success": true
+  }
+}

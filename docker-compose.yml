@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  # Dashboard Streamlit
+  front:
+    build: ./platform/front
+    container_name: obrail_front
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    restart: always
+
+  # API REST FastAPI
+  api:
+    build: ./platform/server
+    container_name: obrail_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=obrail
+      - DB_USER=obrail_user
+      - DB_PASSWORD=1234
+      - JWT_SECRET=supersecretkey
+    depends_on:
+      - db
+    restart: always
+
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15
+    container_name: obrail_db
+    restart: always
+    environment:
+      POSTGRES_USER: obrail_user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: obrail
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+
+volumes:
+  db_data:
