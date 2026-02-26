@@ -1,11 +1,11 @@
 {
-  "execution_date": "2026-02-23T12:08:43.810897",
+  "execution_date": "2026-02-26T14:59:59.390577",
   "project": "ObRail Europe - MSPR E6.1",
   "reports": [
     {
       "source": "back_on_track",
-      "cities_total": 722,
-      "cities_with_names": 722,
+      "cities_total": 720,
+      "cities_with_names": 720,
       "trains_total": 196,
       "trains_after_2010": 196,
       "countries_covered": 20,
@@ -21,20 +21,20 @@
         "RO": 16,
         "IT": 15,
         "AT": 11,
-        "FR": 9,
         "SE": 9,
+        "FR": 9,
         "BG": 8,
-        "HU": 7,
         "TR": 7,
+        "HU": 7,
         "GB": 6,
         "NO": 4,
-        "FI": 4,
         "SK": 4,
+        "FI": 4,
         "HR": 3,
         "CZ": 2,
+        "BE": 1,
         "CH": 1,
-        "RS": 1,
-        "BE": 1
+        "RS": 1
       }
     },
     {
@@ -65,8 +65,8 @@
     {
       "source": "gtfs_fr",
       "agencies": 5,
-      "routes": 833,
-      "stops": 8969,
+      "routes": 846,
+      "stops": 8980,
       "trips_sample": 10000,
       "night_trains": 0,
       "missing_coords": {
