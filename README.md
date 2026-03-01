@@ -62,7 +62,9 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 * Création du **Modèle Physique de Données (MPD)**
 
 ### Zeinab
-* a remplir
+*conception globale du front 
+
+
 
 ### Travail collectif
 
@@ -213,6 +215,8 @@ Le chargement dans PostgreSQL est organisé en plusieurs scripts spécialisés
 ---
 
 ## 🚀 Lancer le projet
+
+## python -m streamlit run platform/front/app.py --server.port 8502 ##
 
 ### Prérequis
 

@@ -8,6 +8,8 @@ import folium
 from streamlit_folium import folium_static
 import altair as alt
 
+
+
 # Configuration de la page
 st.set_page_config(
     page_title="ObRail - Observatoire Européen du Rail",
@@ -32,6 +34,17 @@ st.markdown("""
         font-size: 1.5rem;
         color: #2563EB;
         margin-top: 1rem;
+        
+    }
+               /* Footer accessible */
+    .footer {
+        text-align: center;
+        color: #CCCCCC;
+        padding: 1.5rem;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+        margin-top: 2rem;
+        backdrop-filter: blur(5px);
     }
     .kpi-card {
         background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
@@ -66,7 +79,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Fonctions pour appeler l'API
-@st.cache_data(ttl=300)  # Cache 5 minutes
+@st.cache_data(ttl=300)  
 def fetch_data(endpoint, params=None):
     """Récupère les données depuis l'API"""
     try:
@@ -132,7 +145,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Filtres globaux (gardés en session)
+    # Filtres globaux 
     if "filters" not in st.session_state:
         st.session_state.filters = {
             "year": 2024,
@@ -401,6 +414,7 @@ elif page == "🌍 Carte Interactive":
     if data["geographic"] and data["night_trains"]:
         geo_data = data["geographic"]
         trains_data = data["night_trains"]
+        trains_data = pd.DataFrame(trains_data)
         
         # Création de la carte
         m = folium.Map(location=[50, 10], zoom_start=4)
@@ -459,10 +473,10 @@ elif page == "🌍 Carte Interactive":
                 fillOpacity=0.6
             ).add_to(m)
         
-        # Ajout des trains individuels (limité pour la performance)
+        # Ajout des trains individuels 
         for _, train in trains_data[:100].iterrows():
-            # Coordonnées aléatoires autour du pays (pour la démo)
-            # Dans la vraie vie, il faudrait les vraies coordonnées
+            # Coordonnées aléatoires autour du pays 
+           
             coords = {
                 'FR': [46.6 + (hash(train['night_train']) % 10 - 5) / 10, 1.9 + (hash(train['night_train']) % 10 - 5) / 10],
                 'DE': [51.2 + (hash(train['night_train']) % 10 - 5) / 10, 10.5 + (hash(train['night_train']) % 10 - 5) / 10],
@@ -544,7 +558,7 @@ elif page == "🏢 Opérateurs":
         
         st.dataframe(operators_df, use_container_width=True, hide_index=True)
         
-        # Statistiques par opérateur (si données disponibles)
+        # Statistiques par opérateur si un opérateur est sélectionné
         if st.session_state.filters["operator"] != "Tous":
             selected_operator = st.session_state.filters["operator"]
             # Trouver l'ID de l'opérateur
@@ -630,12 +644,13 @@ elif page == "📚 Sources & Qualité":
             for t in quality_data["traceability"]["transformations_applied"]:
                 st.markdown(f"- {t}")
 
-# Footer
-st.markdown("---")
-st.markdown(
-    "<div style='text-align: center; color: gray;'>"
-    "🚂 ObRail - Observatoire Européen du Rail | Données ferroviaires 2010-2024 | "
-    f"Mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-    "</div>", 
-    unsafe_allow_html=True
-)
+st.markdown(f"""
+    <footer class="footer" role="contentinfo">
+        <div>🚂 ObRail - Observatoire Européen du Rail | Données ferroviaires 2010-2024</div>
+        <div style="font-size: 0.9rem; margin-top: 0.5rem;">
+            <span>♿ Site accessible - Conformité partiel RGAA</span> | 
+            <span>📊 Données Eurostat & Back-on-Track</span> | 
+            <span>🔄 Mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M')}</span>
+        </div>
+    </footer>
+""", unsafe_allow_html=True)

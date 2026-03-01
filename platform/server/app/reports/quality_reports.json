@@ -1,5 +1,5 @@
 {
-  "execution_date": "2026-02-26T14:59:59.390577",
+  "execution_date": "2026-03-01T15:34:09.219967",
   "project": "ObRail Europe - MSPR E6.1",
   "reports": [
     {
@@ -65,8 +65,8 @@
     {
       "source": "gtfs_fr",
       "agencies": 5,
-      "routes": 846,
-      "stops": 8980,
+      "routes": 843,
+      "stops": 8957,
       "trips_sample": 10000,
       "night_trains": 0,
       "missing_coords": {
@@ -90,8 +90,8 @@
       "source": "gtfs_de",
       "agencies": 13,
       "routes": 90,
-      "stops": 1218,
-      "trips_sample": 4670,
+      "stops": 1266,
+      "trips_sample": 4786,
       "night_trains": 0,
       "missing_coords": {
         "stop_lat": 0,
