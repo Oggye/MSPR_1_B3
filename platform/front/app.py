@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # API Configuration
-API_BASE_URL = "http://localhost:8000/api"
+API_BASE_URL = "http://api:8000/api"
 
 # Style CSS personnalisé
 st.markdown("""
