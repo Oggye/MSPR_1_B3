@@ -62,15 +62,14 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 * Création du **Modèle Physique de Données (MPD)**
 
 ### Zeinab
-*conception globale du front 
+* Conception du dashboard
+* Définition et suivi des KPI
 
 
 
 ### Travail collectif
 
 * Développement de l’API REST
-* Conception du dashboard
-* Définition et suivi des KPI
 * Documentation et soutenance
 
 ---
