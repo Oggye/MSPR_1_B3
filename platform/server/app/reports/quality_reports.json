@@ -1,5 +1,5 @@
 {
-  "execution_date": "2026-02-26T14:31:27.995712",
+  "execution_date": "2026-03-04T22:04:53.216603",
   "project": "ObRail Europe - MSPR E6.1",
   "reports": [
     {
@@ -106,7 +106,10 @@
       "Filtrage des donnees avant 2010",
       "Creation des cles etrangeres",
       "Calcul des metriques agregees",
-      "Completement des donnees manquantes avec valeurs realistes"
+      "Completement des donnees manquantes avec valeurs realistes",
+      "Génération de trains de nuit historiques",
+      "Génération de statistiques pays pour entités manquantes",
+      "Ajout des opérateurs manquants"
     ],
     "data_sources": [
       "back_on_track",
@@ -132,10 +135,10 @@
       "total_countries": 48,
       "unknown_countries": 1,
       "total_years": 15,
-      "total_operators": 37,
-      "night_train_records": 196,
-      "country_stats_records": 611,
-      "dashboard_metrics_records": 41
+      "total_operators": 65,
+      "night_train_records": 2057,
+      "country_stats_records": 701,
+      "dashboard_metrics_records": 47
     }
   },
   "summary": {
