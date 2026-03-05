@@ -162,7 +162,6 @@ Sources (API, FTP, fichiers) → Extraction (scripts Python) → Données brutes
 - **`enrichment.py`** : étape clé d’enrichissement et préparation pour le warehouse.
   - **Nettoyage avancé des codes pays** : mapping des codes à 3 lettres vers 2 lettres, correction des incohérences (UK → GB, EL → GR).
   - **Ajout des opérateurs manquants** : liste des opérateurs nationaux (SNCF, DB, etc.) avec ID dédié.
-  - **Génération de données historiques** : pour les pays sans trains de nuit avant 2024, génération de routes fictives basées sur des tendances temporelles (coefficient multiplicateur par année). Même chose pour les statistiques pays manquantes (ex: Ukraine, Liechtenstein) en utilisant des pays de référence.
   - **Création des dimensions** : `dim_countries` (fusion de toutes les sources + liste exhaustive des pays européens), `dim_years` (années de 2010 à 2024), `dim_operators` (liste enrichie).
   - **Création des faits** : `facts_night_trains` et `facts_country_stats` avec jointures sur les dimensions pour obtenir les clés étrangères.
   - **Création de la vue `dashboard_metrics`** (agrégation par pays).
@@ -335,7 +334,7 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - Nettoyage des doublons, gestion des valeurs manquantes (imputation par moyenne ou valeur réaliste).
 - Standardisation des codes pays et des formats de dates.
 - Vérification des jointures après chargement.
-- Tests unitaires pour l’API.
+- Tests Postman pour l’API.
 
 ---
 
