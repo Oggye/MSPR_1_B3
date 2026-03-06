@@ -407,7 +407,7 @@ Le projet a permis de livrer à ObRail Europe un **entrepôt de données complet
 - Intégration de sources supplémentaires (Italie, Espagne) via leurs GTFS.
 - Amélioration des modèles prédictifs (prévision de la demande).
 - Mise en place d’une authentification pour l’API.
-- Automatisation complète du pipeline ETL via Airflow.
+- Automatisation complète du pipeline ETL via GitHub Action.
 
 Le projet est prêt à être présenté au jury et servira de base solide pour les futures analyses d’ObRail Europe.
 
