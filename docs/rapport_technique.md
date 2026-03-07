@@ -249,7 +249,7 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 
 ## 7. API REST
 
-**Framework** : FastAPI, choisi pour sa rapidité, sa validation automatique avec Pydantic, et sa documentation interactive (Swagger).
+**Framework** : FastAPI, choisi pour sa rapidité, sa validation automatique avec Pydantic, et sa documentation interactive (Swagger et OpenApi).
 
 **Structure** :
 - `app/main.py` : point d’entrée, inclusion des routeurs.
