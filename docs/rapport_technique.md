@@ -195,20 +195,21 @@ Sources (API, FTP, fichiers) → Extraction (scripts Python) → Données brutes
 
 ### 5.1 Modèle Conceptuel de Données (MCD)
 
-Le modèle suit une architecture en **étoile** (star schema), adaptée à l’analyse et au reporting.
+Initialement, nous avions envisagé une architecture en **étoile** classique, avec une seule table de faits. Cependant, après analyse des besoins, nous avons opté pour une architecture en **constellation** (ou schéma en galaxie), mieux adaptée à la présence de deux processus métier distincts mais partageant des dimensions communes.
 
 **Entités principales** :
-- **Pays** (dim_countries) : code pays, nom.
-- **Année** (dim_years) : année, indicateur post-2010.
-- **Opérateur** (dim_operators) : nom de l’opérateur.
-- **Fait : Trains de nuit** (facts_night_trains) : route, nom du train, clés vers pays, année, opérateur.
-- **Fait : Statistiques pays** (facts_country_stats) : passagers, émissions CO₂, CO₂ par passager, clés vers pays et année.
+- **Pays** (`dim_countries`) : code pays, nom.
+- **Année** (`dim_years`) : année, indicateur post-2010.
+- **Opérateur** (`dim_operators`) : nom de l’opérateur.
+- **Fait : Trains de nuit** (`facts_night_trains`) : route, nom du train, clés vers pays, année, opérateur.
+- **Fait : Statistiques pays** (`facts_country_stats`) : passagers, émissions CO₂, CO₂ par passager, clés vers pays et année.
 
-**Relations** : chaque fait est lié aux dimensions correspondantes (plusieurs trains peuvent concerner un même pays, etc.). Les cardinalités sont de type (1,N) des dimensions vers les faits.
+**Relations** : chaque table de faits est reliée aux dimensions pertinentes. Les cardinalités sont de type (1,N) des dimensions vers les faits. Les dimensions `dim_countries` et `dim_years` sont partagées par les deux faits, ce qui caractérise une constellation.
 
-**Justification** : ce modèle permet des requêtes d’agrégation simples (par pays, par année, par opérateur) et des analyses comparatives (jour/nuit via la présence de trains de nuit).
+**Justification** : ce modèle permet non seulement des requêtes d’agrégation simples (par pays, année, opérateur) mais aussi des analyses croisées entre les deux faits (par exemple, comparer l’évolution des émissions de CO₂ avec l’offre de trains de nuit). L’architecture en constellation évite la redondance des dimensions et facilite l’extension future à d’autres faits.
 
 ![MCD du projet](mcd.png)
+
 
 ### 5.2 Modèle Physique de Données (MPD)
 
