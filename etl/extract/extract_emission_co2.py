@@ -12,7 +12,7 @@ def download_eurostat_via_api():
     # URL de l'API SDMX pour le dataset ENV_AIR_GGE
     base_url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1"
     
-    # Option 1: Données au format SDMX-CSV (recommandé)
+    # Option 1: Données au format SDMX-CSV
     url_csv = f"{base_url}/data/ENV_AIR_GGE/?format=SDMX-CSV&compressed=false"
     
     # Option 2: Données au format TSV (similaire à l'ancien format)
