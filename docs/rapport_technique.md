@@ -262,6 +262,8 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - `GET /api/countries` : liste des pays.
 - `GET /api/countries/stats` : statistiques avec filtres (pays, année, seuils).
 - `GET /api/night-trains` : trains de nuit avec filtres.
+- `GET /api/night-trains/by-operator/{operator_id}` : trains de nuit par operateur.
+- `GET /api/geographic/coverage` : la couverture géographique des trains de nuit.
 - `GET /api/dashboard/metrics` : métriques agrégées pour le dashboard.
 - `GET /api/dashboard/kpis` : indicateurs clés.
 - `GET /api/statistics/co2-ranking` : classement CO₂.
