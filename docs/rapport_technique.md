@@ -208,6 +208,8 @@ Le modèle suit une architecture en **étoile** (star schema), adaptée à l’a
 
 **Justification** : ce modèle permet des requêtes d’agrégation simples (par pays, par année, par opérateur) et des analyses comparatives (jour/nuit via la présence de trains de nuit).
 
+![MCD du projet](mcd.png)
+
 ### 5.2 Modèle Physique de Données (MPD)
 
 Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèles SQLAlchemy (`app/models.py`).
@@ -226,6 +228,8 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - Clés primaires auto-incrémentées pour simplifier les insertions.
 - Contraintes d’intégrité référentielle pour garantir la cohérence.
 - Index sur les colonnes de jointure (`country_id`, `year_id`, `operator_id`) pour améliorer les performances.
+
+![MDP du projet](mpd.png)
 
 ---
 
