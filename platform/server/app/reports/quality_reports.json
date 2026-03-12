@@ -1,11 +1,11 @@
 {
-  "execution_date": "2026-03-04T22:04:53.216603",
+  "execution_date": "2026-03-09T13:24:33.353685",
   "project": "ObRail Europe - MSPR E6.1",
   "reports": [
     {
       "source": "back_on_track",
-      "cities_total": 720,
-      "cities_with_names": 720,
+      "cities_total": 726,
+      "cities_with_names": 726,
       "trains_total": 196,
       "trains_after_2010": 196,
       "countries_covered": 20,
@@ -65,8 +65,8 @@
     {
       "source": "gtfs_fr",
       "agencies": 5,
-      "routes": 846,
-      "stops": 8980,
+      "routes": 807,
+      "stops": 8943,
       "trips_sample": 10000,
       "night_trains": 0,
       "missing_coords": {
@@ -90,8 +90,8 @@
       "source": "gtfs_de",
       "agencies": 13,
       "routes": 90,
-      "stops": 1218,
-      "trips_sample": 4670,
+      "stops": 1257,
+      "trips_sample": 5087,
       "night_trains": 0,
       "missing_coords": {
         "stop_lat": 0,
@@ -106,10 +106,7 @@
       "Filtrage des donnees avant 2010",
       "Creation des cles etrangeres",
       "Calcul des metriques agregees",
-      "Completement des donnees manquantes avec valeurs realistes",
-      "Génération de trains de nuit historiques",
-      "Génération de statistiques pays pour entités manquantes",
-      "Ajout des opérateurs manquants"
+      "Completement des donnees manquantes avec valeurs realistes"
     ],
     "data_sources": [
       "back_on_track",
@@ -135,10 +132,10 @@
       "total_countries": 48,
       "unknown_countries": 1,
       "total_years": 15,
-      "total_operators": 65,
-      "night_train_records": 2057,
-      "country_stats_records": 701,
-      "dashboard_metrics_records": 47
+      "total_operators": 37,
+      "night_train_records": 196,
+      "country_stats_records": 611,
+      "dashboard_metrics_records": 41
     }
   },
   "summary": {
