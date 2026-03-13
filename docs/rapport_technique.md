@@ -195,7 +195,7 @@ Sources (API, FTP, fichiers) → Extraction (scripts Python) → Données brutes
 
 ### 5.1 Modèle Conceptuel de Données (MCD)
 
-Initialement, nous avions envisagé une architecture en **étoile** classique, avec une seule table de faits. Cependant, après analyse des besoins, nous avons opté pour une architecture en **constellation** (ou schéma en galaxie), mieux adaptée à la présence de deux processus métier distincts mais partageant des dimensions communes.
+Initialement, nous avions envisagé une architecture en **étoile** classique, avec une seule table de faits. Cependant, après analyse des besoins, nous avons opté pour une architecture en **constellation**, mieux adaptée à la présence de deux processus métier distincts mais partageant des dimensions communes.
 
 **Entités principales** :
 - **Pays** (`dim_countries`) : code pays, nom.
