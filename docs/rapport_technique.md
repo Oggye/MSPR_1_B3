@@ -280,7 +280,7 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - `GET /api/metadata/quality` : rapport qualité.
 - `GET /api/metadata/sources` : catalogue des sources.
 
-**Tests** : une suite de tests unitaires (`test_api.py`) valide le bon fonctionnement de tous les endpoints avec une base SQLite en mémoire. Les tests couvrent les cas nominaux, les filtres, les erreurs.
+**Tests** : une suite de tests avec Postman valide le bon fonctionnement de tous les endpoints.
 
 **Documentation** : accessible à `http://localhost:8000/api/docs`.
 
