@@ -8,6 +8,8 @@ import folium
 from streamlit_folium import folium_static
 import altair as alt
 
+
+
 # Configuration de la page
 st.set_page_config(
     page_title="ObRail - Observatoire Européen du Rail",
@@ -17,7 +19,7 @@ st.set_page_config(
 )
 
 # API Configuration
-API_BASE_URL = "http://127.0.0.1:8000/api"
+API_BASE_URL = "http://api:8000/api"
 
 # Style CSS personnalisé
 st.markdown("""
@@ -32,8 +34,9 @@ st.markdown("""
         font-size: 1.5rem;
         color: #2563EB;
         margin-top: 1rem;
+        
     }
-    /* Footer accessible */
+               /* Footer accessible */
     .footer {
         text-align: center;
         color: #CCCCCC;
@@ -174,10 +177,6 @@ with st.sidebar:
         "📅 Année",
         2010, 2024, 2024
     )
-    
-    st.markdown("---")
-    
-    
     
     st.markdown("---")
     st.markdown("**📊 Données mises à jour:**")
@@ -343,10 +342,9 @@ elif page == "📊 Tableau de Bord":
         
         metrics_df = pd.DataFrame(data["metrics"])
         
-        # APPLICATION DU FILTRE PAYS
+        # Filtre par pays
         if st.session_state.filters["country"] != "Tous":
             metrics_df = metrics_df[metrics_df['country_name'] == st.session_state.filters["country"]]
-            st.info(f"Affichage des données pour : {st.session_state.filters['country']}")
         
         fig = px.scatter(
             metrics_df,
@@ -357,7 +355,7 @@ elif page == "📊 Tableau de Bord":
             hover_name='country_name',
             title="Relation passagers vs CO₂ par pays",
             labels={
-                'avg_passengers': 'Passagers',
+                'avg_passengers': 'Passagers (millions)',
                 'avg_co2_per_passenger': 'kg CO₂/passager',
                 'avg_co2_emissions': 'Émissions totales'
             }
@@ -370,28 +368,44 @@ elif page == "🚂 Trains de Nuit":
     
     if data["night_trains"]:
         trains_df = pd.DataFrame(data["night_trains"])
-
-        # APPLICATION DES FILTRES
-        # Filtre par pays
-        if st.session_state.filters["country"] != "Tous":
-            trains_df = trains_df[trains_df['country_name'] == st.session_state.filters["country"]]
         
-        # Filtre par opérateur
-        if st.session_state.filters["operator"] != "Tous":
-            trains_df = trains_df[trains_df['operator_name'].str.contains(st.session_state.filters["operator"], na=False)]
+        # Filtres
+        col1, col2, col3 = st.columns(3)
         
-        # Filtre par année
-        trains_df = trains_df[trains_df['year'] == st.session_state.filters["year"]]
+        with col1:
+            if st.session_state.filters["country"] != "Tous":
+                trains_df = trains_df[trains_df['country_name'] == st.session_state.filters["country"]]
         
+        with col2:
+            if st.session_state.filters["operator"] != "Tous":
+                trains_df = trains_df[trains_df['operator_name'].str.contains(st.session_state.filters["operator"])]
         
+        with col3:
+            selected_year = st.selectbox("Année", sorted(trains_df['year'].unique()), index=0)
+            trains_df = trains_df[trains_df['year'] == selected_year]
+        
+        # Statistiques
+        st.markdown(f"**{len(trains_df)}** trains trouvés")
         
         # Tableau des trains
-        if not trains_df.empty:
-            display_df = trains_df[['night_train', 'country_name', 'operator_name', 'year']]
-            display_df.columns = ['Train', 'Pays', 'Opérateur(s)', 'Année']
-            st.dataframe(display_df, use_container_width=True, height=500)
-        else:
-            st.warning("Aucun train ne correspond aux filtres sélectionnés")
+        display_df = trains_df[['night_train', 'country_name', 'operator_name', 'year']]
+        display_df.columns = ['Train', 'Pays', 'Opérateur(s)', 'Année']
+        
+        st.dataframe(display_df, use_container_width=True, height=500)
+        
+        # Distribution par pays
+        st.markdown("<h2 class='sub-header'>📊 Distribution par pays</h2>", unsafe_allow_html=True)
+        
+        country_counts = trains_df['country_name'].value_counts().reset_index()
+        country_counts.columns = ['Pays', 'Nombre de trains']
+        
+        fig = px.pie(
+            country_counts,
+            values='Nombre de trains',
+            names='Pays',
+            title="Répartition des trains de nuit par pays"
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 # PAGE CARTE INTERACTIVE
 elif page == "🌍 Carte Interactive":
@@ -401,17 +415,6 @@ elif page == "🌍 Carte Interactive":
         geo_data = data["geographic"]
         trains_data = data["night_trains"]
         trains_data = pd.DataFrame(trains_data)
-
-        # APPLICATION DES FILTRES pour la carte
-        if st.session_state.filters["country"] != "Tous":
-            trains_data = trains_data[trains_data['country_name'] == st.session_state.filters["country"]]
-        
-        if st.session_state.filters["operator"] != "Tous":
-            trains_data = trains_data[trains_data['operator_name'].str.contains(st.session_state.filters["operator"], na=False)]
-        
-        trains_data = trains_data[trains_data['year'] == st.session_state.filters["year"]]
-        
-        st.info(f"Affichage de {len(trains_data)} trains sur la carte")
         
         # Création de la carte
         m = folium.Map(location=[50, 10], zoom_start=4)
@@ -473,6 +476,7 @@ elif page == "🌍 Carte Interactive":
         # Ajout des trains individuels 
         for _, train in trains_data[:100].iterrows():
             # Coordonnées aléatoires autour du pays 
+           
             coords = {
                 'FR': [46.6 + (hash(train['night_train']) % 10 - 5) / 10, 1.9 + (hash(train['night_train']) % 10 - 5) / 10],
                 'DE': [51.2 + (hash(train['night_train']) % 10 - 5) / 10, 10.5 + (hash(train['night_train']) % 10 - 5) / 10],
@@ -498,9 +502,6 @@ elif page == "🌍 Carte Interactive":
 # PAGE ANALYSES CO2
 elif page == "📈 Analyses CO2":
     st.markdown("<h1 class='main-header'>📈 Analyses des Émissions CO₂</h1>", unsafe_allow_html=True)
-
-    st.info(f"Analyse basée sur les filtres: Pays={st.session_state.filters['country']}, "
-            f"Opérateur={st.session_state.filters['operator']}, Année={st.session_state.filters['year']}")
     
     if data["comparison"]:
         st.markdown("<h2 class='sub-header'>⚖️ Comparaison Trains de Jour vs Nuit</h2>", unsafe_allow_html=True)
@@ -643,13 +644,11 @@ elif page == "📚 Sources & Qualité":
             for t in quality_data["traceability"]["transformations_applied"]:
                 st.markdown(f"- {t}")
 
-# Footer
-st.markdown("---")
 st.markdown(f"""
     <footer class="footer" role="contentinfo">
         <div>🚂 ObRail - Observatoire Européen du Rail | Données ferroviaires 2010-2024</div>
         <div style="font-size: 0.9rem; margin-top: 0.5rem;">
-            <span>♿ Site accessible - Conformité partielle RGAA</span> | 
+            <span>♿ Site accessible - Conformité partiel RGAA</span> | 
             <span>📊 Données Eurostat & Back-on-Track</span> | 
             <span>🔄 Mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M')}</span>
         </div>
