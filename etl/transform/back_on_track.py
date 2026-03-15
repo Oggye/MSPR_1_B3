@@ -206,7 +206,7 @@ def transform_back_on_track(raw_dir: str, processed_dir: str) -> None:
     # Créer un identifiant unique pour chaque route
     trains_df['route_id'] = trains_df['route_id'].astype(str).str.strip()
     
-    # NOUVEAU: Extraction améliorée du code pays
+    # Extraction améliorée du code pays
     logger.info("🌍 Extraction des codes pays avec logique améliorée...")
     
     # Appliquer la fonction d'extraction améliorée

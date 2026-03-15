@@ -94,7 +94,7 @@ def generate_night_trains(night_trains, year_list, operator_df):
     if not augmented.empty and 'route_id' in augmented.columns:
         # Extraire les numéros de route – le résultat est un DataFrame à 1 colonne
         route_nums = augmented['route_id'].astype(str).str.extract(r'(\d+)').astype(float)
-        # CORRECTION : utiliser iloc pour obtenir la Series de la première colonne
+        # utiliser iloc pour obtenir la Series de la première colonne
         if not route_nums.iloc[:, 0].isna().all():
             max_route_num = int(route_nums.max().iloc[0])
     next_route_id = max_route_num + 1
