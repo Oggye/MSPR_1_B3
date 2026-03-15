@@ -1,4 +1,7 @@
-# download_direct_updated.py
+#==================================================================
+# ETL/extract/extract_emission_co2.py
+# Script d'extraction des données d'émissions de CO2 depuis l'API SDMX 2.1 d'Eurostat
+#==================================================================
 import pandas as pd
 import os
 import requests
