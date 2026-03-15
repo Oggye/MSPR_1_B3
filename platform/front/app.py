@@ -89,7 +89,6 @@ def fetch_data(endpoint, params=None):
         st.error(f"Erreur: {e}")
         return None
 
-<<<<<<< HEAD
 def load_all_data(filters):
     """Charge toutes les données nécessaires en fonction des filtres"""
     params = {}
@@ -99,12 +98,6 @@ def load_all_data(filters):
         params["operator"] = filters["operator"]
     if filters["country"] != "Tous":
         params["country"] = filters["country"]
-=======
-# Fonctions de chargement par page
-@st.cache_data(ttl=300)
-def load_kpis():
-    return fetch_data("dashboard/kpis")
->>>>>>> 4739c0f086b40d67e67a94f51804817efce01a4a
 
     with st.spinner("Chargement des données..."):
         kpis = fetch_data("dashboard/kpis", params)
@@ -567,8 +560,7 @@ elif page == "📈 Analyses CO2":
         
         if not comparison_df.empty:
             col1, col2 = st.columns(2)
-
-            # Graphique : Émissions CO₂ par passager
+            
             with col1:
                 fig = px.bar(
                     comparison_df,
@@ -581,7 +573,6 @@ elif page == "📈 Analyses CO2":
                 )
                 st.plotly_chart(fig, use_container_width=True)
             
-            # Graphique : Score d'efficacité environnementale
             with col2:
                 fig = px.bar(
                     comparison_df,
@@ -597,23 +588,12 @@ elif page == "📈 Analyses CO2":
     if data.get("recommendations"):
         st.markdown("<h2 class='sub-header'>💡 Recommandations Politiques</h2>", unsafe_allow_html=True)
         
-<<<<<<< HEAD
         for rec in data["recommendations"].get("recommendations", []):
             with st.expander(f"**{rec.get('title', 'Titre inconnu')}**"):
                 st.markdown(f"**Description:** {rec.get('description', '')}")
                 st.markdown(f"**Suggestion:** {rec.get('suggestion', '')}")
                 if rec.get('avg_co2_per_passenger'):
                     st.markdown(f"**Valeurs CO₂:** {', '.join([f'{x:.3f}' for x in rec['avg_co2_per_passenger'][:5]])}")
-=======
-        # Parcours de toutes les recommandations retournées par l'API
-        for rec in recommendations.get("recommendations", []):
-            with st.expander(f"**{rec.get('title', 'Sans titre')}**"):
-                st.markdown(f"**Description:** {rec.get('description', 'N/A')}")
-                st.markdown(f"**Suggestion:** {rec.get('suggestion', 'N/A')}")
-                if 'avg_co2_per_passenger' in rec and rec['avg_co2_per_passenger']:
-                    vals = rec['avg_co2_per_passenger'][:5]
-                    st.markdown(f"**Valeurs CO₂:** {', '.join([f'{x:.3f}' for x in vals])}")
->>>>>>> 4739c0f086b40d67e67a94f51804817efce01a4a
 
 # PAGE OPÉRATEURS
 elif page == "🏢 Opérateurs":
@@ -662,52 +642,12 @@ elif page == "🏢 Opérateurs":
 elif page == "📚 Sources & Qualité":
     st.markdown("<h1 class='main-header'>📚 Sources de Données & Qualité</h1>", unsafe_allow_html=True)
     
-<<<<<<< HEAD
     if data.get("sources") and data.get("quality"):
         sources_data = data["sources"]
         quality_data = data["quality"]
         
         # Métriques de qualité
         traceability = quality_data.get("traceability", {})
-=======
-    sources = load_sources()
-    quality = load_quality()
-    
-    # Catalogue des Sources de Données
-    if sources:
-        st.markdown("<h2 class='sub-header'>📋 Sources de données</h2>", unsafe_allow_html=True)
-        for source in sources.get("sources", []):
-            with st.expander(f"**{source.get('name', 'Inconnu')}**"):
-                # Organisation en deux colonnes pour les métadonnées
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    st.markdown(f"**Description:** {source.get('description', 'N/A')}")
-                    url = source.get('url', '#')
-                    st.markdown(f"**URL:** [{url}]({url})")
-                    st.markdown(f"**Licence:** {source.get('license', 'N/A')}")
-                with col2:
-                    st.markdown(f"**Fréquence:** {source.get('update_frequency', 'N/A')}")
-                    st.markdown(f"**Couverture:** {source.get('coverage', 'N/A')}")
-                    st.markdown(f"**Périmètre:** {source.get('geographic_scope', 'N/A')}")
-                datasets = source.get('datasets', [])
-                st.markdown(f"**Datasets:** {', '.join(datasets)}")
-    
-    # Rapport de Qualité des Données
-    if quality:
-        st.markdown("<h2 class='sub-header'>📊 Rapport de Qualité</h2>", unsafe_allow_html=True)
-        
-        st.markdown(f"**Date d'exécution:** {quality.get('execution_date', 'N/A')}")
-        st.markdown(f"**Projet:** {quality.get('project', 'N/A')}")
-        
-        # Résumé exécutif (succès/échec global)
-        summary = quality.get("summary", {})
-        if summary:
-            st.markdown(f"**Résumé:** {'✅ Succès' if summary.get('success') else '❌ Échec'}")
-            st.markdown(f"**Sources traitées:** {summary.get('total_sources_processed', 'N/A')}")
-        
-        # Métriques de qualité des données
-        traceability = quality.get("traceability", {})
->>>>>>> 4739c0f086b40d67e67a94f51804817efce01a4a
         data_quality = traceability.get("data_quality", {})
         
         if data_quality:
