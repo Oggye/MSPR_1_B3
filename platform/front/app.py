@@ -91,7 +91,7 @@ def fetch_data(endpoint, params=None):
         st.error(f"Erreur: {e}")
         return None
 
-# Fonctions de chargement par page (paresseux)
+# Fonctions de chargement par page
 @st.cache_data(ttl=300)
 def load_kpis():
     return fetch_data("dashboard/kpis")
@@ -550,7 +550,8 @@ elif page == "📈 Analyses CO2":
         comparison_df = pd.DataFrame(comparison)
         if not comparison_df.empty and 'train_type' in comparison_df.columns:
             col1, col2 = st.columns(2)
-            
+
+            # Graphique : Émissions CO₂ par passager
             with col1:
                 fig = px.bar(
                     comparison_df,
@@ -563,6 +564,7 @@ elif page == "📈 Analyses CO2":
                 )
                 st.plotly_chart(fig, use_container_width=True)
             
+            # Graphique : Score d'efficacité environnementale
             with col2:
                 if 'efficiency_score' in comparison_df.columns:
                     fig = px.bar(
@@ -582,6 +584,7 @@ elif page == "📈 Analyses CO2":
     if recommendations:
         st.markdown("<h2 class='sub-header'>💡 Recommandations Politiques</h2>", unsafe_allow_html=True)
         
+        # Parcours de toutes les recommandations retournées par l'API
         for rec in recommendations.get("recommendations", []):
             with st.expander(f"**{rec.get('title', 'Sans titre')}**"):
                 st.markdown(f"**Description:** {rec.get('description', 'N/A')}")
@@ -636,10 +639,12 @@ elif page == "📚 Sources & Qualité":
     sources = load_sources()
     quality = load_quality()
     
+    # Catalogue des Sources de Données
     if sources:
         st.markdown("<h2 class='sub-header'>📋 Sources de données</h2>", unsafe_allow_html=True)
         for source in sources.get("sources", []):
             with st.expander(f"**{source.get('name', 'Inconnu')}**"):
+                # Organisation en deux colonnes pour les métadonnées
                 col1, col2 = st.columns([2, 1])
                 with col1:
                     st.markdown(f"**Description:** {source.get('description', 'N/A')}")
@@ -653,17 +658,20 @@ elif page == "📚 Sources & Qualité":
                 datasets = source.get('datasets', [])
                 st.markdown(f"**Datasets:** {', '.join(datasets)}")
     
+    # Rapport de Qualité des Données
     if quality:
         st.markdown("<h2 class='sub-header'>📊 Rapport de Qualité</h2>", unsafe_allow_html=True)
         
         st.markdown(f"**Date d'exécution:** {quality.get('execution_date', 'N/A')}")
         st.markdown(f"**Projet:** {quality.get('project', 'N/A')}")
         
+        # Résumé exécutif (succès/échec global)
         summary = quality.get("summary", {})
         if summary:
             st.markdown(f"**Résumé:** {'✅ Succès' if summary.get('success') else '❌ Échec'}")
             st.markdown(f"**Sources traitées:** {summary.get('total_sources_processed', 'N/A')}")
         
+        # Métriques de qualité des données
         traceability = quality.get("traceability", {})
         data_quality = traceability.get("data_quality", {})
         if data_quality:

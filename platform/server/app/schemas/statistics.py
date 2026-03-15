@@ -5,6 +5,7 @@ from .base import BaseSchema
 
 
 class DashboardMetricsResponse(BaseSchema):
+    """Schéma de réponse pour les métriques agrégées du dashboard."""
     country_name: str
     country_code: str
     avg_passengers: float
@@ -13,6 +14,7 @@ class DashboardMetricsResponse(BaseSchema):
 
 
 class KPIsResponse(BaseSchema):
+    """Schéma de réponse pour les indicateurs clés de performance (KPI)."""
     total_countries: int
     total_night_trains: int
     total_operators: int
@@ -23,6 +25,7 @@ class KPIsResponse(BaseSchema):
 
 
 class TimelineData(BaseSchema):
+    """Schéma pour les données d'évolution temporelle."""
     year: int
     passengers: Optional[float] = None
     co2_emissions: Optional[float] = None
@@ -31,6 +34,7 @@ class TimelineData(BaseSchema):
 
 
 class CO2RankingItem(BaseSchema):
+    """Schéma pour le classement des pays par performance CO2."""
     country_name: str
     country_code: str
     avg_co2_per_passenger: float
@@ -39,6 +43,7 @@ class CO2RankingItem(BaseSchema):
 
 
 class TrainTypeComparison(BaseSchema):
+    """Schéma pour la comparaison entre trains de jour et de nuit."""
     train_type: str  # "night", "day" (à extrapoler)
     avg_passengers: float
     avg_co2_per_passenger: float

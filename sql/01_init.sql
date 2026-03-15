@@ -1,6 +1,7 @@
 -- 01_init.sql
 -- Script de création des tables du data warehouse ObRail
 -- Ordre de chargement: 1. Dimensions, 2. Faits
+
 -- Supression de la vue si elle existe
 DROP VIEW IF EXISTS dashboard_metrics;
 

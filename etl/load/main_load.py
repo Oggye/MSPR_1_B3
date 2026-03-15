@@ -3,15 +3,22 @@ Orchestrateur principal du chargement PostgreSQL
 """
 import sys
 import time
-from database import db
 import os 
 import json
+from pathlib import Path
+
+# Ajouter le répertoire racine au PYTHONPATH
+current_dir = Path(__file__).parent
+project_root = current_dir.parent
+sys.path.insert(0, str(project_root))
+
 # Importer les fonctions de chargement
-from load_countries import load_countries
-from load_years import load_years
-from load_operators import load_operators
-from load_night_trains import load_night_trains
-from load_country_stats import load_country_stats
+from load.load_countries import load_countries
+from load.load_years import load_years
+from load.load_operators import load_operators
+from load.load_night_trains import load_night_trains
+from load.load_country_stats import load_country_stats
+from load.database import db
 
 
 def load_reports():
@@ -48,7 +55,7 @@ def mainload():
         
     print("\n🔌 Test de connexion à PostgreSQL...")
 
-    # Tester la connexion via la classe db
+    # Tester la connexion via l'instance globale db
     if not db.test_connection():
         print("❌ Échec de la connexion à PostgreSQL")
         print("   Vérifiez que:")
@@ -58,17 +65,18 @@ def mainload():
         print("   4. Les tables sont créées (exécutez 01_init.sql)")
         return False
 
-    # Chargement complet
+    # Chargement séquentiel des données
     print("\n🚀 Démarrage du chargement...")
     steps = [
-        ("Années", load_years),
-        ("Opérateurs", load_operators),
-        ("Pays", load_countries),
-        ("Trajets par pays ", load_country_stats),
-        ("Trajets de nuit ", load_night_trains),
-        ("Chargement de quality reports ", load_reports),
+        ("Années", load_years),                    # Dimension
+        ("Opérateurs", load_operators),            # Dimension
+        ("Pays", load_countries),                   # Dimension
+        ("Trajets par pays", load_country_stats),   # Fait (dépend des dimensions)
+        ("Trajets de nuit", load_night_trains),     # Fait (dépend des dimensions)
+        ("Chargement quality reports", load_reports), # Fichier JSON
     ]
-            
+
+    # Exécution séquentielle        
     for step_name, step_func in steps:
         print(f"\n➡️  Étape: {step_name}")
         if not step_func():

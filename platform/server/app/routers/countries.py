@@ -4,19 +4,6 @@
 # Rôle: Fournir l'accès aux données statistiques par pays (passagers, CO2)
 #       avec filtrage avancé pour les analyses comparatives.
 
-# Tables utilisées:
-# - facts_country_stats : Statistiques annuelles par pays
-# - dim_countries : Référentiel des pays européens  
-# - dim_years : Dimension temporelle (2010-2024)
-
-# Endpoints implémentés:
-# 1. GET /api/countries/stats - Statistiques complètes avec filtres
-# 2. GET /api/countries/ - Liste des pays référencés
-
-# Résultats attendus:
-# - Interface pour le tableau de bord ObRail
-# - Données pour les rapports institutionnels
-# - Base pour les analyses environnementales comparatives
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -35,6 +22,7 @@ def get_countries(
 ):
     """
     Récupère la liste des pays européens référencés.
+    Tables: dim_countries
     """
     countries = db.query(DimCountries).offset(skip).limit(limit).all()
     return countries
@@ -48,6 +36,7 @@ def get_country_stats(
 ):
     """
     Récupère les statistiques par pays avec filtrage avancé.
+    Tables: facts_country_stats, dim_countries, dim_years
     """
     # Construction de la requête de base avec jointures
     query = db.query(
@@ -62,21 +51,27 @@ def get_country_stats(
     )
     
     # Application des filtres
+    # Filtre sur le code pays (ex: "FR", "DE", "IT")
     if filter.country_code is not None:
         query = query.filter(DimCountries.country_code == filter.country_code)
     
+    # Filtre sur l'année (ex: 2020, 2021, etc.)
     if filter.year is not None:
         query = query.filter(DimYears.year == filter.year)
     
+    # Filtre sur le nombre minimum de passagers
     if filter.min_passengers is not None:
         query = query.filter(FactsCountryStats.passengers >= filter.min_passengers)
     
+    # Filtre sur le nombre maximum de passagers
     if filter.max_passengers is not None:
         query = query.filter(FactsCountryStats.passengers <= filter.max_passengers)
     
+    # Filtre sur les émissions CO2 minimum par passager
     if filter.min_co2_per_passenger is not None:
         query = query.filter(FactsCountryStats.co2_per_passenger >= filter.min_co2_per_passenger)
     
+    # Filtre sur les émissions CO2 maximum par passager
     if filter.max_co2_per_passenger is not None:
         query = query.filter(FactsCountryStats.co2_per_passenger <= filter.max_co2_per_passenger)
     
@@ -85,7 +80,7 @@ def get_country_stats(
     
     # Transformation en format de réponse
     transformed_results = []
-
+    
     for stats, country_name, country_code, year in results:
         response_item = CountryStatsResponse(
             stats_id=stats.stats_id,

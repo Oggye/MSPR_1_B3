@@ -4,19 +4,6 @@
 # Rôle: Alimenter le dashboard interactif avec des indicateurs synthétiques
 #       et des métriques agrégées pour la prise de décision.
 
-# Tables/vues utilisées:
-# - dashboard_metrics : Vue SQL des indicateurs agrégés
-# - facts_country_stats : Données sources
-# - dim_countries : Contexte géographique
-
-# Endpoints implémentés:
-# 1. GET /api/dashboard/metrics - Métriques pour visualisations
-# 2. GET /api/dashboard/kpis - Indicateurs clés de performance
-
-# Résultats attendus:
-# - Dashboard temps réel pour décideurs politiques
-# - Monitoring de la mobilité durable européenne
-# - Support visuel pour les présentations institutionnelles
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -32,6 +19,7 @@ router = APIRouter()
 def get_dashboard_metrics(db: Session = Depends(get_db)):
     """
     Récupère les métriques agrégées pour le dashboard.
+    Vue: dashboard_metrics
     """
     metrics = db.query(DashboardMetrics).all()
 
@@ -41,6 +29,7 @@ def get_dashboard_metrics(db: Session = Depends(get_db)):
 def get_dashboard_kpis(db: Session = Depends(get_db)):
     """
     Récupère les indicateurs clés de performance pour le dashboard.
+    Tables: facts_night_trains, facts_country_stats, dim_countries, dim_operators, dim_years
     """
     # Comptages
     total_countries = len(db.query(DimCountries).all())
@@ -60,6 +49,7 @@ def get_dashboard_kpis(db: Session = Depends(get_db)):
     # Agrégation des statistiques
     stats = db.query(FactsCountryStats).all()
     
+    # Initialisation
     total_co2_per_passenger = 0
     total_passengers = 0
     total_co2_emissions = 0

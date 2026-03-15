@@ -4,19 +4,6 @@
 # Rôle: Fournir des analyses temporelles et comparatives
 #       sur les indicateurs clés du transport ferroviaire.
 
-# Tables utilisées:
-# - facts_country_stats : Données statistiques historiques
-# - dim_years : Dimension temporelle
-# - dim_countries : Contexte géographique
-
-# Endpoints implémentés:
-# 1. GET /api/statistics/timeline - Évolution temporelle des indicateurs
-# 2. GET /api/statistics/co2-ranking - Classement des pays par performance CO2
-
-# Résultats attendus:
-# - Identification des tendances 2010-2024
-# - Détection des meilleures pratiques nationales
-# - Données pour les modèles prédictifs
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -32,6 +19,7 @@ router = APIRouter()
 def get_timeline_data(db: Session = Depends(get_db)):
     """
     Récupère les données d'évolution temporelle pour les graphiques.
+    Tables: facts_country_stats, dim_years, facts_night_trains
     """
     # Récupérer toutes les statistiques
     stats_query = db.query(
@@ -84,6 +72,7 @@ def get_co2_ranking(
 ):
     """
     Classe les pays par performance CO2.
+    Vue: dashboard_metrics
     """
     # Récupère les données de la vue dashboard_metrics
     ranking_data = db.query(
@@ -94,6 +83,7 @@ def get_co2_ranking(
         DashboardMetrics.avg_co2_per_passenger.asc()
     ).limit(limit).all()
     
+    # Construction du classement avec catégorisation
     ranking_items = []
     for i, (country_name, country_code, avg_co2) in enumerate(ranking_data, 1):
         # Détermine la performance

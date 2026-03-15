@@ -4,19 +4,6 @@
 # Rôle: Garantir la transparence et la traçabilité du processus ETL
 #       conformément aux exigences RGPD et aux bonnes pratiques.
 
-# Sources utilisées:
-# - quality_reports.json : Rapport de qualité généré par le pipeline ETL
-# - Documentation du projet
-# - Catalogue des sources de données
-
-# Endpoints implémentés:
-# 1. GET /api/metadata/quality - Rapport qualité complet
-# 2. GET /api/metadata/sources - Catalogue des sources utilisées
-
-# Résultats attendus:
-# - Conformité réglementaire (RGPD)
-# - Transparence pour les partenaires institutionnels
-# - Documentation technique pour la reproductibilité
 
 import json
 import os
@@ -29,13 +16,15 @@ router = APIRouter()
 def get_quality_report():
     """
     Récupère le rapport de qualité des données.
+    Source: reports/quality_reports.json (généré par le pipeline ETL)
     """
     try:
-        # Essaye de charger le rapport depuis un fichier JSON
+        # Construction du chemin vers le fichier de rapport
         current_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(os.path.dirname(current_dir))
         report_path = os.path.join(project_root, "app", "reports", "quality_reports.json")
-
+        
+        # Chargement du rapport
         if os.path.exists(report_path):
             with open(report_path, 'r', encoding='utf-8') as f:
                 report_data = json.load(f)
