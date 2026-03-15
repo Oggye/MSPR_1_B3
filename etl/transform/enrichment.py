@@ -150,7 +150,6 @@ def generate_night_trains(night_trains, year_list, operator_df):
 
         # Pour chaque année de 2010 à 2023
         for year in range(2010, 2024):
-            # Si le pays a déjà des données pour cette année, on évite de dupliquer ?
             # On vérifie si une ligne existe déjà pour ce pays et cette année
             if ((augmented['country_code'] == country) & (augmented['year'] == year)).any():
                 continue
