@@ -9,12 +9,10 @@ from datetime import datetime
 import sys
 from pathlib import Path
 
-# Ajouter le répertoire au path pour les imports
-current_dir = Path(__file__).parent
-sys.path.insert(0, str(current_dir))
 
 # --- EXTRACTION ---
 try:
+    # Import des modules d'extraction depuis le dossier extract/
     from extract.extract_gtfs_fr import extract_gtfs_fr
     from extract.extract_eurostat import extract_eurostat
     from extract.extract_back_on_track_eu import extract_back_on_track
@@ -27,31 +25,28 @@ except ImportError as e:
 
 # --- TRANSFORMATION ---
 try:
+    # Import du pipeline de transformation principal
     from transform.main_transform import main_transform_pipeline
 except ImportError as e:
     print(f"⚠️  Modules de transformation non trouvés: {e}")
 
 # --- CHARGEMENT ---
-
 try:
-    
-    sys.path.insert(0, str(Path(__file__).parent / "load"))
-    from main_load import mainload
-    from database import db
-    sys.path.pop(0)
+    # Import des modules de chargement depuis le dossier load/
+    from load.main_load import mainload
+    from load.database import db
 except ImportError as e:
-        print(f"❌ Module de chargement non trouvé: {e}")
-        print("\n💡 SOLUTIONS:")
-        print("1. Exécutez directement: python load/main_load.py")
-        print("2. Vérifiez que le fichier load/__init__.py existe")
-        print("3. Vérifiez que database.py est dans le répertoire load/")
-
+    print(f"❌ Module de chargement non trouvé: {e}")
+    print("\n💡 SOLUTIONS:")
+    print("1. Exécutez directement: python load/main_load.py")
+    print("2. Vérifiez que database.py est dans le répertoire load/")
 
 def run_extraction():
     """Exécute uniquement la phase d'extraction"""
     print("📥 PHASE 1 : EXTRACTION")
     print("-" * 40)
     
+    # Liste des extracteurs avec leur nom et fonction associée
     extractors = [
         ("GTFS France", extract_gtfs_fr),
         ("Eurostat (trafic ferroviaire)", extract_eurostat),
@@ -61,6 +56,7 @@ def run_extraction():
         ("Émissions CO2", download_eurostat_via_api),
     ]
     
+    # Exécution séquentielle de chaque extracteur
     for name, func in extractors:
         print(f"📄 Extraction de {name}...")
         try:
@@ -155,7 +151,7 @@ def show_data_status():
     print("\n📊 ÉTAT DES DONNÉES")
     print("-" * 40)
     
-    # Vérifier raw
+    # Vérification des fichiers dans data/raw
     raw_dir = BASE_DIR / "data" / "raw"
     if raw_dir.exists():
         raw_files = list(raw_dir.rglob("*.csv"))
@@ -169,7 +165,7 @@ def show_data_status():
     else:
         print("📁 Données brutes: ❌ Répertoire non trouvé")
     
-    # Vérifier processed
+    # Vérification des fichiers dans data/processed
     processed_dir = BASE_DIR / "data" / "processed"
     if processed_dir.exists():
         processed_files = list(processed_dir.rglob("*.csv"))
@@ -178,7 +174,7 @@ def show_data_status():
     else:
         print("\n📁 Données transformées: ❌ Répertoire non trouvé")
     
-    # Vérifier warehouse
+    # Vérification des fichiers dans data/warehouse
     warehouse_dir = BASE_DIR / "data" / "warehouse"
     if warehouse_dir.exists():
         warehouse_files = list(warehouse_dir.glob("*.csv"))
@@ -197,7 +193,7 @@ def show_data_status():
         return
     
     try:
-        # 1. NOMBRE DE TRAJETS CHARGÉS
+        # 1. Comptage des lignes dans chaque table
         print("\n📊 NOMBRE D'ENREGISTREMENTS:")
 
         queries = [
@@ -214,7 +210,7 @@ def show_data_status():
             print(f"   📊 {table_name}: {count} lignes")
 
 
-        # 2. JOINTURES ENTRE TABLES
+        # 2. Jointures entre tables
         print("\n🔗 TEST DES JOINTURES:")
         
         # Vérification des liens entre tables
@@ -261,7 +257,7 @@ def show_data_status():
                 print(f"   ❌ {nom}: {count} erreur(s) de référence")
                 erreurs_total += count
 
-        # Jointure complète réussie pour facts_night_trains
+        # Vérification spécifique pour facts_night_trainss
         db.cursor.execute("""
             SELECT COUNT(*) 
             FROM facts_night_trains ft
@@ -279,7 +275,7 @@ def show_data_status():
         else:
             print(f"❌ {erreurs_night}/{total_night} trajets de nuit ont des références manquantes")
                 
-        # Jointure complète réussie pour facts_country_stats
+        # Vérification spécifique pour facts_country_stats
         db.cursor.execute("""
             SELECT COUNT(*) 
             FROM facts_country_stats fcs
@@ -297,10 +293,10 @@ def show_data_status():
             print(f"❌ {erreurs_stats}/{total_stats} statistiques ont des références manquantes")
 
 
-        # 3. AFFICHAGE DE LA VUE DASHBOARD_METRICS
+        # 3. Affichage de la vue Dashboard
         print("\n📊 DONNÉES DE LA VUE DASHBOARD_METRICS:")
         
-        # Récupérer les colonnes de la vue
+        # Structure de la vue
         db.cursor.execute("""
             SELECT column_name, data_type
             FROM information_schema.columns
@@ -333,7 +329,7 @@ def show_data_status():
                 f"CO2 moy: {row[3]:,.2f} t | "
                 f"CO2/passager: {row[4]:.4f} t")
 
-        # Statistiques de base
+        # Nombre total de pays dans la vue
         db.cursor.execute("SELECT COUNT(*) FROM dashboard_metrics")
         nb_pays = db.cursor.fetchone()[0]
         print(f"\n🌍 Nombre de pays en total dans la vue: {nb_pays}")
@@ -345,6 +341,4 @@ def show_data_status():
 if __name__ == "__main__":
     # Exécuter le menu interactif
     show_menu()
-    
-    # Ou exécuter directement le pipeline complet:
-    # run_full_etl()
+    # Alternative: run_full_etl() pour exécution directe

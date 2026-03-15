@@ -7,8 +7,11 @@ class DatabaseConnection:
     """Gestion de la connexion à PostgreSQL"""
     
     def __init__(self):
+        """Initialisation des attributs de connexion"""
         self.connection = None
         self.cursor = None
+
+        # Paramètres de connexion - à adapter selon votre environnement
         self.config = {
             'host': 'localhost',
             'port': 5432,
@@ -18,22 +21,25 @@ class DatabaseConnection:
         }
     
     def connect(self):
-        """Établir la connexion"""
+        """Établir la connexion à la base de données"""
         try:
+            # Tentative de connexion avec les paramètres configurés
             self.connection = psycopg2.connect(**self.config)
+            # On crée un curseur pour pouvoir exécuter des requêtes
             self.cursor = self.connection.cursor()
             return True
         except Exception as e:
+            # Si la connexion échoue, on affiche l'erreur
             print(f"Erreur de connexion: {e}")
             return False
 
     def test_connection(self):
-        """Tester la connexion"""
+        """Vérifie que tout fonctionne et que les tables sont là"""
         if not self.connect():
             return False
         
         try:
-            # Test basique
+            # Test basique pour voir si PostgreSQL répond
             self.cursor.execute("SELECT 1")
             print("✅ Connexion PostgreSQL établie")
             
@@ -49,6 +55,7 @@ class DatabaseConnection:
             missing = []
 
             print("\n📋 Vérification des tables:")
+            # Vérification de chaque table
             for table in essential_tables:
                 self.cursor.execute(f"""
                     SELECT EXISTS (
@@ -62,6 +69,7 @@ class DatabaseConnection:
                 if not self.cursor.fetchone()[0]:
                     missing.append(table)
             
+            # On vérifie les tables manquantes
             if missing:
                 print(f"❌ Tables manquantes:")
                 for table in missing:
@@ -95,16 +103,19 @@ class DatabaseConnection:
             self.close()
 
     def execute_query(self, query, params=None):
-        """Exécuter une requête SQL"""
+        """Exécute une requête SQL et gère la connexion automatiquement"""
         try:
+            # Établir une connexion si nécessaire
             if not self.connection:
                 self.connect()
             
+            # Exécution avec ou sans paramètres
             if params:
                 self.cursor.execute(query, params)
             else:
                 self.cursor.execute(query)
             
+            # Validation de la transaction
             self.connection.commit()
             return self.cursor
         except Exception as e:
@@ -161,7 +172,8 @@ class DatabaseConnection:
                         VALUES (%s, %s, %s, %s, %s, %s)""",
                         (row.stat_id, row.passengers, row.co2_emissions, row.co2_per_passenger, row.country_id, row.year_id)
                     )
-                        
+            
+            # Validation de toutes les insertions            
             self.connection.commit()
             return True
             
@@ -172,9 +184,9 @@ class DatabaseConnection:
     def close(self):
         """Fermer la connexion"""
         if self.cursor:
-            self.cursor.close()
+            self.cursor.close()  # Fermeture du curseur
         if self.connection:
-            self.connection.close()
+            self.connection.close() # Fermeture de la connexion
 
 # Instance globale
 db = DatabaseConnection()

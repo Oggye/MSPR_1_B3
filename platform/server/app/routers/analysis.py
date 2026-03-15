@@ -4,19 +4,6 @@
 # Rôle: Produire des analyses comparatives et des recommandations
 #       basées sur les données pour soutenir les politiques publiques.
 
-# Tables utilisées:
-# - facts_night_trains + facts_country_stats : Données combinées
-# - dim_countries : Contexte national
-# - dim_operators : Acteurs ferroviaires
-
-# Endpoints implémentés:
-# 1. GET /api/analysis/train-types-comparison - Comparaison jour/nuit
-# 2. GET /api/analysis/policy-recommendations - Recommandations politiques
-
-# Résultats attendus:
-# - Preuves data-driven pour le Green Deal européen
-# - Arguments pour le développement du ferroviaire nocturne
-# - Base pour les décisions d'investissement
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -54,6 +41,7 @@ def compare_train_types(db: Session = Depends(get_db)):
         ~FactsCountryStats.country_id.in_(night_countries)
     ).first()
     
+    # Initialisation des variables avec valeurs par défaut
     night_avg_co2 = 0
     night_avg_passengers = 0
     day_avg_co2 = 0
@@ -70,10 +58,12 @@ def compare_train_types(db: Session = Depends(get_db)):
     # Score d'efficacité
     REFERENCE_CO2 = 0.05
     
+    # Score pour les trains de nuit
     night_efficiency = 0
     if night_avg_co2 > 0:
         night_efficiency = min(100, (REFERENCE_CO2 / night_avg_co2) * 100)
     
+    # Score pour les trains de jour
     day_efficiency = 0
     if day_avg_co2 > 10:
         day_avg_co2 = day_avg_co2 / 1000 
@@ -97,7 +87,8 @@ def compare_train_types(db: Session = Depends(get_db)):
 @router.get("/api/analysis/policy-recommendations")
 def get_policy_recommendations(db: Session = Depends(get_db)):
     """
-    Génère des recommandations politiques basées sur les données.
+Génère des recommandations politiques basées sur les données.
+    Tables: facts_country_stats, facts_night_trains, dim_countries
     """
     recommendations = []
     

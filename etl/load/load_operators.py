@@ -1,5 +1,12 @@
 import pandas as pd
-from database import db
+import sys
+from pathlib import Path
+
+# Ajouter le répertoire racine au PYTHONPATH
+current_dir = Path(__file__).parent
+project_root = current_dir.parent
+sys.path.insert(0, str(project_root))
+from .database import db
 
 def load_operators():
     """Charger la table dim_operators"""

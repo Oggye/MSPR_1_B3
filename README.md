@@ -77,7 +77,7 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 ## 📂 Arborescence du projet
 
 ```
-project-root/
+MSPR_1_B3/
 │
 ├── docker-compose.yml        # Orchestration globale des services
 ├── .env                     # Variables d’environnement

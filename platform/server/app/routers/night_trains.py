@@ -4,21 +4,6 @@
 # Rôle: Exposer le catalogue des trains de nuit avec leurs caractéristiques
 #       et permettre l'analyse de leur couverture géographique.
 
-# Tables utilisées:
-# - facts_night_trains : Inventaire des trains de nuit
-# - dim_countries : Pays desservis
-# - dim_operators : Opérateurs ferroviaires
-# - dim_years : Période de fonctionnement
-
-# Endpoints implémentés:
-# 1. GET /api/night-trains/ - Liste avec filtres pays/opérateur/année
-# 2. GET /api/night-trains/by-operator/{id} - Trains par opérateur
-# 3. GET /api/geographic/coverage - Visualisation géographique
-
-# Résultats attendus:
-# - Visualisation du réseau de trains de nuit
-# - Support pour les études de mobilité durable
-# - Données pour les comparaisons modales (train vs avion)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -39,6 +24,7 @@ def get_night_trains(
 ):
     """
     Récupère la liste des trains de nuit avec filtres.
+    Tables: facts_night_trains, dim_countries, dim_operators, dim_years
     """
     # Construction de la requête avec jointures
     query = db.query(
@@ -56,12 +42,15 @@ def get_night_trains(
     )
     
     # Application des filtres
+    # Filtre par code pays (ex: "FR", "DE", "IT")
     if filter.country_code:
         query = query.filter(DimCountries.country_code == filter.country_code)
     
+    # Filtre par nom d'opérateur
     if filter.operator_name:
         query = query.filter(DimOperators.operator_name.ilike(f"%{filter.operator_name}%"))
     
+    # Filtre par année (ex: 2020, 2021, etc.)
     if filter.year:
         query = query.filter(DimYears.year == filter.year)
     
@@ -92,10 +81,12 @@ def get_night_trains_by_operator(
 ):
     """
     Récupère les trains de nuit par opérateur.
+    Tables: facts_night_trains, dim_operators, dim_countries, dim_years
     """
     # Vérifier d'abord que l'opérateur existe
     operator = db.query(DimOperators).filter(DimOperators.operator_id == operator_id).first()
     
+    # Si l'opérateur n'existe pas, on retourne une erreur 404
     if not operator:
         raise HTTPException(status_code=404, detail="Opérateur non trouvé")
     
@@ -116,6 +107,7 @@ def get_night_trains_by_operator(
         FactsNightTrains.operator_id == operator_id
     )
     
+    # Exécution de la requête
     results = query.all()
     
     # Transformation en format de réponse
@@ -138,7 +130,9 @@ def get_night_trains_by_operator(
 def get_geographic_coverage(db: Session = Depends(get_db)):
     """
     Récupère la couverture géographique des trains de nuit.
+    Tables: facts_night_trains, dim_countries
     """
+    # Récupère le nombre de trains de nuit par pays
     coverage = db.query(
         DimCountries.country_name,
         DimCountries.country_code,

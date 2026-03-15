@@ -4,19 +4,6 @@
 # Rôle: Analyser la performance et la contribution des différents
 #       opérateurs ferroviaires européens.
 
-# Tables utilisées:
-# - dim_operators : Catalogue des opérateurs
-# - facts_night_trains : Trains opérés
-# - facts_country_stats : Contexte statistique
-
-# Endpoints implémentés:
-# 1. GET /api/operators/ - Liste des opérateurs
-# 2. GET /api/operators/{id}/stats - Statistiques par opérateur
-
-# Résultats attendus:
-# - Évaluation comparative des opérateurs
-# - Identification des leaders du secteur
-# - Données pour les partenariats public-privé
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -35,9 +22,10 @@ def get_operators(
 ):
     """
     Récupère la liste des opérateurs ferroviaires.
+    Tables: dim_operators
     """
+    # Construction et exécution de la requête
     query = db.query(DimOperators)
-    
     operators = query.offset(skip).limit(limit).all()
     
     # Transformation en format de réponse
@@ -59,11 +47,14 @@ def get_operator_stats(
 ):
     """
     Statistiques détaillées par opérateur ferroviaire.
+    Tables: dim_operators, facts_night_trains, dim_countries
     """
+    # Recherche de l'opérateur par son ID
     operator = db.query(DimOperators).filter(
         DimOperators.operator_id == operator_id
     ).first()
     
+    # Si l'opérateur n'existe pas, retour d'une erreur 404
     if not operator:
         raise HTTPException(status_code=404, detail="Opérateur non trouvé")
     
