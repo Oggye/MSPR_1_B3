@@ -21,10 +21,6 @@ KEEP_FILES = [
 ]
 
 def extract_gtfs_de():
-    """
-    Extrait les données GTFS d'Allemagne (Deutsche Bahn)
-    Contient les données de tous les opérateurs allemands (DB, etc.)
-    """
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 
     print("Téléchargement du GTFS Allemagne (Deutsche Bahn)…")
