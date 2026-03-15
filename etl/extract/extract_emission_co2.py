@@ -10,20 +10,13 @@ from io import BytesIO
 import zipfile
 
 def download_eurostat_via_api():
-    """Télécharge les données depuis l'API SDMX 2.1 d'Eurostat."""
-    
     # URL de l'API SDMX pour le dataset ENV_AIR_GGE
-    base_url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1"
-    
-    # Option 1: Données au format SDMX-CSV
+    base_url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1"  
     url_csv = f"{base_url}/data/ENV_AIR_GGE/?format=SDMX-CSV&compressed=false"
-    
-    # Option 2: Données au format TSV (similaire à l'ancien format)
-    # url_tsv = f"{base_url}/data/ENV_AIR_GGE/?format=TSV&compressed=false"
-    
+    # Option 2: Données au format TSV
+    # url_tsv = f"{base_url}/data/ENV_AIR_GGE/?format=TSV&compressed=false"   
     print(f"Téléchargement depuis l'API Eurostat...")
-    print(f"URL : {url_csv}")
-    
+    print(f"URL : {url_csv}")  
     try:
         # Télécharger les données
         response = requests.get(url_csv, timeout=30)
@@ -33,7 +26,6 @@ def download_eurostat_via_api():
         csv_content = response.content.decode('utf-8')
         
         # Créer un DataFrame à partir du contenu CSV
-        # Note: SDMX-CSV utilise la première ligne comme en-tête
         df = pd.read_csv(BytesIO(csv_content.encode('utf-8')))
         
         print(f"Dataset chargé : {df.shape}")
@@ -81,8 +73,6 @@ def download_eurostat_via_api():
         traceback.print_exc()
 
 def download_filtered_data():
-    """Télécharger des données filtrées (exemple : CO2 pour tous les pays)."""
-    
     base_url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1"
     
     # Filtre : CO2 seulement, tous les pays, tous les secteurs
@@ -112,8 +102,6 @@ def download_filtered_data():
         print(f"Erreur lors du téléchargement filtré : {e}")
 
 def get_data_structure():
-    """Récupérer la structure des données (métadonnées)."""
-    
     base_url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1"
     
     # Structure du flux de données
