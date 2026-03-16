@@ -80,6 +80,7 @@ class FactsNightTrains(Base):
     fact_id = Column(Integer, primary_key=True, index=True)
     route_id = Column(Integer, nullable=False, index=True)
     night_train = Column(String(200), nullable=False, index=True)
+    is_night = Column(Boolean, nullable=False, default=True)
     
     # Clés étrangères
     country_id = Column(Integer, ForeignKey("dim_countries.country_id"), nullable=False, index=True)

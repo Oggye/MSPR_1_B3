@@ -24,6 +24,7 @@ class NightTrainResponse(NightTrainBase):
     country_code: str
     operator_name: str
     year: int
+    is_night: bool
 
 
 class NightTrainFilter(BaseModel):
@@ -32,3 +33,4 @@ class NightTrainFilter(BaseModel):
     operator_id: Optional[int] = None
     year: Optional[int] = None
     operator_name: Optional[str] = None
+    is_night: Optional[bool] = None

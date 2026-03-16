@@ -19,56 +19,40 @@ router = APIRouter()
 def compare_train_types(db: Session = Depends(get_db)):
     """
     Compare les indicateurs entre trains de jour et trains de nuit.
-    Tables: facts_night_trains + données statistiques extrapolées
+    Utilise la colonne is_night pour distinguer les types.
     """
-    # Données pour les trains de nuit
+    # Statistiques pour les trains de nuit (is_night = True)
     night_stats = db.query(
         func.avg(FactsCountryStats.passengers).label("avg_passengers"),
         func.avg(FactsCountryStats.co2_per_passenger).label("avg_co2")
     ).join(
         FactsNightTrains,
         FactsCountryStats.country_id == FactsNightTrains.country_id
-    ).first()
-    
-    # Récupère les pays qui ont des trains de nuit
-    night_countries = db.query(FactsNightTrains.country_id).distinct().subquery()
-    
-    # Moyennes des trains de jour 
+    ).filter(FactsNightTrains.is_night == True).first()
+
+    # Statistiques pour les trains de jour (is_night = False)
     day_stats = db.query(
         func.avg(FactsCountryStats.passengers).label("avg_passengers"),
         func.avg(FactsCountryStats.co2_per_passenger).label("avg_co2")
-    ).filter(
-        ~FactsCountryStats.country_id.in_(night_countries)
-    ).first()
-    
-    # Initialisation des variables avec valeurs par défaut
-    night_avg_co2 = 0
-    night_avg_passengers = 0
-    day_avg_co2 = 0
-    day_avg_passengers = 0
-    
-    if night_stats and night_stats.avg_co2:
-        night_avg_co2 = float(night_stats.avg_co2)
-        night_avg_passengers = float(night_stats.avg_passengers)
-    
-    if day_stats and day_stats.avg_co2:
-        day_avg_co2 = float(day_stats.avg_co2)
-        day_avg_passengers = float(day_stats.avg_passengers)
-    
-    # Score d'efficacité
-    REFERENCE_CO2 = 0.05
-    
+    ).join(
+        FactsNightTrains,
+        FactsCountryStats.country_id == FactsNightTrains.country_id
+    ).filter(FactsNightTrains.is_night == False).first()
+
+    # Valeurs par défaut
+    night_avg_co2 = float(night_stats.avg_co2) if night_stats and night_stats.avg_co2 else 0
+    night_avg_passengers = float(night_stats.avg_passengers) if night_stats and night_stats.avg_passengers else 0
+    day_avg_co2 = float(day_stats.avg_co2) if day_stats and day_stats.avg_co2 else 0
+    day_avg_passengers = float(day_stats.avg_passengers) if day_stats and day_stats.avg_passengers else 0
+
+    REFERENCE_CO2 = 0.05  # seuil de référence pour le calcul du score
+
     # Score pour les trains de nuit
-    night_efficiency = 0
-    if night_avg_co2 > 0:
-        night_efficiency = min(100, (REFERENCE_CO2 / night_avg_co2) * 100)
-    
+    night_efficiency = min(100, (REFERENCE_CO2 / night_avg_co2) * 100) if night_avg_co2 > 0 else 0
+
     # Score pour les trains de jour
-    day_efficiency = 0
-    if day_avg_co2 > 10:
-        day_avg_co2 = day_avg_co2 / 1000 
-        day_efficiency = min(100, (REFERENCE_CO2 / day_avg_co2) * 100)
-    
+    day_efficiency = min(100, (REFERENCE_CO2 / day_avg_co2) * 100) if day_avg_co2 > 0 else 0
+
     return [
         TrainTypeComparison(
             train_type="night",

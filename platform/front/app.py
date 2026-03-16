@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 import folium
 from streamlit_folium import folium_static
+import random
 
 # Configuration de la page
 st.set_page_config(
@@ -95,9 +96,12 @@ def load_all_data(filters):
     if filters["year"] != 2024:
         params["year"] = filters["year"]
     if filters["operator"] != "Tous":
-        params["operator"] = filters["operator"]
+        params["operator_name"] = filters["operator"]  # L'API attend operator_name pour le filtre
     if filters["country"] != "Tous":
-        params["country"] = filters["country"]
+        params["country_code"] = get_country_code(filters["country"])  # Conversion nom -> code
+    # MODIF: Ajout du filtre type de train
+    if filters["train_type"] != "Tous":
+        params["is_night"] = (filters["train_type"] == "Nuit")
 
     with st.spinner("Chargement des données..."):
         kpis = fetch_data("dashboard/kpis", params)
@@ -128,6 +132,17 @@ def load_all_data(filters):
         "sources": sources
     }
 
+def get_country_code(country_name):
+    """Convertit un nom de pays en code pays (simplifié)"""
+    if country_name == "Tous":
+        return None
+    # Récupérer depuis la liste des pays si disponible
+    if "countries" in st.session_state.data:
+        for c in st.session_state.data["countries"]:
+            if c["country_name"] == country_name:
+                return c["country_code"]
+    return None
+
 # Sidebar
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/000000/train.png", width=80)
@@ -139,7 +154,7 @@ with st.sidebar:
         "Navigation",
         ["🏠 Accueil", 
          "📊 Tableau de Bord", 
-         "🚂 Trains de Nuit", 
+         "🚂 Trains (Jour & Nuit)",   # MODIF: renommé
          "🌍 Carte Interactive",
          "📈 Analyses CO2",
          "🏢 Opérateurs",
@@ -153,7 +168,8 @@ with st.sidebar:
         st.session_state.filters = {
             "year": 2024,
             "country": "Tous",
-            "operator": "Tous"
+            "operator": "Tous",
+            "train_type": "Tous"  # MODIF: nouveau filtre
         }
     
     # Chargement des données pour les listes déroulantes
@@ -177,6 +193,14 @@ with st.sidebar:
             index=operator_list.index(st.session_state.filters["operator"]) if st.session_state.filters["operator"] in operator_list else 0
         )
         st.session_state.filters["operator"] = selected_operator
+    
+    # MODIF: Ajout du sélecteur de type de train
+    train_type = st.selectbox(
+        "🚂 Type de train",
+        ["Tous", "Nuit", "Jour"],
+        index=["Tous", "Nuit", "Jour"].index(st.session_state.filters["train_type"])
+    )
+    st.session_state.filters["train_type"] = train_type
     
     st.session_state.filters["year"] = st.slider(
         "📅 Année",
@@ -217,10 +241,12 @@ if page == "🏠 Accueil":
             """, unsafe_allow_html=True)
         
         with col2:
+            # MODIF: Afficher le total des trains (jour+nuit) plutôt que seulement nuit
+            total_trains = len(data.get("night_trains", [])) if data.get("night_trains") else 0
             st.markdown(f"""
                 <div class='kpi-card'>
-                    <div class='kpi-number'>{kpis.get('total_night_trains', 'N/A')}</div>
-                    <div class='kpi-label'>Trains de nuit</div>
+                    <div class='kpi-number'>{total_trains}</div>
+                    <div class='kpi-label'>Trains référencés</div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -323,7 +349,7 @@ elif page == "📊 Tableau de Bord":
             def color_performance(val):
                 if val == 'good':
                     return 'background-color: #10B981; color: white'
-                elif val == 'average':
+                elif val == 'medium':
                     return 'background-color: #F59E0B; color: white'
                 else:
                     return 'background-color: #EF4444; color: white'
@@ -343,7 +369,7 @@ elif page == "📊 Tableau de Bord":
                     x='Pays',
                     y='kg CO₂/passager',
                     color='Performance',
-                    color_discrete_map={'good': '#10B981', 'average': '#F59E0B', 'poor': '#EF4444'},
+                    color_discrete_map={'good': '#10B981', 'medium': '#F59E0B', 'bad': '#EF4444'},
                     title="Top 5 des pays avec le meilleur ratio CO₂"
                 )
                 fig.update_layout(showlegend=False)
@@ -378,61 +404,62 @@ elif page == "📊 Tableau de Bord":
         else:
             st.info("Aucune donnée pour les filtres sélectionnés.")
 
-# PAGE TRAINS DE NUIT
-elif page == "🚂 Trains de Nuit":
-    st.markdown("<h1 class='main-header'>🚂 Catalogue des Trains de Nuit</h1>", unsafe_allow_html=True)
+# PAGE TRAINS (JOUR & NUIT)
+elif page == "🚂 Trains (Jour & Nuit)":
+    st.markdown("<h1 class='main-header'>🚂 Catalogue des Trains (Jour & Nuit)</h1>", unsafe_allow_html=True)
     
     if data.get("night_trains"):
         trains_df = pd.DataFrame(data["night_trains"])
         
-        # Filtres
-        col1, col2 = st.columns(2)
+        # MODIF: Ajout d'une colonne type pour l'affichage
+        trains_df['type'] = trains_df['is_night'].apply(lambda x: 'Nuit' if x else 'Jour')
         
-        with col1:
-            if st.session_state.filters["country"] != "Tous" and 'country_name' in trains_df.columns:
-                trains_df = trains_df[trains_df['country_name'] == st.session_state.filters["country"]]
-        
-        with col2:
-            if st.session_state.filters["operator"] != "Tous" and 'operator_name' in trains_df.columns:
-                trains_df = trains_df[trains_df['operator_name'] == st.session_state.filters["operator"]]
-        
-        # Appliquer le filtre année
-        if 'year' in trains_df.columns:
-            trains_df = trains_df[trains_df['year'] == st.session_state.filters["year"]]
+        # Filtres (déjà appliqués via l'API, mais on peut raffiner localement)
+        if st.session_state.filters["train_type"] != "Tous":
+            trains_df = trains_df[trains_df['type'] == st.session_state.filters["train_type"]]
         
         # Statistiques
         st.markdown(f"**{len(trains_df)}** trains trouvés")
         
         if not trains_df.empty:
             # Tableau des trains
-            display_df = trains_df[['night_train', 'country_name', 'operator_name', 'year']]
-            display_df.columns = ['Train', 'Pays', 'Opérateur(s)', 'Année']
+            display_df = trains_df[['night_train', 'country_name', 'operator_name', 'year', 'type']]
+            display_df.columns = ['Train', 'Pays', 'Opérateur(s)', 'Année', 'Type']
             
             st.dataframe(display_df, use_container_width=True, height=500, hide_index=True)
             
             # Distribution par pays
             st.markdown("<h2 class='sub-header'>📊 Distribution par pays</h2>", unsafe_allow_html=True)
             
-            country_counts = trains_df['country_name'].value_counts().reset_index()
-            country_counts.columns = ['Pays', 'Nombre de trains']
+            country_counts = trains_df.groupby(['country_name', 'type']).size().reset_index(name='count')
             
-            fig = px.pie(
+            fig = px.bar(
                 country_counts,
-                values='Nombre de trains',
-                names='Pays',
-                title="Répartition des trains de nuit par pays"
+                x='country_name',
+                y='count',
+                color='type',
+                title="Répartition des trains par pays et type",
+                labels={'country_name': 'Pays', 'count': 'Nombre de trains', 'type': 'Type'},
+                barmode='group',
+                color_discrete_map={'Jour': '#10B981', 'Nuit': '#2563EB'}
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Aucun train de nuit ne correspond aux filtres sélectionnés.")
+            st.info("Aucun train ne correspond aux filtres sélectionnés.")
+    else:
+        st.warning("Données de trains non disponibles.")
 
 # PAGE CARTE INTERACTIVE
 elif page == "🌍 Carte Interactive":
-    st.markdown("<h1 class='main-header'>🌍 Carte des Trains de Nuit</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>🌍 Carte des Trains (Jour & Nuit)</h1>", unsafe_allow_html=True)
     
     if data.get("geographic") and data.get("night_trains"):
         geo_data = data["geographic"]
         trains_data = pd.DataFrame(data["night_trains"])
+        
+        # MODIF: Ajout colonne type
+        if not trains_data.empty and 'is_night' in trains_data.columns:
+            trains_data['type'] = trains_data['is_night'].apply(lambda x: 'Nuit' if x else 'Jour')
         
         # Dictionnaire complet des coordonnées des pays européens
         country_coords = {
@@ -470,7 +497,7 @@ elif page == "🌍 Carte Interactive":
         # Création de la carte
         m = folium.Map(location=[50, 10], zoom_start=4)
         
-        # Ajout des pays avec trains
+        # Ajout des pays avec trains (tous types confondus pour les cercles)
         for country in geo_data.get("coverage_by_country", []):
             # Couleurs selon le nombre de trains
             train_count = country.get("train_count", 0)
@@ -491,7 +518,7 @@ elif page == "🌍 Carte Interactive":
             # Popup avec infos
             popup_text = f"""
             <b>{country.get('country_name', 'Inconnu')}</b><br>
-            Trains de nuit: {train_count}<br>
+            Trains: {train_count}<br>
             """
             
             folium.CircleMarker(
@@ -510,20 +537,25 @@ elif page == "🌍 Carte Interactive":
                 # Coordonnées approximatives autour du pays
                 base_coords = country_coords.get(train.get('country_code'), [50, 10])
                 # Ajout d'un petit décalage pour éviter la superposition
-                import random
                 offset_lat = random.uniform(-0.5, 0.5)
                 offset_lon = random.uniform(-0.5, 0.5)
                 coords = [base_coords[0] + offset_lat, base_coords[1] + offset_lon]
                 
+                # MODIF: Icône différente pour jour/nuit
+                if train.get('type') == 'Nuit':
+                    icon = folium.Icon(color='darkblue', icon='moon', prefix='fa')
+                else:
+                    icon = folium.Icon(color='orange', icon='sun', prefix='fa')
+                
                 folium.Marker(
                     location=coords,
-                    popup=f"{train.get('night_train', 'Train inconnu')}<br>Opérateur: {train.get('operator_name', 'Inconnu')}",
-                    icon=folium.Icon(color='blue', icon='train', prefix='fa')
+                    popup=f"{train.get('night_train', 'Train inconnu')}<br>Opérateur: {train.get('operator_name', 'Inconnu')}<br>Type: {train.get('type', 'Inconnu')}",
+                    icon=icon
                 ).add_to(m)
         
         # Ajout de la légende
         legend_html = """
-        <div style="position: fixed; bottom: 50px; left: 50px; width: 220px; height: 170px; 
+        <div style="position: fixed; bottom: 50px; left: 50px; width: 240px; height: 200px; 
                     background-color: white; border:2px solid grey; z-index:9999; font-size:14px;
                     padding: 10px; border-radius: 5px; opacity:0.9;">
             <b>Légende</b><br>
@@ -532,7 +564,8 @@ elif page == "🌍 Carte Interactive":
             <span style="color:orange;">●</span> 6–10 trains<br>
             <span style="color:green;">●</span> 1–5 trains<br>
             <span style="color:gray;">●</span> Aucun train<br>
-            <span style="color:blue;">🚂</span> Train individuel
+            <span style="color:darkblue;">🌙</span> Train de nuit<br>
+            <span style="color:orange;">☀️</span> Train de jour
         </div>
         """
         m.get_root().html.add_child(folium.Element(legend_html))
@@ -543,7 +576,7 @@ elif page == "🌍 Carte Interactive":
         # Statistiques
         st.markdown(f"""
         <div class='info-card'>
-            <b>🌍 Couverture géographique:</b> {geo_data.get('total_countries_covered', 0)} pays avec des trains de nuit
+            <b>🌍 Couverture géographique:</b> {geo_data.get('total_countries_covered', 0)} pays avec des trains
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -571,6 +604,8 @@ elif page == "📈 Analyses CO2":
                     labels={'train_type': 'Type de train', 'avg_co2_per_passenger': 'kg CO₂/passager'},
                     color_discrete_map={'night': '#2563EB', 'day': '#10B981'}
                 )
+                # MODIF: Renommer les étiquettes
+                fig.update_xaxes(ticktext=['Nuit', 'Jour'], tickvals=['night', 'day'])
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
@@ -583,6 +618,7 @@ elif page == "📈 Analyses CO2":
                     labels={'train_type': 'Type de train', 'efficiency_score': 'Score (100 = meilleur)'},
                     color_discrete_map={'night': '#2563EB', 'day': '#10B981'}
                 )
+                fig.update_xaxes(ticktext=['Nuit', 'Jour'], tickvals=['night', 'day'])
                 st.plotly_chart(fig, use_container_width=True)
     
     if data.get("recommendations"):
@@ -658,7 +694,9 @@ elif page == "📚 Sources & Qualité":
                 st.metric("Pays inconnus", data_quality.get("unknown_countries", "N/A"))
             
             with col2:
-                st.metric("Enregistrements trains nuit", data_quality.get("night_train_records", "N/A"))
+                # MODIF: Afficher le nombre total de trains (tous types)
+                total_trains = data_quality.get("night_train_records", "N/A")  # Le champ s'appelle encore night_train_records mais inclut tous les trains
+                st.metric("Enregistrements trains", total_trains)
                 st.metric("Enregistrements stats pays", data_quality.get("country_stats_records", "N/A"))
             
             with col3:
@@ -708,7 +746,7 @@ st.markdown(f"""
         <div>🚂 ObRail - Observatoire Européen du Rail | Données ferroviaires 2010-2024</div>
         <div style="font-size: 0.9rem; margin-top: 0.5rem;">
             <span>♿ Site accessible - Conformité partielle RGAA</span> | 
-            <span>📊 Données Eurostat & Back-on-Track</span> | 
+            <span>📊 Données Eurostat & Back-on-Track & GTFS</span> | 
             <span>🔄 Mise à jour: {datetime.now().strftime('%d/%m/%Y %H:%M')}</span>
         </div>
     </footer>

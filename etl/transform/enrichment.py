@@ -550,6 +550,15 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     if not night_trains.empty:
         night_trains = generate_night_trains(night_trains, years_list, operators_df)
 
+    # --- Calcul du max des route_id numériques pour les futurs trains de jour ---
+    max_route_id = 0
+    if not night_trains.empty and 'route_id' in night_trains.columns:
+        # Extraire les route_id purement numériques
+        numeric_routes = pd.to_numeric(night_trains['route_id'], errors='coerce').dropna()
+        if not numeric_routes.empty:
+            max_route_id = int(numeric_routes.max())
+    next_route_id = max_route_id + 1
+
     #-----------------------
        # Ajouter la colonne is_night pour les trains de nuit (ils sont True)
     if not night_trains.empty:
@@ -566,10 +575,18 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     # Ajouter une colonne route_id pour les trains de jour (si absente)
     for df in [day_trains_gtfs, day_trains_synth]:
         if not df.empty and 'route_id' not in df.columns:
-            df['route_id'] = 'DAY_' + df.index.astype(str)
+            df['route_id'] = None
 
     # Fusionner tous les trains
     all_trains = pd.concat([night_trains, day_trains_gtfs, day_trains_synth], ignore_index=True)
+
+    # Attribuer des route_id aux lignes qui en sont dépourvues
+    if 'route_id' not in all_trains.columns:
+        all_trains['route_id'] = None
+    mask_missing = all_trains['route_id'].isna()
+    for idx in all_trains[mask_missing].index:
+        all_trains.loc[idx, 'route_id'] = str(next_route_id)
+        next_route_id += 1
 
     # Réattribuer des fact_id uniques
     if not all_trains.empty:
@@ -969,6 +986,7 @@ CREATE TABLE IF NOT EXISTS facts_night_trains (
     country_id INTEGER,
     year_id INTEGER,
     operator_id INTEGER,
+    is_night BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (country_id) REFERENCES dim_countries(country_id),
     FOREIGN KEY (year_id) REFERENCES dim_years(year_id),
     FOREIGN KEY (operator_id) REFERENCES dim_operators(operator_id)
