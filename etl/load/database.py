@@ -159,9 +159,9 @@ class DatabaseConnection:
                 for row in df.itertuples():
                     self.cursor.execute(
                         """INSERT INTO facts_night_trains 
-                        (fact_id, route_id, night_train, operator_id, year_id, country_id) 
-                        VALUES (%s, %s, %s, %s, %s, %s)""",
-                        (row.fact_id, row.route_id, row.night_train, row.operator_id, row.year_id, row.country_id)
+                        (fact_id, route_id, night_train, operator_id, year_id, country_id, is_night) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                        (row.fact_id, row.route_id, row.night_train, row.operator_id, row.year_id, row.country_id, row.is_night)
                     )
             
             elif table_name == 'facts_country_stats':

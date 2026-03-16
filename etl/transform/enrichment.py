@@ -195,6 +195,115 @@ def generate_night_trains(night_trains, year_list, operator_df):
     return augmented
 
 
+def extract_day_trains_from_gtfs(processed_dir, operators_df):
+    """
+    Extrait les trains de jour depuis les GTFS (FR, CH, DE) transformés.
+    Retourne un DataFrame avec les colonnes : night_train, country_code, year, operators, is_night=False
+    """
+    day_trains = pd.DataFrame()
+    for country in ['fr', 'ch', 'de']:
+        routes_path = Path(processed_dir) / "gtfs" / country / "routes_processed.csv"
+        if not routes_path.exists():
+            continue
+        routes = pd.read_csv(routes_path)
+        # Conserver les routes qui ne sont pas des trains de nuit (selon la colonne is_night_train du GTFS)
+        if 'is_night_train' in routes.columns:
+            routes = routes[~routes['is_night_train'].fillna(False)]
+        else:
+            routes = routes  # tous considérés comme jour par défaut
+        
+        # Récupérer les noms des routes
+        route_names = routes['route_long_name'].dropna().unique()
+        if len(route_names) == 0:
+            continue
+        
+        # Pour chaque année de 2010 à 2024, générer des lignes (même tendance que pour les trains de nuit)
+        year_multiplier = {2010:0.3, 2011:0.35, 2012:0.4, 2013:0.45, 2014:0.5,
+                           2015:0.55, 2016:0.6, 2017:0.7, 2018:0.8, 2019:0.9,
+                           2020:0.5, 2021:0.6, 2022:0.8, 2023:0.95, 2024:1.0}
+        for year, mult in year_multiplier.items():
+            nb_routes = max(1, int(round(len(route_names) * mult)))
+            selected = np.random.choice(route_names, size=nb_routes, replace=True)
+            for name in selected:
+                # Trouver un opérateur plausible (par exemple, celui du pays)
+                op_name = f"National Railway of {country.upper()}"
+                # Chercher dans operators_df
+                possible = operators_df[operators_df['operator_name'].str.contains(country.upper(), case=False, na=False)]
+                if not possible.empty:
+                    op_name = possible.sample(1)['operator_name'].iloc[0]
+                day_trains = pd.concat([day_trains, pd.DataFrame([{
+                    'night_train': name,
+                    'country_code': country.upper(),
+                    'year': year,
+                    'operators': op_name,
+                    'is_night': False
+                }])], ignore_index=True)
+    return day_trains
+
+
+def generate_synthetic_day_trains(operators_df, year_list, eu_codes):
+    """
+    Génère des trains de jour synthétiques pour les pays de l'UE non couverts par GTFS.
+    Utilise des routes typiques.
+    """
+    typical_day_routes = {
+        'AT': ['Wien - Salzburg', 'Wien - Innsbruck'],
+        'BE': ['Brussels - Liège', 'Brussels - Antwerp'],
+        'BG': ['Sofia - Plovdiv', 'Sofia - Varna'],
+        'HR': ['Zagreb - Split', 'Zagreb - Rijeka'],
+        'CY': [],  # pas de train
+        'CZ': ['Praha - Brno', 'Praha - Ostrava'],
+        'DK': ['Copenhagen - Aarhus', 'Copenhagen - Odense'],
+        'EE': ['Tallinn - Tartu'],
+        'FI': ['Helsinki - Tampere', 'Helsinki - Turku'],
+        'FR': ['Paris - Lyon', 'Paris - Marseille', 'Paris - Lille'],
+        'DE': ['Berlin - München', 'Hamburg - Frankfurt', 'Köln - Stuttgart'],
+        'GR': ['Athens - Thessaloniki'],
+        'HU': ['Budapest - Debrecen', 'Budapest - Szeged'],
+        'IE': ['Dublin - Cork', 'Dublin - Galway'],
+        'IT': ['Roma - Milano', 'Roma - Napoli', 'Milano - Venezia'],
+        'LV': ['Riga - Daugavpils'],
+        'LT': ['Vilnius - Kaunas'],
+        'LU': ['Luxembourg - Esch-sur-Alzette'],
+        'MT': [],
+        'NL': ['Amsterdam - Rotterdam', 'Amsterdam - Utrecht'],
+        'PL': ['Warszawa - Kraków', 'Warszawa - Wrocław'],
+        'PT': ['Lisboa - Porto', 'Lisboa - Coimbra'],
+        'RO': ['București - Cluj', 'București - Timișoara'],
+        'SK': ['Bratislava - Košice'],
+        'SI': ['Ljubljana - Maribor'],
+        'ES': ['Madrid - Barcelona', 'Madrid - Valencia', 'Barcelona - Sevilla'],
+        'SE': ['Stockholm - Göteborg', 'Stockholm - Malmö'],
+        'GB': ['London - Manchester', 'London - Edinburgh'],
+    }
+    day_trains = pd.DataFrame()
+    year_multiplier = {y: 1.0 for y in year_list}  # on peut utiliser la même tendance que nuit
+    # ou mieux, utiliser la tendance de la fonction précédente
+    for country in eu_codes:
+        routes = typical_day_routes.get(country, [])
+        if not routes:
+            continue
+        for year in year_list:
+            mult = year_multiplier.get(year, 1.0)
+            nb_routes = max(1, int(round(len(routes) * mult)))
+            selected = np.random.choice(routes, size=nb_routes, replace=True)
+            for name in selected:
+                # Opérateur
+                possible = operators_df[operators_df['operator_name'].str.contains(country, case=False, na=False)]
+                if not possible.empty:
+                    op_name = possible.sample(1)['operator_name'].iloc[0]
+                else:
+                    op_name = f"National Railway of {country}"
+                day_trains = pd.concat([day_trains, pd.DataFrame([{
+                    'night_train': name,
+                    'country_code': country,
+                    'year': year,
+                    'operators': op_name,
+                    'is_night': False
+                }])], ignore_index=True)
+    return day_trains
+
+
 def generate_country_stats(passengers, emissions, year_list):
     """
     Génère des données de passagers et émissions pour les pays manquants.
@@ -440,6 +549,36 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     # --- Trains de nuit ---
     if not night_trains.empty:
         night_trains = generate_night_trains(night_trains, years_list, operators_df)
+
+    #-----------------------
+       # Ajouter la colonne is_night pour les trains de nuit (ils sont True)
+    if not night_trains.empty:
+        night_trains['is_night'] = True
+
+    # Générer les trains de jour
+    logger.info("🌞 Génération des trains de jour...")
+    # Liste des codes pays UE (utilisée aussi dans generate_synthetic_day_trains)
+    eu_codes = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']
+    
+    day_trains_gtfs = extract_day_trains_from_gtfs(processed_dir, operators_df)
+    day_trains_synth = generate_synthetic_day_trains(operators_df, years_list, eu_codes)
+
+    # Ajouter une colonne route_id pour les trains de jour (si absente)
+    for df in [day_trains_gtfs, day_trains_synth]:
+        if not df.empty and 'route_id' not in df.columns:
+            df['route_id'] = 'DAY_' + df.index.astype(str)
+
+    # Fusionner tous les trains
+    all_trains = pd.concat([night_trains, day_trains_gtfs, day_trains_synth], ignore_index=True)
+
+    # Réattribuer des fact_id uniques
+    if not all_trains.empty:
+        all_trains['fact_id'] = range(1, len(all_trains) + 1)
+
+    # Remplacer night_trains par all_trains pour la suite (contient maintenant tous les trains)
+    night_trains = all_trains
+
+    #----------------------------------------------
     
     # --- Statistiques pays ---
     if not passengers.empty and not emissions.empty:
@@ -639,7 +778,7 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
             facts_night_trains['operator_id'] = facts_night_trains['operator_id'].fillna(0).astype(int)
         
         # Sélectionner les colonnes pour les faits
-        fact_cols = ['fact_id', 'route_id', 'night_train', 'country_id', 'year_id', 'operator_id']
+        fact_cols = ['fact_id', 'route_id', 'night_train', 'country_id', 'year_id', 'operator_id', 'is_night']
         available_cols = [col for col in fact_cols if col in facts_night_trains.columns]
         facts_night_trains = facts_night_trains[available_cols]
     

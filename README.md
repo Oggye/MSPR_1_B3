@@ -215,8 +215,6 @@ Le chargement dans PostgreSQL est organisé en plusieurs scripts spécialisés
 
 ## 🚀 Lancer le projet
 
-## python -m streamlit run platform/front/app.py --server.port 8502 ##
-
 ### Prérequis
 
 * Docker
@@ -233,7 +231,12 @@ docker-compose up --build
 * PostgreSQL : `localhost:5432`
 * API REST : `http://localhost:8000/docs`
 * Dashboard : `http://localhost:8501`
+* ETL : (pas de port, tout ici se joue sur le terminal)
 
+### Voir se qui se passe en temps reel
+```bash
+docker-compose logs -f
+```
 ---
 
 ## 📌 Tâches couvertes par le projet

@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS facts_night_trains(
   country_id INTEGER NOT NULL,
   year_id INTEGER NOT NULL, 
   operator_id INTEGER NOT NULL,
+  is_night BOOLEAN NOT NULL DEFAULT TRUE,   -- nouvelle colonne
   FOREIGN KEY (country_id) REFERENCES dim_countries(country_id),
   FOREIGN KEY (year_id) REFERENCES dim_years(year_id),
   FOREIGN KEY (operator_id) REFERENCES dim_operators(operator_id)

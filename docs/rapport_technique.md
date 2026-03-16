@@ -106,7 +106,7 @@ Sources (API, FTP, fichiers) → Extraction (scripts Python) → Données brutes
 → API REST (FastAPI) → Dashboard (Streamlit)
 ```
 
-**Conteneurisation** : Docker Compose pour orchestrer les services (base de données, API, frontend).
+**Conteneurisation** : Docker Compose pour orchestrer les services (base de données, API, frontend et ETL).
 
 **Choix techniques justifiés** :
 
@@ -242,7 +242,7 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - 48 pays (dont 1 inconnu)
 - 15 années (2010–2024)
 - 65 opérateurs
-- 2057 trains de nuit
+- +2000 trains de nuit
 - 701 enregistrements de statistiques pays
 - Vue dashboard avec 47 pays
 
@@ -314,13 +314,14 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - **db** : PostgreSQL 15, avec volume persistant et initialisation via `sql/01_init.sql`.
 - **api** : construit à partir du Dockerfile dans `platform/server/`, expose le port 8000. Dépend de `db`.
 - **front** : construit à partir du Dockerfile dans `platform/front/`, expose le port 8501. Dépend de `api`.
+- **etl** : fait tourner automatiquement tout l'etl de l'extraction au chargement, Dockerfile dans `etl`.
 
 **Avantages** :
 - Isolation des environnements.
 - Facilité de déploiement (une seule commande `docker-compose up --build`).
 - Reproductibilité : les versions des images sont figées.
 
-**Communication** : les services communiquent via les noms de conteneur (db, api) grâce au réseau Docker interne.
+**Communication** : les services communiquent via les noms de conteneur (db, api, etl) grâce au réseau Docker interne.
 
 ---
 
