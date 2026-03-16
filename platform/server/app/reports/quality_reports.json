@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "execution_date": "2026-03-15T19:35:01.819140",
-=======
-  "execution_date": "2026-03-15T18:24:09.458726",
->>>>>>> 4739c0f086b40d67e67a94f51804817efce01a4a
+  "execution_date": "2026-03-16T05:42:24.041612",
   "project": "ObRail Europe - MSPR E6.1",
   "reports": [
     {
@@ -25,20 +21,20 @@
         "RO": 16,
         "IT": 15,
         "AT": 11,
-        "FR": 9,
         "SE": 9,
+        "FR": 9,
         "BG": 8,
-        "HU": 7,
         "TR": 7,
+        "HU": 7,
         "GB": 6,
         "NO": 4,
-        "FI": 4,
         "SK": 4,
+        "FI": 4,
         "HR": 3,
         "CZ": 2,
+        "BE": 1,
         "CH": 1,
-        "RS": 1,
-        "BE": 1
+        "RS": 1
       }
     },
     {
@@ -69,8 +65,8 @@
     {
       "source": "gtfs_fr",
       "agencies": 5,
-      "routes": 822,
-      "stops": 8947,
+      "routes": 794,
+      "stops": 8928,
       "trips_sample": 10000,
       "night_trains": 0,
       "missing_coords": {

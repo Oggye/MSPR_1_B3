@@ -8,3 +8,4 @@ data/raw/
 data/processed/
 data/warehouse/
 note_perso
+.pytest_cache       

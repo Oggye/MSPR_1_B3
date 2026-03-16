@@ -43,5 +43,27 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
 
+  etl:
+    build:
+      context: ./etl           # contexte = dossier etl
+      dockerfile: Dockerfile.etl
+    container_name: obrail_etl
+    depends_on:
+      - db
+      - api
+      - front
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=obrail
+      - DB_USER=obrail_user
+      - DB_PASSWORD=1234
+    volumes:
+      - ./etl:/app/etl        
+      - ./data:/app/data       
+    command: >
+      sh -c "echo 'Démarrage de l ETL...' &&
+            python /app/etl/run_full_etl.py"
+    restart: "no"
 volumes:
   db_data:

@@ -13,7 +13,7 @@ class DatabaseConnection:
 
         # Paramètres de connexion - à adapter selon votre environnement
         self.config = {
-            'host': 'localhost',
+            'host': 'db' or 'localhost',
             'port': 5432,
             'database': 'obrail',
             'user': 'obrail_user',
