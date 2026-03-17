@@ -99,15 +99,18 @@ def load_all_data(filters):
         params["operator_name"] = filters["operator"]  # L'API attend operator_name pour le filtre
     if filters["country"] != "Tous":
         params["country_code"] = get_country_code(filters["country"])  # Conversion nom -> code
-    # MODIF: Ajout du filtre type de train
-    if filters["train_type"] != "Tous":
-        params["is_night"] = (filters["train_type"] == "Nuit")
 
     with st.spinner("Chargement des données..."):
         kpis = fetch_data("dashboard/kpis", params)
         metrics = fetch_data("dashboard/metrics", params)
         countries = fetch_data("countries")
-        night_trains = fetch_data("night-trains", {"limit": 500, **params})
+        # Ajout du filtre type de train
+        if filters["train_type"] == "Nuit":
+            night_trains = fetch_data("night-trains/night", params)
+        elif filters["train_type"] == "Jour":
+            night_trains = fetch_data("night-trains/day", params)
+        else:  # "Tous"
+            night_trains = fetch_data("night-trains", {"limit": 500, **params})
         co2_ranking = fetch_data("statistics/co2-ranking", {"limit": 20, **params})
         timeline = fetch_data("statistics/timeline", params)
         comparison = fetch_data("analysis/train-types-comparison", params)
@@ -154,7 +157,7 @@ with st.sidebar:
         "Navigation",
         ["🏠 Accueil", 
          "📊 Tableau de Bord", 
-         "🚂 Trains (Jour & Nuit)",   # MODIF: renommé
+         "🚂 Trains (Jour & Nuit)",   
          "🌍 Carte Interactive",
          "📈 Analyses CO2",
          "🏢 Opérateurs",
@@ -169,7 +172,7 @@ with st.sidebar:
             "year": 2024,
             "country": "Tous",
             "operator": "Tous",
-            "train_type": "Tous"  # MODIF: nouveau filtre
+            "train_type": "Tous"
         }
     
     # Chargement des données pour les listes déroulantes
@@ -194,7 +197,7 @@ with st.sidebar:
         )
         st.session_state.filters["operator"] = selected_operator
     
-    # MODIF: Ajout du sélecteur de type de train
+    # Ajout du sélecteur de type de train
     train_type = st.selectbox(
         "🚂 Type de train",
         ["Tous", "Nuit", "Jour"],
@@ -241,7 +244,7 @@ if page == "🏠 Accueil":
             """, unsafe_allow_html=True)
         
         with col2:
-            # MODIF: Afficher le total des trains (jour+nuit) plutôt que seulement nuit
+            # Afficher le total deu type des trains
             total_trains = len(data.get("night_trains", [])) if data.get("night_trains") else 0
             st.markdown(f"""
                 <div class='kpi-card'>
@@ -411,13 +414,11 @@ elif page == "🚂 Trains (Jour & Nuit)":
     if data.get("night_trains"):
         trains_df = pd.DataFrame(data["night_trains"])
         
-        # MODIF: Ajout d'une colonne type pour l'affichage
-        trains_df['type'] = trains_df['is_night'].apply(lambda x: 'Nuit' if x else 'Jour')
-        
-        # Filtres (déjà appliqués via l'API, mais on peut raffiner localement)
-        if st.session_state.filters["train_type"] != "Tous":
-            trains_df = trains_df[trains_df['type'] == st.session_state.filters["train_type"]]
-        
+        # Ajout d'une colonne type pour l'affichage
+        trains_df['type'] = trains_df['is_night'].apply(
+            lambda x: 'Tous' if x is None else ('Jour' if x is False else 'Nuit')
+        )
+
         # Statistiques
         st.markdown(f"**{len(trains_df)}** trains trouvés")
         
@@ -457,7 +458,7 @@ elif page == "🌍 Carte Interactive":
         geo_data = data["geographic"]
         trains_data = pd.DataFrame(data["night_trains"])
         
-        # MODIF: Ajout colonne type
+        # Ajout colonne type
         if not trains_data.empty and 'is_night' in trains_data.columns:
             trains_data['type'] = trains_data['is_night'].apply(lambda x: 'Nuit' if x else 'Jour')
         
@@ -541,7 +542,7 @@ elif page == "🌍 Carte Interactive":
                 offset_lon = random.uniform(-0.5, 0.5)
                 coords = [base_coords[0] + offset_lat, base_coords[1] + offset_lon]
                 
-                # MODIF: Icône différente pour jour/nuit
+                # Icône différente pour jour/nuit
                 if train.get('type') == 'Nuit':
                     icon = folium.Icon(color='darkblue', icon='moon', prefix='fa')
                 else:
@@ -604,7 +605,7 @@ elif page == "📈 Analyses CO2":
                     labels={'train_type': 'Type de train', 'avg_co2_per_passenger': 'kg CO₂/passager'},
                     color_discrete_map={'night': '#2563EB', 'day': '#10B981'}
                 )
-                # MODIF: Renommer les étiquettes
+
                 fig.update_xaxes(ticktext=['Nuit', 'Jour'], tickvals=['night', 'day'])
                 st.plotly_chart(fig, use_container_width=True)
             
@@ -694,7 +695,7 @@ elif page == "📚 Sources & Qualité":
                 st.metric("Pays inconnus", data_quality.get("unknown_countries", "N/A"))
             
             with col2:
-                # MODIF: Afficher le nombre total de trains (tous types)
+                # Afficher le nombre total de trains (tous types)
                 total_trains = data_quality.get("night_train_records", "N/A")  # Le champ s'appelle encore night_train_records mais inclut tous les trains
                 st.metric("Enregistrements trains", total_trains)
                 st.metric("Enregistrements stats pays", data_quality.get("country_stats_records", "N/A"))

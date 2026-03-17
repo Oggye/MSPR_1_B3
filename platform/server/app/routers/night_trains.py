@@ -183,7 +183,7 @@ def get_night_trains_by_operator(
 @router.get("/api/geographic/coverage")
 def get_geographic_coverage(db: Session = Depends(get_db)):
     """
-    Récupère la couverture géographique des trains de nuit.
+    Récupère la couverture géographique des trains.
     """
     coverage = db.query(
         DimCountries.country_name,
