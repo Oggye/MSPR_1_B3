@@ -43,7 +43,7 @@ Le client fictif **ObRail Europe** est un observatoire indépendant spécialisé
 
 ## 👥 Organisation de l’équipe
 
-### Djamil
+### Djamil & Andrea
 
 * Recherche et sélection des sources de données
 * Scripts d’extraction automatisée
