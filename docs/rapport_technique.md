@@ -422,5 +422,5 @@ Le projet est prêt à être présenté au jury et servira de base solide pour l
 ---
 
 **Équipe projet**  
-Djamil, Nafissa, Mariam, Zeinab  
+Djamil, Nafissa, Mariam, Zeinab, Andrea
 Mars 2026
