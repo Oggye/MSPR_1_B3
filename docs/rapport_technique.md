@@ -294,7 +294,7 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - Page d’accueil avec KPIs (pays couverts, nombre de trains de nuit, opérateurs, CO₂ moyen).
 - Graphiques d’évolution temporelle (passagers, émissions).
 - Classement CO₂ par pays avec code couleur.
-- Catalogue des trains de nuit avec filtres.
+- Catalogue des trains de jour et de nuit avec filtres.
 - Carte interactive (Folium) des pays couverts et des trains.
 - Analyses comparatives jour/nuit.
 - Section sources et qualité.
