@@ -4,7 +4,7 @@
 **Bloc de compétences E6.1 – Créer un modèle de données d’une solution IA en utilisant des méthodes de Data science**  
 **Certification Développeur en Intelligence Artificielle et Data Science (RNCP36581)**  
 
-**Équipe projet** : Djamil, Nafissa, Mariam, Zeinab, Andrea**
+**Équipe projet** : Djamil, Nafissa, Mariam, Zeinab, Andrea
 **Date** : Mars 2026  
 
 ---
