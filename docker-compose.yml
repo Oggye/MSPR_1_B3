@@ -6,7 +6,7 @@ services:
     build: ./platform/front
     container_name: obrail_front
     ports:
-      - "8501:8501"
+      - "3000:80"
     depends_on:
       - api
     restart: always
