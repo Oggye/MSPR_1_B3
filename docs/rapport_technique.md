@@ -4,7 +4,7 @@
 **Bloc de compétences E6.1 – Créer un modèle de données d’une solution IA en utilisant des méthodes de Data science**  
 **Certification Développeur en Intelligence Artificielle et Data Science (RNCP36581)**  
 
-**Équipe projet** : Djamil, Nafissa, Mariam, Zeinab  
+**Équipe projet** : Djamil, Nafissa, Mariam, Zeinab, Andrea
 **Date** : Mars 2026  
 
 ---
@@ -294,7 +294,7 @@ Le MPD est implémenté dans le script SQL `sql/01_init.sql` et dans les modèle
 - Page d’accueil avec KPIs (pays couverts, nombre de trains de nuit, opérateurs, CO₂ moyen).
 - Graphiques d’évolution temporelle (passagers, émissions).
 - Classement CO₂ par pays avec code couleur.
-- Catalogue des trains de nuit avec filtres.
+- Catalogue des trains de jour et de nuit avec filtres.
 - Carte interactive (Folium) des pays couverts et des trains.
 - Analyses comparatives jour/nuit.
 - Section sources et qualité.
@@ -422,5 +422,5 @@ Le projet est prêt à être présenté au jury et servira de base solide pour l
 ---
 
 **Équipe projet**  
-Djamil, Nafissa, Mariam, Zeinab  
+Djamil, Nafissa, Mariam, Zeinab, Andrea
 Mars 2026
