@@ -12,6 +12,10 @@ from pathlib import Path
 import logging
 import re
 
+from .dim_stops import build_dim_stops
+from .distance import compute_route_distance
+from .duration import compute_night_train_durations
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -236,7 +240,8 @@ def extract_day_trains_from_gtfs(processed_dir, operators_df):
                     'country_code': country.upper(),
                     'year': year,
                     'operators': op_name,
-                    'is_night': False
+                    'is_night': False,
+                    'itinerary': name
                 }])], ignore_index=True)
     return day_trains
 
@@ -595,7 +600,29 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     # Remplacer night_trains par all_trains pour la suite (contient maintenant tous les trains)
     night_trains = all_trains
 
-    #----------------------------------------------
+        # --- Construction de la dimension des stops ---
+    dim_stops = build_dim_stops(processed_dir, warehouse_dir)
+
+    # --- Calcul des distances ---
+    if not all_trains.empty and 'itinerary' in all_trains.columns:
+        all_trains = compute_route_distance(all_trains, dim_stops)
+    else:
+        all_trains['distance_km'] = 0.0
+
+    # --- Calcul des durées ---
+    all_trains = compute_night_train_durations(all_trains)
+
+    # --- Dashboard opérateurs ---
+    if not all_trains.empty and 'operator_id' in all_trains.columns:
+        op_dash = all_trains.groupby('operator_id').agg(
+            nb_trains=('fact_id', 'count'),
+            distance_totale=('distance_km', 'sum'),
+            duree_moyenne=('duration_min', 'mean')
+        ).reset_index()
+        op_dash = op_dash.merge(dim_operators[['operator_id', 'operator_name']],
+                                on='operator_id', how='left')
+        op_dash.to_csv(warehouse_path / "operator_dashboard.csv", index=False)
+        logger.info(f"✅ operator_dashboard créé : {len(op_dash)} opérateurs")
     
     # --- Statistiques pays ---
     if not passengers.empty and not emissions.empty:
@@ -795,7 +822,7 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
             facts_night_trains['operator_id'] = facts_night_trains['operator_id'].fillna(0).astype(int)
         
         # Sélectionner les colonnes pour les faits
-        fact_cols = ['fact_id', 'route_id', 'night_train', 'country_id', 'year_id', 'operator_id', 'is_night']
+        fact_cols = ['fact_id', 'route_id', 'night_train', 'country_id', 'year_id', 'operator_id', 'is_night', 'distance_km', 'duration_min']
         available_cols = [col for col in fact_cols if col in facts_night_trains.columns]
         facts_night_trains = facts_night_trains[available_cols]
     
@@ -881,7 +908,7 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
         
         # Conversion numérique
         for col in ['passengers', 'co2_emissions', 'co2_per_passenger']:
-            facts_country_stats[col] = pd.to_numeric(facts_country_stats[col], errors='coerce')
+            facts_country_stats.loc[:, col] = pd.to_numeric(facts_country_stats[col], errors='coerce')
         
         # Dernier remplissage
         for col in ['passengers', 'co2_emissions', 'co2_per_passenger']:
@@ -952,6 +979,18 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     if not dashboard_metrics.empty:
         dashboard_metrics.to_csv(warehouse_path / "dashboard_metrics.csv", index=False)
         logger.info(f"✅ dashboard_metrics: {len(dashboard_metrics)} pays")
+    
+    # --- Dashboard opérateurs ---
+    if not all_trains.empty and 'operator_id' in all_trains.columns and 'distance_km' in all_trains.columns:
+        op_dash = all_trains.groupby('operator_id').agg(
+            nb_trains=('fact_id', 'count'),
+            distance_totale_km=('distance_km', 'sum'),
+            duree_moyenne_min=('duration_min', 'mean')
+        ).reset_index()
+        op_dash = op_dash.merge(dim_operators[['operator_id', 'operator_name']],
+                                on='operator_id', how='left')
+        op_dash.to_csv(warehouse_path / "operator_dashboard.csv", index=False)
+        logger.info(f"✅ operator_dashboard créé : {len(op_dash)} opérateurs")
     
     logger.info(f"✅ Data warehouse préparé dans {warehouse_path}")
     
@@ -1034,16 +1073,10 @@ GROUP BY c.country_id, c.country_name, c.country_code;
         ],
         'data_sources': ['back_on_track', 'eurostat', 'emissions', 'gtfs_fr', 'gtfs_ch', 'gtfs_de'],
         'tables_created': {
-            'dimensions': [
-                'dim_countries.csv',
-                'dim_years.csv', 
-                'dim_operators.csv'
-            ],
-            'facts': [
-                'facts_night_trains.csv',
-                'facts_country_stats.csv'
-            ],
-            'dashboard': 'dashboard_metrics.csv'
+            'dimensions': ['dim_countries.csv', 'dim_years.csv', 'dim_operators.csv', 'dim_stops.csv'],
+            'facts': ['facts_night_trains.csv', 'facts_country_stats.csv'],
+            'dashboard': ['dashboard_metrics.csv', 'operator_dashboard.csv']
+            
         },
         'data_quality': {
             'total_countries': len(dim_countries) if not dim_countries.empty else 0,
