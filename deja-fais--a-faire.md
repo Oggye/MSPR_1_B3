@@ -126,3 +126,110 @@ FROM facts_night_trains f
 JOIN dim_years y ON f.year_id = y.year_id
 GROUP BY y.year
 ORDER BY y.year;
+
+
+
+
+
+
+
+**À Corriger En Priorité**
+
+1. Dans [models.py](platform/server/app/models.py:55), aligner les modèles SQLAlchemy avec la nouvelle BDD:
+   - `FactsCountryStats.stats_id` doit devenir `stat_id`, car la table SQL utilise `stat_id`.
+   - `FactsNightTrains.route_id` doit être `String(50)` au lieu de `Integer`, comme dans `sql/01_init.sql`.
+   - Ajouter `distance_km` et `duration_min` dans `FactsNightTrains`.
+   - Ajouter un modèle `DimStops`.
+   - Ajouter un modèle `OperatorDashboard` pour la vue `operator_dashboard`.
+   - Ajouter `country_id` dans `DashboardMetrics`, car la vue le retourne maintenant.
+
+2. Dans [trains.py](platform/server/app/schemas/trains.py:9), mettre à jour la réponse API:
+```python
+route_id: str
+distance_km: float
+duration_min: float
+is_night: bool
+train_type: str  # "day" ou "night", optionnel mais pratique
+```
+
+3. Dans [night_trains.py](platform/server/app/routers/night_trains.py:41), supprimer la limite max à 500. Actuellement:
+```python
+limit: int = Query(100, ge=1, le=500)
+```
+
+À remplacer par:
+```python
+limit: Optional[int] = Query(None, ge=1)
+```
+
+Puis appliquer la limite seulement si elle est donnée:
+```python
+query = query.offset(skip)
+if limit is not None:
+    query = query.limit(limit)
+results = query.all()
+```
+
+À faire sur:
+- `/api/night-trains`
+- `/api/night-trains/night`
+- `/api/night-trains/day`
+
+Comme ça:
+- `/api/night-trains` récupère tous les trains, jour + nuit.
+- `/api/night-trains/night` récupère tous les trains de nuit.
+- `/api/night-trains/day` récupère tous les trains de jour.
+- Plus de plafond à `500`.
+
+4. Ajouter un endpoint résumé, par exemple:
+```python
+GET /api/night-trains/summary
+```
+
+Réponse attendue:
+```json
+{
+  "total_trains": 8665,
+  "total_night_trains": 2049,
+  "total_day_trains": 6616
+}
+```
+
+5. Dans [dashboard.py](platform/server/app/routers/dashboard.py:36), `total_night_trains` compte en réalité tous les trains. Il faut séparer:
+```python
+total_trains = db.query(FactsNightTrains).count()
+total_night_trains = db.query(FactsNightTrains).filter(FactsNightTrains.is_night.is_(True)).count()
+total_day_trains = db.query(FactsNightTrains).filter(FactsNightTrains.is_night.is_(False)).count()
+```
+
+Et mettre à jour [statistics.py](platform/server/app/schemas/statistics.py:15) avec `total_trains` et `total_day_trains`.
+
+6. Dans [operators.py](platform/server/app/routers/operators.py:62), le compteur est nommé “night_trains” mais compte tout. Il faut exposer:
+- `total_trains`
+- `night_trains`
+- `day_trains`
+- `distance_totale_km`
+- `duree_moyenne_min`
+
+Le plus propre: utiliser directement la nouvelle vue `operator_dashboard`.
+
+7. Dans [countries.py](platform/server/app/routers/countries.py:86), remplacer `stats.stats_id` par `stats.stat_id`, ou garder `stats_id` seulement comme nom de champ API via alias Pydantic.
+
+8. Dans [statistics.py](platform/server/app/routers/statistics.py:39), le champ `night_trains_count` compte aussi les trains de jour. Il faut séparer par `is_night`.
+
+9. Dans [analysis.py](platform/server/app/routers/analysis.py), la comparaison jour/nuit fait une jointure seulement par pays, ce qui peut dupliquer les statistiques. Il faut joindre au minimum par `country_id` + `year_id`, puis grouper par `is_night`.
+
+
+**Point BDD Important**
+
+`sql/01_init.sql` est plus à jour que `data/warehouse/create_tables.sql`. Mais ton ETL utilise `data/warehouse/create_tables.sql` en fallback dans [main_load.py](etl/load/main_load.py:21). Il faut donc régénérer ou synchroniser `data/warehouse/create_tables.sql`, sinon tu risques une BDD avec `stats_id`, sans `dim_stops`, sans `operator_dashboard`.
+
+Ordre conseillé:
+1. Harmoniser `create_tables.sql` avec `sql/01_init.sql`.
+2. Corriger `models.py`.
+3. Corriger les schemas Pydantic.
+4. Corriger les routes `night_trains`, `dashboard`, `operators`, `statistics`, `countries`.
+5. Mettre à jour les tests et la doc API.
+6. Relancer BDD + ETL + API, puis tester `/api/night-trains`, `/api/night-trains/day`, `/api/night-trains/night`.
+
+Je n’ai rien modifié dans le code.
