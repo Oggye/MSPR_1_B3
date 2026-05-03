@@ -7,5 +7,6 @@ etl/load/__pycache__/
 data/raw/
 data/processed/
 data/warehouse/
+data/audit/
 note_perso
 .pytest_cache       
