@@ -126,7 +126,7 @@ FROM facts_night_trains f
 JOIN dim_years y ON f.year_id = y.year_id
 GROUP BY y.year
 ORDER BY y.year;
-
+```
 
 
 
