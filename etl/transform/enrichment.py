@@ -19,6 +19,54 @@ from .duration import compute_night_train_durations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+RANDOM_SEED = 42
+SPECIAL_COUNTRY_CODES = {'UNKNOWN', 'OTHER', 'MULTI', 'EU27'}
+INVALID_COUNTRY_NAMES = {'', 'UNKNOWN', 'NAN', 'NONE', 'NULL'}
+
+
+def add_operator_names(operator_df, operator_names):
+    """
+    Ajoute des noms d'operateurs en evitant les doublons et les IDs manquants.
+    """
+    if operator_df is None or operator_df.empty:
+        operator_df = pd.DataFrame(columns=['operator_id', 'operator_name'])
+    else:
+        operator_df = operator_df.copy()
+        if 'operator_name' not in operator_df.columns:
+            operator_df['operator_name'] = pd.Series(dtype='object')
+        if 'operator_id' not in operator_df.columns:
+            operator_df['operator_id'] = pd.NA
+
+    operator_df['operator_name'] = operator_df['operator_name'].astype('string').str.strip()
+    operator_df = operator_df.dropna(subset=['operator_name'])
+    operator_df = operator_df[operator_df['operator_name'] != '']
+    operator_df = operator_df.drop_duplicates(subset=['operator_name'], keep='first').copy()
+
+    operator_df['operator_id'] = pd.to_numeric(operator_df['operator_id'], errors='coerce')
+    valid_ids = operator_df['operator_id'].dropna()
+    next_id = int(valid_ids.max()) + 1 if not valid_ids.empty else 1
+
+    missing_id_mask = operator_df['operator_id'].isna()
+    for idx in operator_df[missing_id_mask].index:
+        operator_df.loc[idx, 'operator_id'] = next_id
+        next_id += 1
+
+    existing_names = set(operator_df['operator_name'].astype(str))
+    if operator_names is not None:
+        names = pd.Series(operator_names, dtype='object').dropna().astype(str).str.strip()
+        for name in names:
+            if name and name not in existing_names:
+                operator_df = pd.concat([
+                    operator_df,
+                    pd.DataFrame([{'operator_id': next_id, 'operator_name': name}])
+                ], ignore_index=True)
+                existing_names.add(name)
+                next_id += 1
+
+    operator_df['operator_id'] = operator_df['operator_id'].astype(int)
+    return operator_df[['operator_id', 'operator_name']]
+
+
 # -----------------------------------------------------------------------------
 # Fonctions d'enrichissement
 # -----------------------------------------------------------------------------
@@ -27,9 +75,6 @@ def add_missing_operators(operator_df):
     """
     Ajoute les opérateurs nationaux manquants pour les pays de l'UE.
     """
-    if operator_df.empty:
-        operator_df = pd.DataFrame(columns=['operator_id', 'operator_name'])
-
     # Liste des opérateurs manquants (nom, pays indicatif)
     missing_ops = [
         ('Renfe', 'ES'),
@@ -71,17 +116,10 @@ def add_missing_operators(operator_df):
         ('Snälltåget', 'SE'),
         ('GA', 'NO'),
     ]
-    existing_names = operator_df['operator_name'].tolist() if not operator_df.empty else []
-    new_ops = []
-    next_id = operator_df['operator_id'].max() + 1 if not operator_df.empty else 1
-    for name, country in missing_ops:
-        if name not in existing_names:
-            new_ops.append({'operator_id': next_id, 'operator_name': name})
-            next_id += 1
-    if new_ops:
-        new_df = pd.DataFrame(new_ops)
-        operator_df = pd.concat([operator_df, new_df], ignore_index=True)
-    return operator_df
+
+    operator_df = add_operator_names(operator_df, [])
+    missing_names = [name for name, _country in missing_ops]
+    return add_operator_names(operator_df, missing_names)
 
 
 def generate_night_trains(night_trains, year_list, operator_df):
@@ -92,8 +130,18 @@ def generate_night_trains(night_trains, year_list, operator_df):
         return night_trains
 
     augmented = night_trains.copy()
+
+    if 'country_code' not in augmented.columns:
+        logger.warning("Colonne country_code absente : generation historique ignoree.")
+        return augmented
     
-    next_fact_id = augmented['fact_id'].max() + 1 if not augmented.empty else 1
+    if 'fact_id' in augmented.columns:
+        fact_ids = pd.to_numeric(augmented['fact_id'], errors='coerce').dropna()
+        next_fact_id = int(fact_ids.max()) + 1 if not fact_ids.empty else 1
+    else:
+        augmented['fact_id'] = range(1, len(augmented) + 1)
+        next_fact_id = len(augmented) + 1
+
     max_route_num = 0
     if not augmented.empty and 'route_id' in augmented.columns:
         # Extraire les numéros de route – le résultat est un DataFrame à 1 colonne
@@ -107,7 +155,6 @@ def generate_night_trains(night_trains, year_list, operator_df):
     eu_codes = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']
     # Pays déjà présents dans night_trains (country_code)
     existing_countries = augmented['country_code'].unique()
-    missing_eu = [c for c in eu_codes if c not in existing_countries]
 
     # Routes types par pays (pour les pays manquants)
     typical_routes = {
@@ -152,8 +199,9 @@ def generate_night_trains(night_trains, year_list, operator_df):
         if not routes:
             continue
 
-        # Pour chaque année de 2010 à 2023
-        for year in range(2010, 2024):
+        # Pour chaque année historique demandee avant 2024
+        historical_years = sorted({int(year) for year in year_list if int(year) < 2024})
+        for year in historical_years:
             # On vérifie si une ligne existe déjà pour ce pays et cette année
             if ((augmented['country_code'] == country) & (augmented['year'] == year)).any():
                 continue
@@ -397,10 +445,10 @@ def generate_country_stats(passengers, emissions, year_list):
         scale = scale_factors.get(country, 1.0)
 
         for year in year_list:
-            # Vérifier si une donnée existe déjà pour ce pays et cette année
-            if ((passengers_aug['country_code'] == country) & (passengers_aug['year'] == year)).any():
-                continue
-            if ((emissions_aug['country_code'] == country) & (emissions_aug['year'] == year)).any():
+            # Completer separement passagers et emissions si une seule source existe.
+            pass_exists = ((passengers_aug['country_code'] == country) & (passengers_aug['year'] == year)).any()
+            emiss_exists = ((emissions_aug['country_code'] == country) & (emissions_aug['year'] == year)).any()
+            if pass_exists and emiss_exists:
                 continue
 
             # Valeur de base pour cette année
@@ -412,20 +460,23 @@ def generate_country_stats(passengers, emissions, year_list):
             emiss_val = base_emiss * trend[year] * scale
 
             # Ajouter aux DataFrames
-            new_pass = pd.DataFrame([{
-                'country_code': country,
-                'year': year,
-                'passengers': pass_val,
-                'country_name': country
-            }])
-            new_emiss = pd.DataFrame([{
-                'country_code': country,
-                'year': year,
-                'co2_emissions': emiss_val,
-                'country_name': country
-            }])
-            passengers_aug = pd.concat([passengers_aug, new_pass], ignore_index=True)
-            emissions_aug = pd.concat([emissions_aug, new_emiss], ignore_index=True)
+            if not pass_exists:
+                new_pass = pd.DataFrame([{
+                    'country_code': country,
+                    'year': year,
+                    'passengers': pass_val,
+                    'country_name': country
+                }])
+                passengers_aug = pd.concat([passengers_aug, new_pass], ignore_index=True)
+
+            if not emiss_exists:
+                new_emiss = pd.DataFrame([{
+                    'country_code': country,
+                    'year': year,
+                    'co2_emissions': emiss_val,
+                    'country_name': country
+                }])
+                emissions_aug = pd.concat([emissions_aug, new_emiss], ignore_index=True)
 
     logger.info(f"📊 Statistiques pays générées : passagers +{len(passengers_aug)-len(passengers)}, émissions +{len(emissions_aug)-len(emissions)}")
     return passengers_aug, emissions_aug
@@ -463,19 +514,32 @@ def clean_and_standardize_country_codes(df, country_col='country_code'):
         # Autres corrections
         'UNK': 'UNKNOWN', 'NAN': 'UNKNOWN', 'NONE': 'UNKNOWN',
         '': 'UNKNOWN', 'NULL': 'UNKNOWN', 'NaN': 'UNKNOWN',
+        'EU27_2020': 'EU27', 'EU27-2020': 'EU27', 'EU27': 'EU27',
+        'EU28': 'EU27', 'EU': 'EU27',
         None: 'UNKNOWN', np.nan: 'UNKNOWN'
     }
-    
-    # Appliquer les corrections
-    df[country_col] = df[country_col].astype(str).str.upper().str.strip()
-    df[country_col] = df[country_col].replace(country_corrections)
-    df[country_col] = df[country_col].fillna('UNKNOWN')
-    
-    # Supprimer les caractères non alphabétiques
-    df[country_col] = df[country_col].apply(lambda x: re.sub(r'[^A-Z]', '', x))
-    
-    # Limiter à 2 caractères (sauf UNKNOWN)
-    df[country_col] = df[country_col].apply(lambda x: x[:2] if x != 'UNKNOWN' else x)
+
+    def standardize_code(value):
+        if pd.isna(value):
+            return 'UNKNOWN'
+
+        code = str(value).upper().strip()
+        code = country_corrections.get(code, code)
+
+        if code in SPECIAL_COUNTRY_CODES:
+            return code
+
+        code = re.sub(r'[^A-Z]', '', code)
+        code = country_corrections.get(code, code)
+
+        if code in SPECIAL_COUNTRY_CODES:
+            return code
+        if not code:
+            return 'UNKNOWN'
+
+        return code[:2]
+
+    df[country_col] = df[country_col].apply(standardize_code)
     
     return df
 
@@ -485,6 +549,7 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     Enrichit les données transformées et les prépare pour le data warehouse
     """
     logger.info("🔗 Enrichissement et préparation pour le data warehouse...")
+    np.random.seed(RANDOM_SEED)
     
     # 1. Charger les données transformées
     # Back on Track - trains de nuit
@@ -542,10 +607,12 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     
     # --- Opérateurs ---
     # Construire un DataFrame de base des opérateurs à partir des trains de nuit existants
-    operators_from_trains = pd.DataFrame()
+    operators_from_trains = pd.DataFrame(columns=['operator_id', 'operator_name'])
     if not night_trains.empty and 'operators' in night_trains.columns:
-        operators_from_trains = night_trains[['operators']].drop_duplicates().rename(columns={'operators': 'operator_name'})
-    operators_from_trains['operator_id'] = range(1, len(operators_from_trains) + 1)
+        operators_from_trains = add_operator_names(
+            operators_from_trains,
+            night_trains['operators']
+        )
     
     # Ajouter les opérateurs manquants
     operators_df = add_missing_operators(operators_from_trains)
@@ -597,10 +664,28 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     if not all_trains.empty:
         all_trains['fact_id'] = range(1, len(all_trains) + 1)
 
-    # Remplacer night_trains par all_trains pour la suite (contient maintenant tous les trains)
-    night_trains = all_trains
+    # Donner au calcul de distance le meilleur texte d'itineraire disponible.
+    if 'itinerary' not in all_trains.columns:
+        all_trains['itinerary'] = pd.NA
+    itinerary_empty = (
+        all_trains['itinerary'].isna()
+        | (all_trains['itinerary'].astype(str).str.strip() == '')
+    )
+    if 'itinerary_long' in all_trains.columns:
+        long_available = (
+            all_trains['itinerary_long'].notna()
+            & (all_trains['itinerary_long'].astype(str).str.strip() != '')
+        )
+        fill_from_long = itinerary_empty & long_available
+        all_trains.loc[fill_from_long, 'itinerary'] = all_trains.loc[fill_from_long, 'itinerary_long']
+        itinerary_empty = (
+            all_trains['itinerary'].isna()
+            | (all_trains['itinerary'].astype(str).str.strip() == '')
+        )
+    if 'night_train' in all_trains.columns:
+        all_trains.loc[itinerary_empty, 'itinerary'] = all_trains.loc[itinerary_empty, 'night_train']
 
-        # --- Construction de la dimension des stops ---
+    # --- Construction de la dimension des stops ---
     dim_stops = build_dim_stops(processed_dir, warehouse_dir)
 
     # --- Calcul des distances ---
@@ -612,17 +697,14 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     # --- Calcul des durées ---
     all_trains = compute_night_train_durations(all_trains)
 
-    # --- Dashboard opérateurs ---
-    if not all_trains.empty and 'operator_id' in all_trains.columns:
-        op_dash = all_trains.groupby('operator_id').agg(
-            nb_trains=('fact_id', 'count'),
-            distance_totale=('distance_km', 'sum'),
-            duree_moyenne=('duration_min', 'mean')
-        ).reset_index()
-        op_dash = op_dash.merge(dim_operators[['operator_id', 'operator_name']],
-                                on='operator_id', how='left')
-        op_dash.to_csv(warehouse_path / "operator_dashboard.csv", index=False)
-        logger.info(f"✅ operator_dashboard créé : {len(op_dash)} opérateurs")
+    # Les trains generes peuvent introduire de nouveaux operateurs synthetiques.
+    if not all_trains.empty and 'operators' in all_trains.columns:
+        operators_df = add_operator_names(operators_df, all_trains['operators'])
+        logger.info(f"✅ Opérateurs après fusion trains jour/nuit : {len(operators_df)}")
+
+    # Remplacer night_trains par all_trains pour la suite (nom legacy du modele)
+    night_trains = all_trains
+
     
     # --- Statistiques pays ---
     if not passengers.empty and not emissions.empty:
@@ -729,9 +811,20 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
             suffixes=('_base', '_source')
         )
         
-        # Utiliser le nom de la source si disponible, sinon le nom de base
-        dim_countries['country_name'] = dim_countries['country_name_source'].fillna(
+        # Utiliser le nom source seulement s'il apporte une vraie valeur.
+        source_names = dim_countries['country_name_source']
+        source_text = source_names.fillna('').astype(str).str.strip()
+        source_invalid = (
+            source_names.isna()
+            | source_text.str.upper().isin(INVALID_COUNTRY_NAMES)
+            | (source_text.str.upper() == dim_countries['country_code'].astype(str).str.upper())
+        )
+        dim_countries['country_name'] = source_names.mask(
+            source_invalid,
             dim_countries['country_name_base']
+        )
+        dim_countries['country_name'] = dim_countries['country_name'].fillna(
+            dim_countries['country_code']
         )
         
         # Supprimer les colonnes temporaires
@@ -749,8 +842,22 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     
     dim_countries = pd.concat([dim_countries, special_countries], ignore_index=True)
     
-    # Supprimer les doublons
-    dim_countries = dim_countries.drop_duplicates(subset=['country_code'])
+    # Supprimer les doublons en gardant les noms explicites des entrees speciales
+    dim_countries = dim_countries.drop_duplicates(subset=['country_code'], keep='last')
+
+    base_country_names = dict(zip(base_countries['country_code'], base_countries['country_name']))
+    final_names = dim_countries['country_name'].fillna('').astype(str).str.strip()
+    final_invalid = (
+        dim_countries['country_name'].isna()
+        | final_names.str.upper().isin(INVALID_COUNTRY_NAMES)
+        | (final_names.str.upper() == dim_countries['country_code'].astype(str).str.upper())
+    )
+    dim_countries.loc[final_invalid, 'country_name'] = (
+        dim_countries.loc[final_invalid, 'country_code'].map(base_country_names)
+    )
+    dim_countries['country_name'] = dim_countries['country_name'].fillna(
+        dim_countries['country_code']
+    )
     
     # Créer l'ID pays
     dim_countries['country_id'] = range(1, len(dim_countries) + 1)
@@ -939,6 +1046,29 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     # 8. Sauvegarder dans le data warehouse
     warehouse_path = Path(warehouse_dir)
     warehouse_path.mkdir(parents=True, exist_ok=True)
+
+    # --- Dashboard opérateurs ---
+    if not facts_night_trains.empty and 'operator_id' in facts_night_trains.columns:
+        op_source = facts_night_trains.copy()
+        for col in ['distance_km', 'duration_min']:
+            if col not in op_source.columns:
+                op_source[col] = 0.0
+            op_source[col] = pd.to_numeric(op_source[col], errors='coerce').fillna(0.0)
+        if 'is_night' not in op_source.columns:
+            op_source['is_night'] = True
+        op_source['is_night'] = op_source['is_night'].fillna(True).astype(bool)
+
+        op_dash = op_source.groupby('operator_id').agg(
+            nb_trains=('fact_id', 'count'),
+            distance_totale_km=('distance_km', 'sum'),
+            duree_moyenne_min=('duration_min', 'mean'),
+            nb_trains_nuit=('is_night', lambda x: x.eq(True).sum()),
+            nb_trains_jour=('is_night', lambda x: x.eq(False).sum())
+        ).reset_index()
+        op_dash = op_dash.merge(dim_operators[['operator_id', 'operator_name']],
+                                on='operator_id', how='left')
+        op_dash.to_csv(warehouse_path / "operator_dashboard.csv", index=False)
+        logger.info(f"✅ operator_dashboard créé : {len(op_dash)} opérateurs")
     
     # Dimensions d'abord
     if not dim_countries.empty:
@@ -959,6 +1089,13 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
         for col in ['country_id', 'year_id', 'operator_id']:
             if col in facts_night_trains.columns:
                 facts_night_trains[col] = facts_night_trains[col].fillna(0).astype(int)
+        for col in ['distance_km', 'duration_min']:
+            if col in facts_night_trains.columns:
+                facts_night_trains[col] = pd.to_numeric(
+                    facts_night_trains[col], errors='coerce'
+                ).fillna(0.0)
+        if 'is_night' in facts_night_trains.columns:
+            facts_night_trains['is_night'] = facts_night_trains['is_night'].fillna(True).astype(bool)
         facts_night_trains.to_csv(warehouse_path / "facts_night_trains.csv", index=False)
         logger.info(f"✅ facts_night_trains: {len(facts_night_trains)} trajets")
         
@@ -980,18 +1117,6 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
         dashboard_metrics.to_csv(warehouse_path / "dashboard_metrics.csv", index=False)
         logger.info(f"✅ dashboard_metrics: {len(dashboard_metrics)} pays")
     
-    # --- Dashboard opérateurs ---
-    if not all_trains.empty and 'operator_id' in all_trains.columns and 'distance_km' in all_trains.columns:
-        op_dash = all_trains.groupby('operator_id').agg(
-            nb_trains=('fact_id', 'count'),
-            distance_totale_km=('distance_km', 'sum'),
-            duree_moyenne_min=('duration_min', 'mean')
-        ).reset_index()
-        op_dash = op_dash.merge(dim_operators[['operator_id', 'operator_name']],
-                                on='operator_id', how='left')
-        op_dash.to_csv(warehouse_path / "operator_dashboard.csv", index=False)
-        logger.info(f"✅ operator_dashboard créé : {len(op_dash)} opérateurs")
-    
     logger.info(f"✅ Data warehouse préparé dans {warehouse_path}")
     
     # 9. Créer un script SQL de création des tables
@@ -999,10 +1124,12 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
 -- Script de création des tables du data warehouse ObRail
 -- Ordre de chargement: 1. Dimensions, 2. Faits
 
+DROP VIEW IF EXISTS dashboard_metrics;
+
 -- DIMENSIONS
 CREATE TABLE IF NOT EXISTS dim_countries (
     country_id INTEGER PRIMARY KEY,
-    country_code VARCHAR(10) NOT NULL,
+    country_code VARCHAR(10) UNIQUE NOT NULL,
     country_name VARCHAR(100) NOT NULL
 );
 
@@ -1020,19 +1147,21 @@ CREATE TABLE IF NOT EXISTS dim_operators (
 -- FAITS
 CREATE TABLE IF NOT EXISTS facts_night_trains (
     fact_id INTEGER PRIMARY KEY,
-    route_id VARCHAR(50),
-    night_train VARCHAR(200),
-    country_id INTEGER,
-    year_id INTEGER,
-    operator_id INTEGER,
+    route_id INTEGER NOT NULL,
+    night_train VARCHAR(200) NOT NULL,
+    country_id INTEGER NOT NULL,
+    year_id INTEGER NOT NULL,
+    operator_id INTEGER NOT NULL,
     is_night BOOLEAN NOT NULL DEFAULT TRUE,
+    distance_km NUMERIC,
+    duration_min NUMERIC,
     FOREIGN KEY (country_id) REFERENCES dim_countries(country_id),
     FOREIGN KEY (year_id) REFERENCES dim_years(year_id),
     FOREIGN KEY (operator_id) REFERENCES dim_operators(operator_id)
 );
 
 CREATE TABLE IF NOT EXISTS facts_country_stats (
-    stat_id INTEGER PRIMARY KEY,
+    stats_id INTEGER PRIMARY KEY,
     country_id INTEGER NOT NULL,
     year_id INTEGER NOT NULL,
     passengers NUMERIC NOT NULL,
@@ -1043,7 +1172,7 @@ CREATE TABLE IF NOT EXISTS facts_country_stats (
 );
 
 -- VUE POUR DASHBOARD
-CREATE VIEW IF NOT EXISTS dashboard_view AS
+CREATE VIEW dashboard_metrics AS
 SELECT 
     c.country_name,
     c.country_code,
@@ -1068,8 +1197,9 @@ GROUP BY c.country_id, c.country_name, c.country_code;
             'Calcul des metriques agregees',
             'Completement des donnees manquantes avec valeurs realistes',
             'Génération de trains de nuit historiques',
+            'Génération de trains de jour pour comparaison',
             'Génération de statistiques pays pour entités manquantes',
-            'Ajout des opérateurs manquants'
+            'Ajout et dédoublonnage des opérateurs manquants'
         ],
         'data_sources': ['back_on_track', 'eurostat', 'emissions', 'gtfs_fr', 'gtfs_ch', 'gtfs_de'],
         'tables_created': {
@@ -1083,9 +1213,12 @@ GROUP BY c.country_id, c.country_name, c.country_code;
             'unknown_countries': len(dim_countries[dim_countries['country_code'] == 'UNKNOWN']) if not dim_countries.empty else 0,
             'total_years': len(dim_years) if not dim_years.empty else 0,
             'total_operators': len(dim_operators) if not dim_operators.empty else 0,
-            'night_train_records': len(facts_night_trains) if not facts_night_trains.empty else 0,
+            'total_train_records': len(facts_night_trains) if not facts_night_trains.empty else 0,
+            'night_train_records': int(facts_night_trains['is_night'].eq(True).sum()) if not facts_night_trains.empty and 'is_night' in facts_night_trains.columns else 0,
+            'day_train_records': int(facts_night_trains['is_night'].eq(False).sum()) if not facts_night_trains.empty and 'is_night' in facts_night_trains.columns else 0,
             'country_stats_records': len(facts_country_stats) if not facts_country_stats.empty else 0,
-            'dashboard_metrics_records': len(dashboard_metrics) if not dashboard_metrics.empty else 0
+            'dashboard_metrics_records': len(dashboard_metrics) if not dashboard_metrics.empty else 0,
+            'operator_dashboard_records': len(op_dash) if 'op_dash' in locals() and not op_dash.empty else 0
         }
     }
     

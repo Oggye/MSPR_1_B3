@@ -1,0 +1,503 @@
+{
+  "date_diagnostic": "2026-05-03T13:45:28.974525",
+  "projet": "ObRail Europe - MSPR E6.1",
+  "raw": {
+    "back_on_track": {
+      "fichiers": 2,
+      "lignes": 953,
+      "details": [
+        {
+          "nom": "view_ontd_cities.csv",
+          "lignes": 755,
+          "colonnes": 5,
+          "taille_kb": 29.423828125,
+          "erreur": null
+        },
+        {
+          "nom": "view_ontd_list.csv",
+          "lignes": 198,
+          "colonnes": 8,
+          "taille_kb": 65.8515625,
+          "erreur": null
+        }
+      ]
+    },
+    "eurostat": {
+      "fichiers": 2,
+      "lignes": 758,
+      "details": [
+        {
+          "nom": "rail_passengers.csv",
+          "lignes": 107,
+          "colonnes": 56,
+          "taille_kb": 25.8466796875,
+          "erreur": null
+        },
+        {
+          "nom": "rail_traffic.csv",
+          "lignes": 651,
+          "colonnes": 13,
+          "taille_kb": 64.0263671875,
+          "erreur": null
+        }
+      ]
+    },
+    "emission_co2": {
+      "fichiers": 2,
+      "lignes": 3185820,
+      "details": [
+        {
+          "nom": "eurostat_env_air_gge_full.tsv",
+          "lignes": 1592910,
+          "colonnes": 1,
+          "taille_kb": 123263.8349609375,
+          "erreur": null
+        },
+        {
+          "nom": "eurostat_env_air_gge_sdmx.csv",
+          "lignes": 1592910,
+          "colonnes": 11,
+          "taille_kb": 123263.8349609375,
+          "erreur": null
+        }
+      ]
+    },
+    "gtfs_fr": {
+      "fichiers": 6,
+      "lignes": 968661,
+      "details": [
+        {
+          "nom": "agency.csv",
+          "lignes": 6,
+          "colonnes": 5,
+          "taille_kb": 0.3974609375,
+          "erreur": null
+        },
+        {
+          "nom": "calendar_dates.csv",
+          "lignes": 446361,
+          "colonnes": 3,
+          "taille_kb": 8282.1201171875,
+          "erreur": null
+        },
+        {
+          "nom": "routes.csv",
+          "lignes": 750,
+          "colonnes": 9,
+          "taille_kb": 68.5751953125,
+          "erreur": null
+        },
+        {
+          "nom": "stop_times.csv",
+          "lignes": 459294,
+          "colonnes": 9,
+          "taille_kb": 72975.40234375,
+          "erreur": null
+        },
+        {
+          "nom": "stops.csv",
+          "lignes": 8832,
+          "colonnes": 9,
+          "taille_kb": 721.88671875,
+          "erreur": null
+        },
+        {
+          "nom": "trips.csv",
+          "lignes": 53418,
+          "colonnes": 7,
+          "taille_kb": 9051.2392578125,
+          "erreur": null
+        }
+      ]
+    },
+    "gtfs_ch": {
+      "fichiers": 6,
+      "lignes": 39642643,
+      "details": [
+        {
+          "nom": "agency.csv",
+          "lignes": 478,
+          "colonnes": 6,
+          "taille_kb": 44.19140625,
+          "erreur": null
+        },
+        {
+          "nom": "calendar_dates.csv",
+          "lignes": 8790410,
+          "colonnes": 3,
+          "taille_kb": 231894.4931640625,
+          "erreur": null
+        },
+        {
+          "nom": "routes.csv",
+          "lignes": 9527,
+          "colonnes": 6,
+          "taille_kb": 398.7216796875,
+          "erreur": null
+        },
+        {
+          "nom": "stop_times.csv",
+          "lignes": 28465684,
+          "colonnes": 7,
+          "taille_kb": 2128699.50390625,
+          "erreur": null
+        },
+        {
+          "nom": "stops.csv",
+          "lignes": 103480,
+          "colonnes": 8,
+          "taille_kb": 10528.20703125,
+          "erreur": null
+        },
+        {
+          "nom": "trips.csv",
+          "lignes": 2273064,
+          "colonnes": 9,
+          "taille_kb": 293238.5146484375,
+          "erreur": null
+        }
+      ]
+    },
+    "gtfs_de": {
+      "fichiers": 6,
+      "lignes": 63171,
+      "details": [
+        {
+          "nom": "agency.csv",
+          "lignes": 13,
+          "colonnes": 5,
+          "taille_kb": 0.72265625,
+          "erreur": null
+        },
+        {
+          "nom": "calendar_dates.csv",
+          "lignes": 1857,
+          "colonnes": 3,
+          "taille_kb": 28.982421875,
+          "erreur": null
+        },
+        {
+          "nom": "routes.csv",
+          "lignes": 94,
+          "colonnes": 5,
+          "taille_kb": 1.4130859375,
+          "erreur": null
+        },
+        {
+          "nom": "stop_times.csv",
+          "lignes": 54627,
+          "colonnes": 8,
+          "taille_kb": 2741.6630859375,
+          "erreur": null
+        },
+        {
+          "nom": "stops.csv",
+          "lignes": 1259,
+          "colonnes": 7,
+          "taille_kb": 58.6923828125,
+          "erreur": null
+        },
+        {
+          "nom": "trips.csv",
+          "lignes": 5321,
+          "colonnes": 3,
+          "taille_kb": 79.611328125,
+          "erreur": null
+        }
+      ]
+    }
+  },
+  "processed": {
+    "back_on_track": {
+      "fichiers": 2,
+      "lignes": 950,
+      "details": [
+        {
+          "nom": "cities_processed.csv",
+          "lignes": 755,
+          "colonnes": 7,
+          "taille_kb": 41.2236328125,
+          "erreur": null
+        },
+        {
+          "nom": "night_trains_processed.csv",
+          "lignes": 195,
+          "colonnes": 11,
+          "taille_kb": 67.423828125,
+          "erreur": null
+        }
+      ]
+    },
+    "emissions": {
+      "fichiers": 1,
+      "lignes": 92488,
+      "details": [
+        {
+          "nom": "co2_emissions_processed.csv",
+          "lignes": 92488,
+          "colonnes": 5,
+          "taille_kb": 2588.4326171875,
+          "erreur": null
+        }
+      ]
+    },
+    "eurostat": {
+      "fichiers": 2,
+      "lignes": 9417,
+      "details": [
+        {
+          "nom": "passengers_processed.csv",
+          "lignes": 1605,
+          "colonnes": 7,
+          "taille_kb": 72.314453125,
+          "erreur": null
+        },
+        {
+          "nom": "traffic_processed.csv",
+          "lignes": 7812,
+          "colonnes": 9,
+          "taille_kb": 417.443359375,
+          "erreur": null
+        }
+      ]
+    },
+    "gtfs": {
+      "fichiers": 12,
+      "lignes": 149760,
+      "details": [
+        {
+          "nom": "agency_processed.csv",
+          "lignes": 478,
+          "colonnes": 7,
+          "taille_kb": 40.0009765625,
+          "erreur": null
+        },
+        {
+          "nom": "routes_processed.csv",
+          "lignes": 9527,
+          "colonnes": 7,
+          "taille_kb": 342.9111328125,
+          "erreur": null
+        },
+        {
+          "nom": "stops_processed.csv",
+          "lignes": 103480,
+          "colonnes": 8,
+          "taille_kb": 9132.0654296875,
+          "erreur": null
+        },
+        {
+          "nom": "trips_processed.csv",
+          "lignes": 10000,
+          "colonnes": 9,
+          "taille_kb": 1205.6728515625,
+          "erreur": null
+        },
+        {
+          "nom": "agency_processed.csv",
+          "lignes": 13,
+          "colonnes": 6,
+          "taille_kb": 0.7685546875,
+          "erreur": null
+        },
+        {
+          "nom": "routes_processed.csv",
+          "lignes": 94,
+          "colonnes": 6,
+          "taille_kb": 1.978515625,
+          "erreur": null
+        },
+        {
+          "nom": "stops_processed.csv",
+          "lignes": 1259,
+          "colonnes": 7,
+          "taille_kb": 61.3544921875,
+          "erreur": null
+        },
+        {
+          "nom": "trips_processed.csv",
+          "lignes": 5321,
+          "colonnes": 3,
+          "taille_kb": 79.611328125,
+          "erreur": null
+        },
+        {
+          "nom": "agency_processed.csv",
+          "lignes": 6,
+          "colonnes": 6,
+          "taille_kb": 0.4228515625,
+          "erreur": null
+        },
+        {
+          "nom": "routes_processed.csv",
+          "lignes": 750,
+          "colonnes": 10,
+          "taille_kb": 72.984375,
+          "erreur": null
+        },
+        {
+          "nom": "stops_processed.csv",
+          "lignes": 8832,
+          "colonnes": 9,
+          "taille_kb": 694.22265625,
+          "erreur": null
+        },
+        {
+          "nom": "trips_processed.csv",
+          "lignes": 10000,
+          "colonnes": 7,
+          "taille_kb": 1664.501953125,
+          "erreur": null
+        }
+      ]
+    }
+  },
+  "warehouse": {
+    "dimensions": [
+      {
+        "nom": "dim_countries.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\dim_countries.csv",
+        "existe": true,
+        "lignes": 47,
+        "colonnes": 3,
+        "colonnes_noms": [
+          "country_id",
+          "country_code",
+          "country_name"
+        ],
+        "taille_kb": 0.814453125,
+        "apercu": "   country_id country_code            country_name\n0           1           AL                 Albania\n1           2           AT                 Austria\n2           3           BA  Bosnia and Herzegovina\n3           4           BE                 Belgium\n4           5           BG                Bulgaria",
+        "erreur": null
+      },
+      {
+        "nom": "dim_operators.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\dim_operators.csv",
+        "existe": true,
+        "lignes": 87,
+        "colonnes": 2,
+        "colonnes_noms": [
+          "operator_id",
+          "operator_name"
+        ],
+        "taille_kb": 1.2998046875,
+        "apercu": "   operator_id     operator_name\n0            0  Unknown Operator\n1            1               ÖBB\n2            2              HŽPP\n3            3              ZSSK\n4            4                RJ",
+        "erreur": null
+      },
+      {
+        "nom": "dim_stops.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\dim_stops.csv",
+        "existe": true,
+        "lignes": 39851,
+        "colonnes": 6,
+        "colonnes_noms": [
+          "stop_name",
+          "stop_lat",
+          "stop_lon",
+          "stop_id",
+          "source_country",
+          "stop_id_dim"
+        ],
+        "taille_kb": 2475.4306640625,
+        "apercu": "           stop_name   stop_lat   stop_lon               stop_id source_country  stop_id_dim\n0  figueres-vilafant  42.264581   2.943028  StopArea:OCE71043075             FR            1\n1    barcelone-sants  41.378961   2.139834  StopArea:OCE71718010             FR            2\n2             girona  41.979371   2.816957  StopArea:OCE71793000             FR            3\n3            portbou  42.424701   3.158034  StopArea:OCE71793150             FR            4\n4       augsburg hbf  48.365400  10.886000  StopArea:OCE80021402             FR            5",
+        "erreur": null
+      },
+      {
+        "nom": "dim_years.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\dim_years.csv",
+        "existe": true,
+        "lignes": 15,
+        "colonnes": 3,
+        "colonnes_noms": [
+          "year",
+          "year_id",
+          "is_after_2010"
+        ],
+        "taille_kb": 0.2236328125,
+        "apercu": "   year  year_id  is_after_2010\n0  2010        1           True\n1  2011        2           True\n2  2012        3           True\n3  2013        4           True\n4  2014        5           True",
+        "erreur": null
+      }
+    ],
+    "faits": [
+      {
+        "nom": "facts_country_stats.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\facts_country_stats.csv",
+        "existe": true,
+        "lignes": 687,
+        "colonnes": 6,
+        "colonnes_noms": [
+          "stat_id",
+          "country_id",
+          "year_id",
+          "passengers",
+          "co2_emissions",
+          "co2_per_passenger"
+        ],
+        "taille_kb": 40.9755859375,
+        "apercu": "   stat_id  country_id  year_id  passengers  co2_emissions  co2_per_passenger\n0        1           1        1      79.885    5658.180113          70.829068\n1        2           1        2      79.885    5658.180113          70.829068\n2        3           1        3      79.885    5658.180113          70.829068\n3        4           1        4     184.930    5658.180113          30.596334\n4        5           1        5     145.813    5658.180113          38.804360",
+        "erreur": null
+      },
+      {
+        "nom": "facts_night_trains.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\facts_night_trains.csv",
+        "existe": true,
+        "lignes": 8657,
+        "colonnes": 9,
+        "colonnes_noms": [
+          "fact_id",
+          "route_id",
+          "night_train",
+          "country_id",
+          "year_id",
+          "operator_id",
+          "is_night",
+          "distance_km",
+          "duration_min"
+        ],
+        "taille_kb": 610.875,
+        "apercu": "   fact_id  route_id           night_train  country_id  year_id  operator_id  is_night  distance_km  duration_min\n0        1         1   ÖBB NJ 468 + NJ 469           4       15            1      True  1504.175318   1289.293130\n1        2         2   ÖBB NJ 408 + NJ 409           9       15            1      True   674.349668    578.014001\n2        3         3      HŽPP 1820 + 1821          19       15            2      True     0.000000      0.000000\n3        4         5   ÖBB NJ 470 + NJ 471           9       15            1      True   696.968079    597.401210\n4        5         6  ZSSK EN 442 + EN 443          40       15            3      True     0.000000      0.000000",
+        "erreur": null
+      }
+    ],
+    "dashboard": [
+      {
+        "nom": "dashboard_metrics.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\dashboard_metrics.csv",
+        "existe": true,
+        "lignes": 46,
+        "colonnes": 6,
+        "colonnes_noms": [
+          "country_id",
+          "country_code",
+          "country_name",
+          "passengers",
+          "co2_emissions",
+          "co2_per_passenger"
+        ],
+        "taille_kb": 3.2783203125,
+        "apercu": "   country_id country_code            country_name     passengers  co2_emissions  co2_per_passenger\n0           1           AL                 Albania      79.885000    5658.180113         175.493388\n1           2           AT                 Austria  116036.724400    2098.584607           0.018208\n2           3           BA  Bosnia and Herzegovina    1363.333333    5651.227778           4.178234\n3           4           BE                 Belgium   94578.000000    3087.706435           0.032645\n4           5           BG                Bulgaria   10973.037500    1146.496663           0.108936",
+        "erreur": null
+      },
+      {
+        "nom": "operator_dashboard.csv",
+        "chemin": "c:\\Users\\manso\\Documents\\Ecole\\COURS\\B3\\MSPR\\MSPR_1\\MSPR_1_B1\\data\\warehouse\\operator_dashboard.csv",
+        "existe": true,
+        "lignes": 68,
+        "colonnes": 7,
+        "colonnes_noms": [
+          "operator_id",
+          "nb_trains",
+          "distance_totale_km",
+          "duree_moyenne_min",
+          "nb_trains_nuit",
+          "nb_trains_jour",
+          "operator_name"
+        ],
+        "taille_kb": 3.044921875,
+        "apercu": "   operator_id  nb_trains  distance_totale_km  duree_moyenne_min  nb_trains_nuit  nb_trains_jour operator_name\n0            1         18        11088.089157         528.004246              18               0           ÖBB\n1            2          3            0.000000           0.000000               3               0          HŽPP\n2            3         30            0.000000           0.000000              23               7          ZSSK\n3            4          2          547.359810         234.582776               2               0            RJ\n4            5          3         2173.327641         620.950755               3               0       PKP, ČD",
+        "erreur": null
+      }
+    ],
+    "autres": []
+  },
+  "statut": "OK"
+}

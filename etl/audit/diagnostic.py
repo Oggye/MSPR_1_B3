@@ -1,192 +1,414 @@
 # =========================================================
-# diagnostic.py
+# etl/audit/diagnostic_complet.py
+# Diagnostic automatique complet du pipeline ETL ObRail
+# Vérifie : données brutes, données transformées, data warehouse
 # =========================================================
 
 import pandas as pd
 from pathlib import Path
 import glob
+import sys
+import os
+from datetime import datetime
 
-# Dossiers à analyser
-DOSSIERS = {
-    "back_on_track": "data/raw/back_on_track/*.csv",
-    "eurostat": "data/raw/eurostat/*.csv",
-    "emission_co2": "data/raw/emission_co2/*.csv",
-    "gtfs_fr": "data/raw/gtfs_fr/*.csv",
-    "gtfs_ch": "data/raw/gtfs_ch/*.csv",
-    "gtfs_de": "data/raw/gtfs_de/*.csv",
+# Chemins de base
+BASE_DIR = Path(__file__).parent.parent.parent
+RAW_DIR = BASE_DIR / "data" / "raw"
+PROCESSED_DIR = BASE_DIR / "data" / "processed"
+WAREHOUSE_DIR = BASE_DIR / "data" / "warehouse"
+
+# Mapping des sources -> dossiers raw
+RAW_SOURCES = {
+    "back_on_track": RAW_DIR / "back_on_track",
+    "eurostat": RAW_DIR / "eurostat",
+    "emission_co2": RAW_DIR / "emission_co2",
+    "gtfs_fr": RAW_DIR / "gtfs_fr",
+    "gtfs_ch": RAW_DIR / "gtfs_ch",
+    "gtfs_de": RAW_DIR / "gtfs_de",
 }
 
-def analyser_fichier(chemin_fichier):
-    """Analyse un fichier sans tout charger en mémoire"""
+def compter_lignes_csv(chemin):
+    """Compte les lignes d'un CSV de manière efficace"""
     try:
-        nom_fichier = Path(chemin_fichier).name
-        taille_kb = Path(chemin_fichier).stat().st_size / 1024
+        with open(chemin, 'r', encoding='utf-8', errors='ignore') as f:
+            return sum(1 for _ in f) - 1  # -1 pour l'en-tête
+    except:
+        return None
+
+def analyser_fichier_csv(chemin, nrows=10):
+    """Analyse un fichier CSV et retourne ses informations"""
+    result = {
+        'nom': Path(chemin).name,
+        'chemin': str(chemin),
+        'existe': True,
+        'lignes': 0,
+        'colonnes': 0,
+        'colonnes_noms': [],
+        'taille_kb': 0,
+        'apercu': None,
+        'erreur': None
+    }
+    
+    try:
+        result['taille_kb'] = Path(chemin).stat().st_size / 1024
+        result['lignes'] = compter_lignes_csv(chemin)
         
-        # Lire seulement les premières lignes pour les infos
-        if chemin_fichier.endswith('.tsv'):
-            sep = '\t'
-        else:
-            sep = ','
+        # Lire l'aperçu
+        df = pd.read_csv(chemin, nrows=nrows, low_memory=False)
+        result['colonnes'] = len(df.columns)
+        result['colonnes_noms'] = df.columns.tolist()
+        result['apercu'] = df.head(nrows)
         
-        # Méthode 1: Essayer de lire les premières lignes
-        try:
-            # Lire juste l'en-tête et quelques lignes
-            df_sample = pd.read_csv(chemin_fichier, sep=sep, nrows=5)
-            nb_colonnes = len(df_sample.columns)
-            
-            # Compter les lignes de manière optimisée
-            with open(chemin_fichier, 'r', encoding='utf-8', errors='ignore') as f:
-                nb_lignes = sum(1 for _ in f) - 1  # -1 pour l'en-tête
-            
-            # Lire les 10 premières lignes pour l'aperçu
-            df_preview = pd.read_csv(chemin_fichier, sep=sep, nrows=10)
-            preview = df_preview
-            
-            return {
-                'nom': nom_fichier,
-                'lignes': nb_lignes,
-                'colonnes': nb_colonnes,
-                'taille_kb': taille_kb,
-                'preview': preview,
-                'erreur': None
-            }
-            
-        except pd.errors.ParserError as e:
-            # Méthode 2: Si échec, lire en mode texte
-            with open(chemin_fichier, 'r', encoding='utf-8', errors='ignore') as f:
-                lignes = [next(f) for _ in range(11)]  # 10 lignes + en-tête
-            
-            # Estimer les colonnes à partir de la première ligne
-            premiere_ligne = lignes[0].strip()
-            if sep == ',':
-                nb_colonnes = len(premiere_ligne.split(','))
-            else:
-                nb_colonnes = len(premiere_ligne.split('\t'))
-            
-            with open(chemin_fichier, 'r', encoding='utf-8', errors='ignore') as f:
-                nb_lignes = sum(1 for _ in f) - 1
-            
-            # Créer un aperçu texte
-            preview_text = "\n".join([f"      Ligne {i}: {ligne[:100].strip()}" 
-                                     for i, ligne in enumerate(lignes[:11], 1)])
-            
-            return {
-                'nom': nom_fichier,
-                'lignes': nb_lignes,
-                'colonnes': nb_colonnes,
-                'taille_kb': taille_kb,
-                'preview': preview_text,
-                'erreur': f'Format spécial: {str(e)[:30]}'
-            }
-            
     except Exception as e:
-        return {
-            'nom': Path(chemin_fichier).name,
-            'lignes': 0,
-            'colonnes': 0,
-            'taille_kb': Path(chemin_fichier).stat().st_size / 1024,
-            'preview': None,
-            'erreur': str(e)[:50]
-        }
+        result['erreur'] = str(e)[:100]
+        
+    return result
 
-def afficher_resume_avec_apercu():
-    """Affiche un résumé avec aperçu des 10 premières lignes"""
-    print("📊 RÉSUMÉ DES DONNÉES AVEC APERÇU")
-    print("=" * 60)
+def diagnostiquer_raw():
+    """Diagnostic des données brutes (raw)"""
+    print("\n" + "="*70)
+    print("📥 PHASE 1 : DONNÉES BRUTES (RAW)")
+    print("="*70)
     
-    total_lignes = 0
+    stats_raw = {}
     total_fichiers = 0
+    total_lignes = 0
     
-    for nom, chemin in DOSSIERS.items():
-        fichiers = glob.glob(chemin)
+    for source, dossier in RAW_SOURCES.items():
+        print(f"\n📁 {source.upper()}")
+        print("-" * 50)
         
-        print(f"\n{'='*60}")
-        print(f"📁 {nom.upper()}:")
-        print(f"{'='*60}")
-        
-        if not fichiers:
-            print("   Aucun fichier")
+        if not dossier.exists():
+            print(f"   ❌ Dossier introuvable : {dossier}")
+            stats_raw[source] = {'fichiers': 0, 'lignes': 0, 'erreur': 'Dossier manquant'}
             continue
-            
-        for f in fichiers:
-            print(f"\n📄 Fichier: {Path(f).name}")
-            print(f"📁 Chemin: {f}")
-            
-            resultat = analyser_fichier(f)
+        
+        fichiers_csv = list(dossier.glob("*.csv")) + list(dossier.glob("*.tsv"))
+        stats_raw[source] = {'fichiers': len(fichiers_csv), 'lignes': 0, 'details': []}
+        
+        for fichier in sorted(fichiers_csv):
+            result = analyser_fichier_csv(fichier, nrows=3)
             total_fichiers += 1
             
-            if resultat['erreur']:
-                print(f"   ⚠️  Erreur: {resultat['erreur']}")
-                print(f"   📏 Taille: {resultat['taille_kb']:.1f} KB")
+            if result['erreur']:
+                print(f"   ⚠️  {result['nom']} : ERREUR - {result['erreur']}")
+                stats_raw[source]['details'].append(result)
             else:
-                print(f"   ✅ Lignes: {resultat['lignes']:,}")
-                print(f"   🗂️  Colonnes: {resultat['colonnes']}")
-                print(f"   📏 Taille: {resultat['taille_kb']:.1f} KB")
-                total_lignes += resultat['lignes']
+                total_lignes += result['lignes']
+                stats_raw[source]['lignes'] += result['lignes']
+                print(f"   ✅ {result['nom']:<35} {result['lignes']:>10,} lignes | {result['colonnes']} colonnes | {result['taille_kb']:>8.1f} KB")
+                stats_raw[source]['details'].append(result)
+    
+    print(f"\n📊 TOTAL RAW : {total_fichiers} fichiers, {total_lignes:,} lignes")
+    return stats_raw
+
+def diagnostiquer_processed():
+    """Diagnostic des données transformées (processed) - version récursive"""
+    print("\n" + "="*70)
+    print("🔄 PHASE 2 : DONNÉES TRANSFORMÉES (PROCESSED)")
+    print("="*70)
+    
+    stats_processed = {}
+    total_fichiers = 0
+    total_lignes = 0
+    
+    if not PROCESSED_DIR.exists():
+        print("   ❌ Dossier processed introuvable")
+        return stats_processed
+    
+    # Parcourir récursivement tous les sous-dossiers
+    for source_dir in sorted(PROCESSED_DIR.iterdir()):
+        if source_dir.is_dir():
+            source_name = source_dir.name
+            
+            # Récupérer TOUS les CSV, y compris dans les sous-dossiers
+            fichiers_csv = list(source_dir.rglob("*.csv"))
+            
+            if not fichiers_csv:
+                # Vérifier les sous-dossiers
+                for sub_dir in source_dir.iterdir():
+                    if sub_dir.is_dir():
+                        sub_files = list(sub_dir.glob("*.csv"))
+                        if sub_files:
+                            sous_source = f"{source_name}/{sub_dir.name}"
+                            print(f"\n📁 {sous_source.upper()}")
+                            print("-" * 50)
+                            
+                            stats_processed[sous_source] = {'fichiers': len(sub_files), 'lignes': 0, 'details': []}
+                            
+                            for fichier in sorted(sub_files):
+                                result = analyser_fichier_csv(fichier, nrows=3)
+                                total_fichiers += 1
+                                
+                                if result['erreur']:
+                                    print(f"   ⚠️  {result['nom']} : ERREUR - {result['erreur']}")
+                                else:
+                                    total_lignes += result['lignes']
+                                    stats_processed[sous_source]['lignes'] += result['lignes']
+                                    print(f"   ✅ {result['nom']:<35} {result['lignes']:>10,} lignes | {result['colonnes']} colonnes | {result['taille_kb']:>8.1f} KB")
+                                    stats_processed[sous_source]['details'].append(result)
+                continue
+            
+            print(f"\n📁 {source_name.upper()}")
+            print("-" * 50)
+            
+            stats_processed[source_name] = {'fichiers': len(fichiers_csv), 'lignes': 0, 'details': []}
+            
+            for fichier in sorted(fichiers_csv):
+                result = analyser_fichier_csv(fichier, nrows=3)
+                total_fichiers += 1
                 
-                # Afficher les 10 premières lignes
-                print(f"\n   👀 10 PREMIÈRES LIGNES:")
-                print(f"   {'-'*40}")
-                
-                if isinstance(resultat['preview'], pd.DataFrame):
-                    # Afficher le DataFrame
-                    pd.set_option('display.max_columns', None)
-                    pd.set_option('display.width', 120)
-                    print(resultat['preview'].to_string())
-                elif isinstance(resultat['preview'], str):
-                    # Afficher le texte brut
-                    print(resultat['preview'])
+                if result['erreur']:
+                    print(f"   ⚠️  {result['nom']} : ERREUR - {result['erreur']}")
                 else:
-                    print("   (Aperçu non disponible)")
-                
-                print(f"   {'-'*40}")
+                    total_lignes += result['lignes']
+                    stats_processed[source_name]['lignes'] += result['lignes']
+                    print(f"   ✅ {result['nom']:<35} {result['lignes']:>10,} lignes | {result['colonnes']} colonnes | {result['taille_kb']:>8.1f} KB")
+                    stats_processed[source_name]['details'].append(result)
     
-    print(f"\n{'='*60}")
-    print(f"📈 SYNTHÈSE:")
-    print(f"   • {total_fichiers} fichiers analysés")
-    print(f"   • {total_lignes:,} lignes totales")
-    print("=" * 60)
+    print(f"\n📊 TOTAL PROCESSED : {total_fichiers} fichiers, {total_lignes:,} lignes")
+    return stats_processed
 
-def afficher_resume_rapide():
-    """Affiche seulement un résumé rapide"""
-    print("📋 RÉSUMÉ RAPIDE")
-    print("=" * 50)
+def diagnostiquer_warehouse():
+    """Diagnostic du data warehouse"""
+    print("\n" + "="*70)
+    print("💾 PHASE 3 : DATA WAREHOUSE")
+    print("="*70)
+    
+    stats_warehouse = {
+        'dimensions': [],
+        'faits': [],
+        'dashboard': [],
+        'autres': []
+    }
+    
+    if not WAREHOUSE_DIR.exists():
+        print("   ❌ Dossier warehouse introuvable")
+        return stats_warehouse
+    
+    fichiers_csv = sorted(WAREHOUSE_DIR.glob("*.csv"))
+    fichiers_json = sorted(WAREHOUSE_DIR.glob("*.json"))
+    fichiers_sql = sorted(WAREHOUSE_DIR.glob("*.sql"))
+    
+    # Classifier les fichiers
+    for fichier in fichiers_csv:
+        nom = fichier.name.lower()
+        result = analyser_fichier_csv(fichier, nrows=5)
+        
+        if nom.startswith('dim_'):
+            stats_warehouse['dimensions'].append(result)
+        elif nom.startswith('facts_'):
+            stats_warehouse['faits'].append(result)
+        elif 'dashboard' in nom or 'operator' in nom:
+            stats_warehouse['dashboard'].append(result)
+        else:
+            stats_warehouse['autres'].append(result)
+    
+    # Affichage
+    categories = [
+        ("📐 DIMENSIONS", stats_warehouse['dimensions']),
+        ("📊 FAITS", stats_warehouse['faits']),
+        ("📈 DASHBOARD", stats_warehouse['dashboard']),
+        ("📄 AUTRES", stats_warehouse['autres']),
+    ]
     
     total_lignes = 0
-    total_fichiers = 0
+    for titre, fichiers in categories:
+        if fichiers:
+            print(f"\n{titre}")
+            print("-" * 50)
+            for result in fichiers:
+                total_lignes += result['lignes']
+                status = "✅" if not result['erreur'] else "⚠️"
+                print(f"   {status} {result['nom']:<35} {result['lignes']:>10,} lignes | {result['colonnes']} colonnes | {result['taille_kb']:>8.1f} KB")
+                
+                # Afficher les colonnes
+                if result['colonnes_noms']:
+                    print(f"      Colonnes : {', '.join(result['colonnes_noms'][:8])}", end="")
+                    if len(result['colonnes_noms']) > 8:
+                        print(f" (+ {len(result['colonnes_noms']) - 8} autres)")
+                    else:
+                        print()
     
-    for nom, chemin in DOSSIERS.items():
-        fichiers = glob.glob(chemin)
-        
-        print(f"\n📁 {nom}:")
-        if not fichiers:
-            print("   Aucun fichier")
-            continue
-            
-        for f in fichiers:
-            resultat = analyser_fichier(f)
-            total_fichiers += 1
-            
-            if resultat['erreur']:
-                print(f"   ⚠️ {resultat['nom']}")
-                print(f"      Erreur: {resultat['erreur']}")
+    # Fichiers non-CSV
+    if fichiers_json or fichiers_sql:
+        print(f"\n📋 AUTRES FICHIERS")
+        print("-" * 50)
+        for f in fichiers_json:
+            taille = f.stat().st_size / 1024
+            print(f"   📋 {f.name:<35} {taille:>8.1f} KB")
+        for f in fichiers_sql:
+            taille = f.stat().st_size / 1024
+            print(f"   📜 {f.name:<35} {taille:>8.1f} KB")
+    
+    print(f"\n📊 TOTAL WAREHOUSE : {len(fichiers_csv)} fichiers CSV, {total_lignes:,} lignes")
+    return stats_warehouse
+
+def verifier_coherence(raw_stats, processed_stats, warehouse_stats):
+    """Vérifie la cohérence entre les phases du pipeline"""
+    print("\n" + "="*70)
+    print("🔍 VÉRIFICATION DE COHÉRENCE")
+    print("="*70)
+    
+    alerts = []
+    checks = []
+    
+    # Vérifier que les données raw ont bien été transformées
+    sources_raw = set(raw_stats.keys())
+    sources_processed = set(processed_stats.keys())
+    
+    for source in sources_raw:
+        if source in ['back_on_track', 'eurostat', 'emission_co2']:
+            source_name = source.replace('_', ' ')
+            if source not in sources_processed and source != 'emission_co2':
+                alerts.append(f"⚠️  {source} : présent en raw mais absent en processed")
+            elif source == 'emission_co2' and 'emissions' not in sources_processed:
+                alerts.append(f"⚠️  emissions : présent en raw mais absent en processed")
+    
+    # Vérifier les dimensions essentielles
+    dims_attendues = ['dim_countries', 'dim_years', 'dim_operators', 'dim_stops']
+    dims_presentes = [r['nom'].replace('.csv', '') for r in warehouse_stats['dimensions']]
+    
+    for dim in dims_attendues:
+        if dim in dims_presentes:
+            checks.append(f"✅ {dim} : présent")
+        else:
+            alerts.append(f"❌ {dim} : MANQUANT")
+    
+    # Vérifier les tables de faits
+    faits_attendus = ['facts_night_trains', 'facts_country_stats']
+    faits_presents = [r['nom'].replace('.csv', '') for r in warehouse_stats['faits']]
+    
+    for fait in faits_attendus:
+        if fait in faits_presents:
+            checks.append(f"✅ {fait} : présent")
+        else:
+            alerts.append(f"❌ {fait} : MANQUANT")
+    
+    # Vérifier les colonnes importantes dans facts_night_trains
+    for result in warehouse_stats['faits']:
+        if 'facts_night_trains' in result['nom']:
+            colonnes = result['colonnes_noms']
+            cols_attendues = ['distance_km', 'duration_min', 'country_id', 'year_id', 'operator_id', 'is_night']
+            for col in cols_attendues:
+                if col in colonnes:
+                    checks.append(f"✅ facts_night_trains.{col} : présent")
+                else:
+                    alerts.append(f"❌ facts_night_trains.{col} : MANQUANT")
+    
+    # Vérifier operator_dashboard
+    dashboard_noms = [r['nom'] for r in warehouse_stats['dashboard']]
+    if 'operator_dashboard.csv' in dashboard_noms:
+        checks.append(f"✅ operator_dashboard.csv : présent")
+    else:
+        alerts.append(f"⚠️  operator_dashboard.csv : non trouvé (optionnel)")
+    
+    # Affichage
+    print("\n✅ CONTRÔLES RÉUSSIS :")
+    for check in checks:
+        print(f"   {check}")
+    
+    if alerts:
+        print("\n⚠️  ALERTES :")
+        for alert in alerts:
+            print(f"   {alert}")
+    else:
+        print("\n✅ Aucune alerte détectée")
+    
+    return len(alerts) == 0
+
+def generer_rapport_json(raw_stats, processed_stats, warehouse_stats, chemin_rapport=None):
+    """Génère un rapport JSON complet du diagnostic"""
+    if chemin_rapport is None:
+        chemin_rapport = BASE_DIR / "data" / "audit" / "diagnostic_report.json"
+    
+    chemin_rapport.parent.mkdir(parents=True, exist_ok=True)
+    
+    def convertir_stats(stats_dict):
+        """Convertit les stats en format sérialisable"""
+        result = {}
+        for key, value in stats_dict.items():
+            if isinstance(value, dict):
+                if 'details' in value:
+                    # Simplifier les détails
+                    details_simples = []
+                    for d in value['details']:
+                        details_simples.append({
+                            'nom': d.get('nom', ''),
+                            'lignes': d.get('lignes', 0),
+                            'colonnes': d.get('colonnes', 0),
+                            'taille_kb': d.get('taille_kb', 0),
+                            'erreur': d.get('erreur')
+                        })
+                    result[key] = {
+                        'fichiers': value.get('fichiers', 0),
+                        'lignes': value.get('lignes', 0),
+                        'details': details_simples
+                    }
+                else:
+                    result[key] = {
+                        k: v for k, v in value.items() if k != 'apercu'
+                    }
             else:
-                print(f"   ✓ {resultat['nom']}")
-                print(f"      Lignes: {resultat['lignes']:,}")
-                print(f"      Colonnes: {resultat['colonnes']}")
-                total_lignes += resultat['lignes']
+                result[key] = value
+        return result
     
-    print(f"\n{'='*50}")
-    print(f"📈 TOTAL: {total_fichiers} fichiers, {total_lignes:,} lignes")
-    print("=" * 50)
+    rapport = {
+        'date_diagnostic': datetime.now().isoformat(),
+        'projet': 'ObRail Europe - MSPR E6.1',
+        'raw': convertir_stats(raw_stats),
+        'processed': convertir_stats(processed_stats),
+        'warehouse': convertir_stats(warehouse_stats),
+        'statut': 'OK'
+    }
+    
+    import json
+    with open(chemin_rapport, 'w', encoding='utf-8') as f:
+        json.dump(rapport, f, indent=2, ensure_ascii=False, default=str)
+    
+    print(f"\n📋 Rapport JSON sauvegardé : {chemin_rapport}")
+
+def main():
+    """Fonction principale du diagnostic"""
+    print("="*70)
+    print("🔬 DIAGNOSTIC COMPLET DU PIPELINE ETL OBRAIL EUROPE")
+    print(f"📅 Date : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("="*70)
+    
+    # Phase 1 : Données brutes
+    raw_stats = diagnostiquer_raw()
+    
+    # Phase 2 : Données transformées
+    processed_stats = diagnostiquer_processed()
+    
+    # Phase 3 : Data warehouse
+    warehouse_stats = diagnostiquer_warehouse()
+    
+    # Vérification de cohérence
+    coherence_ok = verifier_coherence(raw_stats, processed_stats, warehouse_stats)
+    
+    # Rapport JSON
+    generer_rapport_json(raw_stats, processed_stats, warehouse_stats)
+    
+    # Résumé final
+    print("\n" + "="*70)
+    print("📊 RÉSUMÉ FINAL")
+    print("="*70)
+    
+    total_raw = sum(s.get('lignes', 0) for s in raw_stats.values())
+    total_processed = sum(s.get('lignes', 0) for s in processed_stats.values())
+    total_warehouse = sum(
+        r.get('lignes', 0) 
+        for cat in ['dimensions', 'faits', 'dashboard', 'autres'] 
+        for r in warehouse_stats.get(cat, [])
+    )
+    
+    print(f"   📥 Données brutes      : {total_raw:>12,} lignes")
+    print(f"   🔄 Données transformées : {total_processed:>12,} lignes")
+    print(f"   💾 Data warehouse      : {total_warehouse:>12,} lignes")
+    print(f"\n   Statut global : {'✅ OK' if coherence_ok else '⚠️  VÉRIFIER LES ALERTES'}")
+    print("="*70)
 
 if __name__ == "__main__":
-    print("🔧 UTILISATION :")
-    print("   python diagnostic.py          # Résumé avec aperçu complet")
-    print("   python diagnostic.py --rapide # Résumé rapide seulement")
-    
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "--rapide":
-        afficher_resume_rapide()
-    else:
-        afficher_resume_avec_apercu()
+    # Accepter un argument --csv pour exporter aussi en CSV
+    main()
