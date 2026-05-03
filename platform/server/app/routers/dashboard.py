@@ -1,75 +1,55 @@
-# server\app\routers\dashboard.py
-# ROUTER: Endpoints pour le tableau de bord ObRail
-# ================================================
-# Rôle: Alimenter le dashboard interactif avec des indicateurs synthétiques
-#       et des métriques agrégées pour la prise de décision.
-
-
-from fastapi import APIRouter, Depends, Query
+# server/app/routers/dashboard.py
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 from app.dependencies import get_db
 from app.models import DashboardMetrics, FactsCountryStats, FactsNightTrains, DimCountries, DimOperators, DimYears
 from app.schemas.statistics import DashboardMetricsResponse, KPIsResponse
 
-
 router = APIRouter()
+
 
 @router.get("/api/dashboard/metrics", response_model=List[DashboardMetricsResponse])
 def get_dashboard_metrics(db: Session = Depends(get_db)):
-    """
-    Récupère les métriques agrégées pour le dashboard.
-    Vue: dashboard_metrics
-    """
-    metrics = db.query(DashboardMetrics).all()
+    """Métriques agrégées par pays. Vue: dashboard_metrics"""
+    return db.query(DashboardMetrics).all()
 
-    return metrics
 
 @router.get("/api/dashboard/kpis", response_model=KPIsResponse)
 def get_dashboard_kpis(db: Session = Depends(get_db)):
-    """
-    Récupère les indicateurs clés de performance pour le dashboard.
-    Tables: facts_night_trains, facts_country_stats, dim_countries, dim_operators, dim_years
-    """
-    # Comptages
-    total_countries = len(db.query(DimCountries).all())
-    total_night_trains = len(db.query(FactsNightTrains).all())
-    total_operators = len(db.query(DimOperators).all())
-    
+    """Indicateurs clés de performance."""
+
+    # Comptages corrects et séparés
+    total_countries = db.query(DimCountries).count()
+    total_trains = db.query(FactsNightTrains).count()
+    total_night_trains = db.query(FactsNightTrains).filter(FactsNightTrains.is_night.is_(True)).count()
+    total_day_trains = db.query(FactsNightTrains).filter(FactsNightTrains.is_night.is_(False)).count()
+    total_operators = db.query(DimOperators).count()
+
     # Période couverte
     years = db.query(DimYears.year).order_by(DimYears.year).all()
-    if len(years) > 0:
-        min_year = years[0][0]      # La première de la liste
-        max_year = years[-1][0]     # La dernière de la liste
-        years_covered = f"{min_year}-{max_year}"
+    if years:
+        years_covered = f"{years[0][0]}-{years[-1][0]}"
     else:
         years_covered = "Pas de données"
-        print("Aucune année trouvée")
-    
-    # Agrégation des statistiques
-    stats = db.query(FactsCountryStats).all()
-    
-    # Initialisation
-    total_co2_per_passenger = 0
-    total_passengers = 0
-    total_co2_emissions = 0
-    nb_stats = 0
-    
-    for stat in stats:
-        total_co2_per_passenger += float(stat.co2_per_passenger)
-        total_passengers += float(stat.passengers)
-        total_co2_emissions += float(stat.co2_emissions)
-        nb_stats += 1
-    
-    # Moyenne du CO2 par passager
-    if nb_stats > 0:
-        avg_co2_per_passenger = total_co2_per_passenger / nb_stats
-    else:
-        avg_co2_per_passenger = 0
-    
+
+    # Agrégations en une seule requête
+    stats = db.query(
+        func.avg(FactsCountryStats.co2_per_passenger),
+        func.sum(FactsCountryStats.passengers),
+        func.sum(FactsCountryStats.co2_emissions)
+    ).first()
+
+    avg_co2_per_passenger = float(stats[0] or 0)
+    total_passengers = float(stats[1] or 0)
+    total_co2_emissions = float(stats[2] or 0)
+
     return KPIsResponse(
         total_countries=total_countries,
+        total_trains=total_trains,
         total_night_trains=total_night_trains,
+        total_day_trains=total_day_trains,
         total_operators=total_operators,
         years_covered=years_covered,
         avg_co2_per_passenger=avg_co2_per_passenger,

@@ -1,18 +1,13 @@
-# server\app\routers\operators.py
-# ROUTER: Endpoints pour les opérateurs ferroviaires
-# ==================================================
-# Rôle: Analyser la performance et la contribution des différents
-#       opérateurs ferroviaires européens.
-
-
+# server/app/routers/operators.py
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
 from app.dependencies import get_db
-from app.models import DimOperators, FactsNightTrains, DimCountries
+from app.models import DimOperators, FactsNightTrains, DimCountries, OperatorDashboard
 from app.schemas.operators import OperatorResponse, OperatorRanking
 
 router = APIRouter()
+
 
 @router.get("/api/operators", response_model=List[OperatorResponse])
 def get_operators(
@@ -20,60 +15,50 @@ def get_operators(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500)
 ):
-    """
-    Récupère la liste des opérateurs ferroviaires.
-    Tables: dim_operators
-    """
-    # Construction et exécution de la requête
-    query = db.query(DimOperators)
-    operators = query.offset(skip).limit(limit).all()
-    
-    # Transformation en format de réponse
-    transformed_results = []
-
-    for op in operators:
-        response_item = OperatorResponse(
+    """Récupère la liste des opérateurs ferroviaires."""
+    operators = db.query(DimOperators).offset(skip).limit(limit).all()
+    return [
+        OperatorResponse(
             operator_id=op.operator_id,
             operator_name=op.operator_name
         )
-        transformed_results.append(response_item)
+        for op in operators
+    ]
 
-    return transformed_results
 
 @router.get("/api/operators/{operator_id}/stats", response_model=OperatorRanking)
 def get_operator_stats(
-    operator_id: int, 
+    operator_id: int,
     db: Session = Depends(get_db)
 ):
     """
-    Statistiques détaillées par opérateur ferroviaire.
-    Tables: dim_operators, facts_night_trains, dim_countries
+    Statistiques détaillées par opérateur.
+    Utilise la vue operator_dashboard + dim_countries pour les pays desservis.
     """
-    # Recherche de l'opérateur par son ID
-    operator = db.query(DimOperators).filter(
-        DimOperators.operator_id == operator_id
+    # Récupération depuis la vue operator_dashboard
+    dashboard = db.query(OperatorDashboard).filter(
+        OperatorDashboard.operator_id == operator_id
     ).first()
-    
-    # Si l'opérateur n'existe pas, retour d'une erreur 404
-    if not operator:
+
+    if not dashboard:
         raise HTTPException(status_code=404, detail="Opérateur non trouvé")
-    
-    # Nombre de trains de nuit
-    night_trains = db.query(FactsNightTrains).filter(
-        FactsNightTrains.operator_id == operator_id
-    ).count()
-    
-    # Pays desservis
+
+    # Pays desservis par cet opérateur
     countries = db.query(DimCountries).join(
-        FactsNightTrains
+        FactsNightTrains,
+        DimCountries.country_id == FactsNightTrains.country_id
     ).filter(
         FactsNightTrains.operator_id == operator_id
     ).distinct().all()
-    
+
     return OperatorRanking(
-        operator_id=operator.operator_id,
-        operator_name=operator.operator_name,
-        total_trains=night_trains,
+        operator_id=dashboard.operator_id,
+        operator_name=dashboard.operator_name,
+        total_trains=dashboard.nb_trains or 0,
+        night_trains=dashboard.nb_trains_nuit or 0,
+        day_trains=dashboard.nb_trains_jour or 0,
+        distance_totale_km=float(dashboard.distance_totale_km or 0),
+        duree_moyenne_min=float(dashboard.duree_moyenne_min or 0),
         countries_served=[c.country_name for c in countries],
         countries_count=len(countries)
     )
