@@ -1,89 +1,107 @@
-"""
-Orchestrateur principal du chargement PostgreSQL
-"""
+# etl/load/main_load.py
+"""Script principal de chargement du data warehouse vers PostgreSQL"""
 import sys
-import time
-import os 
-import json
 from pathlib import Path
 
-# Ajouter le répertoire racine au PYTHONPATH
 current_dir = Path(__file__).parent
 project_root = current_dir.parent
 sys.path.insert(0, str(project_root))
 
-# Importer les fonctions de chargement
-from load.load_countries import load_countries
-from load.load_years import load_years
-from load.load_operators import load_operators
-from load.load_night_trains import load_night_trains
-from load.load_country_stats import load_country_stats
-from load.database import db
+from .database import db
+from .load_countries import load_countries
+from .load_years import load_years
+from .load_operators import load_operators
+from .load_stops import load_stops
+from .load_country_stats import load_country_stats
+from .load_night_trains import load_night_trains
 
-
-def load_reports():
-    """Charger quality_reports depuis data/warehouse vers platform/server/app/reports"""
+def init_schema():
+    """Initialise le schéma SQL"""
+    print("=" * 60)
+    print("📐 INITIALISATION DU SCHÉMA")
+    print("=" * 60)
     
-    # Créer le dossier
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    report_path = os.path.join(project_root, "platform", "server", "app", "reports")
-    os.makedirs(report_path, exist_ok=True)
+    sql_path = Path("data/warehouse/create_tables.sql")
     
-    # Définir les chemins source et destination
-    chemin_source = "data/warehouse/quality_reports.json"
-    chemin_destination = os.path.join(report_path, "quality_reports.json")
+    if not sql_path.exists():
+        print(f"❌ Script SQL introuvable : {sql_path}")
+        print("   Place le script create_tables.sql dans data/warehouse/")
+        return False
     
-    # Vérifier que le fichier source existe
-    if not os.path.exists(chemin_source):
-        print(f"❌ Fichier source introuvable: {chemin_source}")
-        # Créer un fichier vide par défaut
-        donnees_source = {"reports": [], "status": "default"}
-    else:
-        # Lire les données source
-        with open(chemin_source, 'r', encoding='utf-8') as f:
-            donnees_source = json.load(f)
-        print(f"✅ Données lues depuis {chemin_source}")
-        
-    # Écrire dans le fichier destination
-    with open(chemin_destination, 'w', encoding='utf-8') as f:
-        json.dump(donnees_source, f, indent=2, ensure_ascii=False)
-
-    return True
+    with open(sql_path, 'r', encoding='utf-8') as f:
+        sql_script = f.read()
+    
+    if not db.connect():
+        return False
+    
+    try:
+        db.cursor.execute(sql_script)
+        db.connection.commit()
+        print("✅ Schéma créé avec succès")
+        return True
+    except Exception as e:
+        print(f"❌ Erreur création schéma: {e}")
+        return False
+    finally:
+        db.close()
 
 def mainload():
-    """Fonction principale"""
-        
-    print("\n🔌 Test de connexion à PostgreSQL...")
-
-    # Tester la connexion via l'instance globale db
+    """Chargement complet"""
+    print("=" * 60)
+    print("💾 CHARGEMENT DATA WAREHOUSE → POSTGRESQL")
+    print("=" * 60)
+    
+    # 0. Test connexion
     if not db.test_connection():
-        print("❌ Échec de la connexion à PostgreSQL")
-        print("   Vérifiez que:")
-        print("   1. PostgreSQL est en cours d'exécution")
-        print("   2. La base 'obrail' existe")
-        print("   3. L'utilisateur 'obrail_user' a les bons droits")
-        print("   4. Les tables sont créées (exécutez 01_init.sql)")
-        return False
-
-    # Chargement séquentiel des données
-    print("\n🚀 Démarrage du chargement...")
-    steps = [
-        ("Années", load_years),                    # Dimension
-        ("Opérateurs", load_operators),            # Dimension
-        ("Pays", load_countries),                   # Dimension
-        ("Trajets par pays", load_country_stats),   # Fait (dépend des dimensions)
-        ("Trajets de nuit", load_night_trains),     # Fait (dépend des dimensions)
-        ("Chargement quality reports", load_reports), # Fichier JSON
-    ]
-
-    # Exécution séquentielle        
-    for step_name, step_func in steps:
-        print(f"\n➡️  Étape: {step_name}")
-        if not step_func():
-            print(f"❌ Échec à l'étape: {step_name}")
-            break
-            
-    return True
+        print("\n⚠️  Les tables n'existent pas. Initialisation du schéma...")
+        if not init_schema():
+            print("❌ Impossible d'initialiser le schéma. Abandon.")
+            return
+    
+    print("\n" + "=" * 60)
+    print("📥 CHARGEMENT DES DONNÉES")
+    print("=" * 60)
+    
+    # 1. Dimensions (ordre important pour les FK)
+    print("\n📐 DIMENSIONS:")
+    load_countries()
+    load_years()
+    load_operators()
+    load_stops()
+    
+    # 2. Faits (après les dimensions)
+    print("\n📊 FAITS:")
+    load_country_stats()
+    load_night_trains()
+    
+    # 3. Vues
+    print("\n📈 VUES:")
+    db.refresh_views()
+    
+    # 4. Résumé
+    print("\n" + "=" * 60)
+    print("📊 RÉSUMÉ DU CHARGEMENT")
+    print("=" * 60)
+    
+    if db.connect():
+        tables = [
+            'dim_countries', 'dim_years', 'dim_operators', 'dim_stops',
+            'facts_night_trains', 'facts_country_stats'
+        ]
+        for table in tables:
+            db.cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            count = db.cursor.fetchone()[0]
+            print(f"   📄 {table:<25} : {count:>10,} lignes")
+        
+        db.cursor.execute("SELECT COUNT(*) FROM dashboard_metrics")
+        print(f"   📈 dashboard_metrics     : {db.cursor.fetchone()[0]:>10,} lignes")
+        
+        db.cursor.execute("SELECT COUNT(*) FROM operator_dashboard")
+        print(f"   📈 operator_dashboard    : {db.cursor.fetchone()[0]:>10,} lignes")
+        
+        db.close()
+    
+    print("\n✅ Chargement terminé avec succès !")
 
 if __name__ == "__main__":
     mainload()

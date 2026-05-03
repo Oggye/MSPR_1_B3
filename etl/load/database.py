@@ -1,3 +1,4 @@
+# etl/load/database.py
 import os
 import psycopg2 
 import pandas as pd
@@ -13,23 +14,20 @@ class DatabaseConnection:
 
         # Paramètres de connexion - à adapter selon votre environnement
         self.config = {
-            'host': 'db' or 'localhost',
-            'port': 5432,
-            'database': 'obrail',
-            'user': 'obrail_user',
-            'password': '1234'
+            'host': os.getenv('DB_HOST', 'localhost'),
+            'port': int(os.getenv('DB_PORT', 5432)),
+            'database': os.getenv('DB_NAME', 'obrail'),
+            'user': os.getenv('DB_USER', 'obrail_user'),
+            'password': os.getenv('DB_PASSWORD', '1234')
         }
     
     def connect(self):
         """Établir la connexion à la base de données"""
         try:
-            # Tentative de connexion avec les paramètres configurés
             self.connection = psycopg2.connect(**self.config)
-            # On crée un curseur pour pouvoir exécuter des requêtes
             self.cursor = self.connection.cursor()
             return True
         except Exception as e:
-            # Si la connexion échoue, on affiche l'erreur
             print(f"Erreur de connexion: {e}")
             return False
 
@@ -39,23 +37,20 @@ class DatabaseConnection:
             return False
         
         try:
-            # Test basique pour voir si PostgreSQL répond
             self.cursor.execute("SELECT 1")
             print("✅ Connexion PostgreSQL établie")
             
-            # Vérifier les tables essentielles
             essential_tables = [
                 'dim_countries', 
                 'dim_years', 
-                'dim_operators', 
+                'dim_operators',
+                'dim_stops',
                 'facts_night_trains', 
                 'facts_country_stats'
             ]
 
-            missing = []
-
             print("\n📋 Vérification des tables:")
-            # Vérification de chaque table
+            missing = []
             for table in essential_tables:
                 self.cursor.execute(f"""
                     SELECT EXISTS (
@@ -64,36 +59,31 @@ class DatabaseConnection:
                         AND table_name = '{table}'
                     )
                 """)
-                print(f"{table} : existe")
-                
-                if not self.cursor.fetchone()[0]:
+                exists = self.cursor.fetchone()[0]
+                status = "✅" if exists else "❌"
+                print(f"   {status} {table}")
+                if not exists:
                     missing.append(table)
             
-            # On vérifie les tables manquantes
             if missing:
-                print(f"❌ Tables manquantes:")
-                for table in missing:
-                    print(f"   - {table}")
-                print("Créer les tables")
+                print(f"\n❌ {len(missing)} table(s) manquante(s). Exécutez d'abord le script SQL d'initialisation.")
                 return False
             
-            print("✅ Toutes les tables essentielles sont présentes")
+            print("\n✅ Toutes les tables essentielles sont présentes")
 
-            # Vérifier le vue pour le dashboard
-            print("\n📋 Vérification de la vue:")
-            self.cursor.execute("""
+            # Vérifier les vues
+            print("\n📋 Vérification des vues:")
+            for view in ['dashboard_metrics', 'operator_dashboard']:
+                self.cursor.execute(f"""
                     SELECT EXISTS (
                         SELECT FROM information_schema.views 
                         WHERE table_schema = 'public' 
-                        AND table_name = 'dashboard_metrics'
+                        AND table_name = '{view}'
                     )
                 """)
-
-            exists = self.cursor.fetchone()[0]
-            if exists:
-                    print(f"dashboard_metric: vue présente")
-            else:
-                    print(f"❌ dashboard_metric: vue absente")
+                exists = self.cursor.fetchone()[0]
+                status = "✅" if exists else "⚠️"
+                print(f"   {status} {view}")
 
             return True
         except Exception as e:
@@ -105,36 +95,45 @@ class DatabaseConnection:
     def execute_query(self, query, params=None):
         """Exécute une requête SQL et gère la connexion automatiquement"""
         try:
-            # Établir une connexion si nécessaire
             if not self.connection:
                 self.connect()
             
-            # Exécution avec ou sans paramètres
             if params:
                 self.cursor.execute(query, params)
             else:
                 self.cursor.execute(query)
             
-            # Validation de la transaction
             self.connection.commit()
             return self.cursor
         except Exception as e:
             print(f"❌ Erreur requête: {e}")
+            if self.connection:
+                self.connection.rollback()
             return None
     
     def load_dataframe(self, df, table_name):
-        """Charger un DataFrame dans une table"""
+        """Charger un DataFrame dans une table - version corrigée et complète"""
         try:
             if not self.connect():
                 return False
             
-            print(f"📥 Chargement de {table_name}...")
+            print(f"📥 Chargement de {table_name}... ({len(df)} lignes)")
             
             # Vider la table AVEC CASCADE pour les contraintes FK
             self.cursor.execute(f"TRUNCATE TABLE {table_name} CASCADE")
             
             # Insérer les données selon la table
-            if table_name == 'dim_years':
+            if table_name == 'dim_stops':
+                for row in df.itertuples():
+                    self.cursor.execute(
+                        """INSERT INTO dim_stops (stop_id_dim, stop_name, stop_lat, stop_lon, stop_id, source_country) 
+                        VALUES (%s, %s, %s, %s, %s, %s)""",
+                        (row.stop_id_dim, row.stop_name, row.stop_lat, row.stop_lon, 
+                         row.stop_id if hasattr(row, 'stop_id') else None, 
+                         row.source_country)
+                    )
+            
+            elif table_name == 'dim_years':
                 for row in df.itertuples():
                     self.cursor.execute(
                         "INSERT INTO dim_years (year_id, year, is_after_2010) VALUES (%s, %s, %s)",
@@ -159,34 +158,88 @@ class DatabaseConnection:
                 for row in df.itertuples():
                     self.cursor.execute(
                         """INSERT INTO facts_night_trains 
-                        (fact_id, route_id, night_train, operator_id, year_id, country_id, is_night) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                        (row.fact_id, row.route_id, row.night_train, row.operator_id, row.year_id, row.country_id, row.is_night)
+                        (fact_id, route_id, night_train, country_id, year_id, operator_id, is_night, distance_km, duration_min) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (row.fact_id, row.route_id, row.night_train, row.country_id, 
+                         row.year_id, row.operator_id, row.is_night, row.distance_km, row.duration_min)
                     )
             
             elif table_name == 'facts_country_stats':
                 for row in df.itertuples():
                     self.cursor.execute(
                         """INSERT INTO facts_country_stats 
-                        (stats_id, passengers, co2_emissions, co2_per_passenger, country_id, year_id) 
+                        (stat_id, country_id, year_id, passengers, co2_emissions, co2_per_passenger) 
                         VALUES (%s, %s, %s, %s, %s, %s)""",
-                        (row.stat_id, row.passengers, row.co2_emissions, row.co2_per_passenger, row.country_id, row.year_id)
+                        (row.stat_id, row.country_id, row.year_id, row.passengers, row.co2_emissions, row.co2_per_passenger)
                     )
             
             # Validation de toutes les insertions            
             self.connection.commit()
+            print(f"   ✅ {table_name} chargé avec succès")
             return True
             
         except Exception as e:
             print(f"❌ Erreur chargement {table_name}: {e}")
+            if self.connection:
+                self.connection.rollback()
+            import traceback
+            traceback.print_exc()
             return False
    
+    def refresh_views(self):
+        """Recréer les vues dashboard"""
+        if not self.connect():
+            return False
+        
+        try:
+            print("🔄 Recréation des vues...")
+            
+            self.cursor.execute("DROP VIEW IF EXISTS dashboard_metrics CASCADE")
+            self.cursor.execute("DROP VIEW IF EXISTS operator_dashboard CASCADE")
+            
+            self.cursor.execute("""
+                CREATE VIEW dashboard_metrics AS
+                SELECT 
+                    c.country_id,
+                    c.country_name,
+                    c.country_code,
+                    AVG(s.passengers)::NUMERIC(15, 2) as avg_passengers,
+                    AVG(s.co2_emissions)::NUMERIC(15, 4) as avg_co2_emissions,
+                    AVG(s.co2_per_passenger)::NUMERIC(15, 6) as avg_co2_per_passenger
+                FROM facts_country_stats s
+                JOIN dim_countries c ON s.country_id = c.country_id
+                GROUP BY c.country_id, c.country_name, c.country_code
+            """)
+            
+            self.cursor.execute("""
+                CREATE VIEW operator_dashboard AS
+                SELECT 
+                    o.operator_id,
+                    o.operator_name,
+                    COUNT(f.fact_id) as nb_trains,
+                    SUM(CASE WHEN f.is_night = TRUE THEN 1 ELSE 0 END) as nb_trains_nuit,
+                    SUM(CASE WHEN f.is_night = FALSE THEN 1 ELSE 0 END) as nb_trains_jour,
+                    COALESCE(SUM(f.distance_km), 0)::NUMERIC(15, 2) as distance_totale_km,
+                    COALESCE(AVG(f.duration_min), 0)::NUMERIC(10, 1) as duree_moyenne_min
+                FROM dim_operators o
+                LEFT JOIN facts_night_trains f ON o.operator_id = f.operator_id
+                GROUP BY o.operator_id, o.operator_name
+                ORDER BY nb_trains DESC
+            """)
+            
+            self.connection.commit()
+            print("   ✅ Vues créées avec succès")
+            return True
+        except Exception as e:
+            print(f"❌ Erreur création vues: {e}")
+            return False
+
     def close(self):
         """Fermer la connexion"""
         if self.cursor:
-            self.cursor.close()  # Fermeture du curseur
+            self.cursor.close()
         if self.connection:
-            self.connection.close() # Fermeture de la connexion
+            self.connection.close()
 
 # Instance globale
 db = DatabaseConnection()
