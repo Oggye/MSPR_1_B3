@@ -130,10 +130,12 @@ ORDER BY y.year;
 
 
 
+--------------------------------------------------------------------------------
+================================================================================
+--------------------------------------------------------------------------------
 
 
-
-**À Corriger En Priorité**
+*À Corriger En Priorité*
 
 1. Dans [models.py](platform/server/app/models.py:55), aligner les modèles SQLAlchemy avec la nouvelle BDD:
    - `FactsCountryStats.stats_id` doit devenir `stat_id`, car la table SQL utilise `stat_id`.
