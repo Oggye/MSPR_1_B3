@@ -235,3 +235,19 @@ Ordre conseillé:
 6. Relancer BDD + ETL + API, puis tester `/api/night-trains`, `/api/night-trains/day`, `/api/night-trains/night`.
 
 Je n’ai rien modifié dans le code.
+
+
+
+
+----------------------------------
+# front:
+- faire une page connexion pour intrface admin et client(option)  
+- fair uen page avec 2 bouton: client et ingenieurs
+Partit ingenieur :
+- 
+Partit client :
+- page d'accueil (dashboard : kpi) avec des filtre(client/dashboard) 
+- page de carte pour voir les differenst train de jour et de nuit et leur trajet (client/carte)
+- page pour voir les differents trajet la durer et la distance(client/trajets) 
+- page pour voir les statistique global(emmision de C02 des train de jours et train nuit, de la frequence des passagers pour les trains de jours et train de nuit et selon les villes, dahsboard metrics,Statistiques détaillées par opérateur,Récupère les données d'évolution temporelle pour les graphiques,Classe les pays par performance CO2*)
+- une page pour récupère la liste des opérateurs ferroviaires
