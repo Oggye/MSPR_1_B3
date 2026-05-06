@@ -260,7 +260,7 @@ Partit client :
 1. Fichiers de test créés (9 fichiers)
 - conftest.py - Configuration partagée (fixtures DB, client, données test)
 - test_countries.py - Tests pour /api/countries/* (4 tests)
-- test_night_trains.py - Tests pour /api/night-trains/* (5 tests)
+- test_night_trains.py - Tests pour /api/night-trains/* (6 tests)
 - test_operators.py - Tests pour /api/operators/* (3 tests)
 - test_dashboard.py - Tests pour /api/dashboard/* (2 tests)
 - test_analysis.py - Tests pour /api/analysis/* (2 tests)
@@ -276,8 +276,8 @@ Partit client :
 
 
 ✅Résultat final
-- 26 tests unitaires créés et fonctionnels
-- 100% de succès (26/26 tests passent)
+- 27 tests unitaires créés et fonctionnels
+- 100% de succès (27/27 tests passent)
 - Couverture : Tous les endpoints principaux testés
 - Isolation : Chaque test utilise une DB propre
 - Maintenabilité : Structure modulaire facile à étendre
