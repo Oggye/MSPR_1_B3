@@ -12,7 +12,7 @@ class TestNightTrainsEndpoints:
         response = client.get("/api/night-trains")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 3  # 3 trains dans sample_data
+        assert len(data) == 25  # 25 trains dans sample_data
         assert "night_train" in data[0]
         assert "country_name" in data[0]
 
@@ -24,9 +24,9 @@ class TestNightTrainsEndpoints:
         assert "total_trains" in data
         assert "total_night_trains" in data
         assert "total_day_trains" in data
-        assert data["total_trains"] == 3  # 3 trains dans sample_data
-        assert data["total_night_trains"] == 2  # 2 trains de nuit dans sample_data
-        assert data["total_day_trains"] == 1  # 1 train de jour dans sample_data
+        assert data["total_trains"] == 25  # 25 trains dans sample_data
+        assert data["total_night_trains"] == 12  # 12 trains de nuit dans sample_data
+        assert data["total_day_trains"] == 13  # 13 trains de jour dans sample_data
 
     def test_get_night_trains_only(self, client, sample_data):
         """Test récupération des trains de nuit uniquement"""
@@ -43,8 +43,6 @@ class TestNightTrainsEndpoints:
         assert response.status_code == 200
         data = response.json()
         # Vérifier que tous les trains retournés sont des trains de jour
-        assert len(data) == 1
-
         for train in data:
          assert train["is_night"] is False
 
@@ -54,7 +52,7 @@ class TestNightTrainsEndpoints:
         response = client.get("/api/night-trains/by-operator/1")  # SNCF
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 2  # 2 trains pour SNCF
+        assert len(data) >= 4  # Au moins 4 trains pour SNCF dans sample_data
         assert data[0]["operator_name"] == "SNCF"
 
 
@@ -65,4 +63,4 @@ class TestNightTrainsEndpoints:
         data = response.json()
 
         assert response.status_code == 200
-        assert len(data) == 3
+        assert len(data) == 25

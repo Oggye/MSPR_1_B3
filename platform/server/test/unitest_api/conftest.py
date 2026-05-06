@@ -114,26 +114,45 @@ def sample_data(db_session):
     for stat in stats:
         db_session.add(stat)
 
-    # Création des trains de nuit (exemple)
-    night_trains = [
-        FactsNightTrains(
-            fact_id=1, country_id=1, operator_id=1, year_id=1,
-            route_id="FR-DE-001", night_train="Paris-Berlin", is_night=True, distance_km=1000.0, duration_min=480.0
-        ),
-        FactsNightTrains(
-            fact_id=2, country_id=2, operator_id=2, year_id=1,
-            route_id="DE-AT-001", night_train="Berlin-Munich", is_night=True, distance_km=600.0, duration_min=300.0
-        ),
-        # Création d'un train de jour (exemple)
-        FactsNightTrains(
-            fact_id=3, country_id=1, operator_id=1, year_id=1,
-            route_id="FR-ES-002", night_train="Paris-Madrid",
-            is_night=False,  # TRAIN DE JOUR
-            distance_km=1200.0, duration_min=600.0
-        ),
-    ]
-    for train in night_trains:
+
+
+    # Création automatique de 25 trains
+    night_trains = []
+
+    for i in range(1, 26):
+
+        train = FactsNightTrains(
+            fact_id=i,
+
+            # Répartition entre les pays 1 à 5
+            country_id=(i % 5) + 1,
+
+             # Répartition entre les opérateurs 1 à 5
+            operator_id=(i % 5) + 1,
+
+            year_id=1,
+
+            # Identifiant unique de route
+            route_id=f"ROUTE-{i}",
+
+            # Nom du train
+            night_train=f"Train-{i}",
+
+            # Un train sur deux = train de nuit
+            is_night=(i % 2 == 0),
+
+            # Distances différentes
+            distance_km=500.0 + (i * 20),
+
+            # Durées différentes
+            duration_min=300.0 + (i * 10)
+        
+        )
+
+        night_trains.append(train)
         db_session.add(train)
+
+
 
     # Création des données operator_dashboard (vue)
     operator_dashboards = [
