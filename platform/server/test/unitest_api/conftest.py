@@ -124,6 +124,13 @@ def sample_data(db_session):
             fact_id=2, country_id=2, operator_id=2, year_id=1,
             route_id="DE-AT-001", night_train="Berlin-Munich", is_night=True, distance_km=600.0, duration_min=300.0
         ),
+        # Création d'un train de jour (exemple)
+        FactsNightTrains(
+            fact_id=3, country_id=1, operator_id=1, year_id=1,
+            route_id="FR-ES-002", night_train="Paris-Madrid",
+            is_night=False,  # TRAIN DE JOUR
+            distance_km=1200.0, duration_min=600.0
+        ),
     ]
     for train in night_trains:
         db_session.add(train)
