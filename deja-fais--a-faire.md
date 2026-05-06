@@ -290,4 +290,4 @@ Partit client :
 - Vérification finale avec exécution complète
 
 Pour lancer les tests unitaires de l'API, installer pytest si ce n'est pas déjà fait et exécuter cette commande dans le répertoire (platform/server) : 
-- python -m pytest test/unitest_api/ -v --tb=short
+- pytest -v
