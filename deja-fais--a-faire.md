@@ -254,25 +254,25 @@ Partit client :
 
 
 ----------------------------------
-# Tests Unitaires:
-- API:
+# Tests Unitaires :
+## API :
   📁 Structure mise en place
 1. Fichiers de test créés (9 fichiers)
-conftest.py - Configuration partagée (fixtures DB, client, données test)
-test_countries.py - Tests pour /api/countries/* (4 tests)
-test_night_trains.py - Tests pour /api/night-trains/* (5 tests)
-test_operators.py - Tests pour /api/operators/* (3 tests)
-test_dashboard.py - Tests pour /api/dashboard/* (2 tests)
-test_analysis.py - Tests pour /api/analysis/* (2 tests)
-test_statistics.py - Tests pour /api/statistics/* (2 tests)
-test_metadata.py - Tests pour /api/metadata/* (2 tests)
-test_geographic.py - Tests pour /api/geographic/* (1 test)
-test_main.py - Tests pour endpoints de base (4 tests)
+- conftest.py - Configuration partagée (fixtures DB, client, données test)
+- test_countries.py - Tests pour /api/countries/* (4 tests)
+- test_night_trains.py - Tests pour /api/night-trains/* (5 tests)
+- test_operators.py - Tests pour /api/operators/* (3 tests)
+- test_dashboard.py - Tests pour /api/dashboard/* (2 tests)
+- test_analysis.py - Tests pour /api/analysis/* (2 tests)
+- test_statistics.py - Tests pour /api/statistics/* (2 tests)
+- test_metadata.py - Tests pour /api/metadata/* (2 tests)
+- test_geographic.py - Tests pour /api/geographic/* (1 test)
+- test_main.py - Tests pour endpoints de base (4 tests)
 
 2. Configuration partagée (conftest.py)
-Base de données : SQLite en mémoire pour les tests
-Fixtures : client, db_session, sample_data (données de test)
-Modèles importés : Tous les modèles SQLAlchemy nécessaires
+- Base de données : SQLite en mémoire pour les tests
+- Fixtures : client, db_session, sample_data (données de test)
+- Modèles importés : Tous les modèles SQLAlchemy nécessaires
 
 
 ✅Résultat final
