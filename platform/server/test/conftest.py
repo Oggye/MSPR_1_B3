@@ -1,14 +1,14 @@
 """
 Configuration partagée pour les tests unitaires de l'API ObRail 
 """
-
+# Note: Ce fichier est utilisé pour configurer les fixtures et les dépendances partagées entre les tests.
 import sys
-import os
+from pathlib import Path
 
-# Ajouter les chemins pour accéder à app/ depuis test/unitest_api/
-test_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-server_dir = os.path.dirname(test_dir)
-sys.path.insert(0, server_dir)
+# Ajouter le chemin pour accéder à app/ depuis test/
+BASE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BASE_DIR))
+
 
 import pytest
 from fastapi.testclient import TestClient
