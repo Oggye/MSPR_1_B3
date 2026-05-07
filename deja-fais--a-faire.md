@@ -256,6 +256,7 @@ Partit client :
 ----------------------------------
 # Tests :
 ## Tests Unitaires :
+À compléter
 
 ## Tests d'Intégration API + DB :
   📁 Structure mise en place
