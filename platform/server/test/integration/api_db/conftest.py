@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 # Ajouter le chemin pour accéder à app/ depuis test/
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(BASE_DIR))
 
 
