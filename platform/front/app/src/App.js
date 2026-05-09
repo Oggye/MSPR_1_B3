@@ -1,18 +1,15 @@
+// App.js
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router';
-import HomePage from './pages/HomePage';
-import ExterneHomePage from './pages/externe/HomePage';
-import InterneHomePage from './pages/interne/HomePage';
+import { BrowserRouter } from 'react-router-dom';
+// Import des pages
+import AppRoutes from './routes/index';
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/externe/HomePage" element={<ExterneHomePage />} />
-        <Route path="/interne/HomePage" element={<InterneHomePage />} />
-      </Routes>
+        <AppRoutes />
     </BrowserRouter>
   );
 }
+
 export default App;

@@ -249,9 +249,17 @@ Partit client :
 - page d'accueil (dashboard : kpi) avec des filtre(client/dashboard) 
 - page de carte pour voir les differenst train de jour et de nuit et leur trajet (client/carte)
 - page pour voir les differents trajet la durer et la distance(client/trajets) 
-- page pour voir les statistique global(emmision de C02 des train de jours et train nuit, de la frequence des passagers pour les trains de jours et train de nuit et selon les villes, dahsboard metrics,Statistiques détaillées par opérateur,Récupère les données d'évolution temporelle pour les graphiques,Classe les pays par performance CO2*)
+- page pour voir les statistique global(emmision de C02 des train de jours et train nuit, de la frequence des passagers pour les trains de jours et train de nuit et selon les villes, dahsboard metrics,Statistiques détaillées par opérateur,Récupère les données d'évolution temporelle pour les graphiques,Classe les pays par performance CO2)
 - une page pour récupère la liste des opérateurs ferroviaires
-
+/api/night-trains ->Consultation des trajets avec filtrage (pays, opérateur, année)
+/api/night-trains/summary ->Indicateur clé "répartition jour/nuit"
+/api/countries ->Permettre le filtrage par pays dans l'interface
+/api/countries/stats ->Visualiser les statistiques CO2 et passagers par pays
+/api/operators ->Permettre le filtrage par opérateur->option
+/api/statistics/timeline ->Graphique d'évolution temporelle (partenaires aiment les tendances)->option
+/api/statistics/co2-ranking ->Comparaison des performances environnementales entre pays
+/api/analysis/train-types-compariso ->Comparaison jour vs nuit
+/api/dashboard/kpis ->KPI
 
 ----------------------------------
 # Tests :

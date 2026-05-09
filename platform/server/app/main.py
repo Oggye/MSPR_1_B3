@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import countries, night_trains, dashboard, analysis, operators, metadata, statistics
 
 app = FastAPI(
@@ -19,6 +20,17 @@ app = FastAPI(
     docs_url="/api/docs",  # Documentation Swagger UI
     openapi_url="/api/openapi.json",  # Documentation OpenAPI
 
+)
+
+# Permet au frontend de communiquer avec l'API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",    # J'autorise spécifiquement le frontend
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],              # Autorise toutes les méthodes (GET, POST, etc.)
+    allow_headers=["*"],              # Autorise tous les headers
 )
 
 # Tous les routeurs
