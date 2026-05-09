@@ -1,3 +1,4 @@
+// services/api.js (ajouter les nouvelles fonctions)
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -44,7 +45,7 @@ export const getGeographicCoverage = () => {
 };
 
 // Liste des trajets
-export const getAllTrains = (skip = 0, limit = 20, filters = {}) => {
+export const getAllTrains = (skip = 0, limit = 100, filters = {}) => {
   return api.get('/night-trains', { 
     params: { skip, limit, ...filters } 
   });
@@ -75,6 +76,10 @@ export const getCountries = () => {
 // Statistiques avancées
 export const getTrainTypeComparison = () => {
   return api.get('/analysis/train-types-comparison');
+};
+
+export const getPolicyRecommendations = () => {
+  return api.get('/analysis/policy-recommendations');
 };
 
 export const getOperatorStats = (operatorId) => {

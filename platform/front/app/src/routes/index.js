@@ -11,7 +11,7 @@ import HomePage from '../pages/HomePage';
 // IMPORT DES PAGES EXTERNES (partenaire)
 import ExterneHomePage from '../pages/externe/HomePage';
 import MapPage from '../pages/externe/Map';
-import TrainsList from '../pages/externe/Trajets';
+import TrainPage from '../pages/externe/Trajets';
 import StatistiquePage from '../pages/externe/Statistique';
 import OperateurPage from '../pages/externe/Operateur';
 
@@ -31,7 +31,7 @@ export default function AppRoutes() {
         <Route path="/externe" element={<LayoutExterne />}>
             <Route path="HomePage" element={<ExterneHomePage />} />
             <Route path="Map" element={<MapPage />} />
-            <Route path="Trajets" element={<TrainsList />} />
+            <Route path="Trajets" element={<TrainPage />} />
             <Route path="Statistique" element={<StatistiquePage />} />
             <Route path="Operateur" element={<OperateurPage />} />
         </Route>
