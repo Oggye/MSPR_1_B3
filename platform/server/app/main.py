@@ -1,14 +1,15 @@
-# app/main.py
+#app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import countries, night_trains, dashboard, analysis, operators, metadata, statistics
 
 app = FastAPI(
     title="ObRail API - Observatoire Européen du Rail",
     description="""
     API de données ferroviaires européennes
-    
+
     Cette API fournit des données sur les transports ferroviaires en Europe, incluant:
-    
+
     Statistiques par pays : Passagers, émissions CO2, indicateurs de performance
     Trains de nuit : Catalogue des liaisons nocturnes européennes
     Analyses comparatives : Impact environnemental, classements
@@ -21,7 +22,18 @@ app = FastAPI(
 
 )
 
-# Tous les routeurs
+#Permet au frontend de communiquer avec l'API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000/",    # J'autorise spécifiquement le frontend
+    ],
+    allow_credentials=True,
+    allow_methods=[""],              # Autorise toutes les méthodes (GET, POST, etc.)
+    allow_headers=[""],              # Autorise tous les headers
+)
+
+#Tous les routeurs
 app.include_router(countries.router)
 app.include_router(night_trains.router)
 app.include_router(dashboard.router)
@@ -37,4 +49,3 @@ def read_root():
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
-
