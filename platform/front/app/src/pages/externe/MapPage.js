@@ -88,7 +88,7 @@ const MapPage = () => {
     try {
       setLoading(true);
       const [trainsRes, countriesRes] = await Promise.all([
-        getNightTrains({ limit: 500 }),
+        getNightTrains(),
         getCountries()
       ]);
       

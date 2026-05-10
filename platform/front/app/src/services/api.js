@@ -28,8 +28,8 @@ export const getDashboardKpis = () => {
 };
 
 // Carte
-export const getNightTrains = (filters = {}) => {
-  return api.get('/night-trains', { params: filters });
+export const getNightTrains = () => {
+  return api.get('/night-trains');
 };
 
 export const getNightTrainsOnly = (filters = {}) => {
