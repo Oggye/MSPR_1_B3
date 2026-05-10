@@ -1,0 +1,456 @@
+/* Operateur.css */
+
+/* Container principal */
+.operateur-container {
+    font-family: 'Arial', sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Titre principal */
+  .operateur-title {
+    color: #333;
+    margin-bottom: 30px;
+  }
+  
+  /* Layout à deux colonnes */
+  .operateur-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+  }
+  
+  /* ========== COLONNE GAUCHE - LISTE DES OPÉRATEURS ========== */
+  .operator-list-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    height: fit-content;
+  }
+  
+  .search-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .search-title {
+    margin: 0 0 15px 0;
+    color: #555;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+  
+  .operator-table-container {
+    max-height: 500px;
+    overflow-y: auto;
+  }
+  
+  .operator-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .operator-table thead {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+  }
+  
+  .operator-table th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    color: #666;
+    border-bottom: 2px solid #e9ecef;
+  }
+  
+  .operator-table td {
+    padding: 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .operator-row {
+    cursor: pointer;
+    background: white;
+    transition: background 0.2s ease;
+  }
+  
+  .operator-row.selected {
+    background: #e3f2fd;
+  }
+  
+  .operator-id {
+    color: #666;
+  }
+  
+  .operator-name {
+    font-weight: 500;
+  }
+  
+  .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #999;
+  }
+  
+  /* ========== COLONNE DROITE - DÉTAILS OPÉRATEUR ========== */
+  .empty-selection {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 60px;
+    text-align: center;
+    color: #999;
+  }
+  
+  .empty-icon {
+    font-size: 48px;
+  }
+  
+  .empty-text {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+  
+  /* Loading state */
+  .loading-state {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 60px;
+    text-align: center;
+  }
+  
+  .spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loading-text {
+    margin-top: 20px;
+    color: #666;
+  }
+  
+  /* En-tête opérateur */
+  .operator-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    padding: 25px;
+    color: white;
+    margin-bottom: 20px;
+  }
+  
+  .operator-name-large {
+    margin: 0;
+    font-size: 28px;
+  }
+  
+  .operator-badge {
+    margin: 10px 0 0 0;
+    opacity: 0.9;
+    font-size: 14px;
+  }
+  
+  .operator-countries {
+    margin: 5px 0 0 0;
+    opacity: 0.8;
+    font-size: 12px;
+  }
+  
+  /* KPI Cards */
+  .kpi-grid-operator {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .kpi-card {
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+  }
+  
+  .kpi-card.total {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .kpi-card.night {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+  
+  .kpi-card.day {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+  
+  .kpi-label {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .kpi-value-large {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  /* Graphique section */
+  .chart-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .chart-title {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+  
+  /* Performance indicators */
+  .performance-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .performance-title {
+    margin: 0 0 15px 0;
+    color: #333;
+  }
+  
+  .performance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .performance-item {
+    margin-bottom: 10px;
+  }
+  
+  .performance-label {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 5px;
+  }
+  
+  .performance-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .performance-value.co2 {
+    color: #28a745;
+  }
+  
+  /* Trajets list */
+  .trains-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .trains-title {
+    margin: 0 0 15px 0;
+    color: #333;
+  }
+  
+  .trains-table-container {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .trains-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .trains-table thead {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+  }
+  
+  .trains-table th {
+    padding: 12px;
+    text-align: left;
+    font-size: 12px;
+    color: #666;
+    border-bottom: 2px solid #e9ecef;
+  }
+  
+  .trains-table td {
+    padding: 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  /* Badge pour type de train */
+  .train-type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .train-type-badge.night {
+    background: rgba(240, 147, 251, 0.2);
+    color: #f5576c;
+  }
+  
+  .train-type-badge.day {
+    background: rgba(79, 172, 254, 0.2);
+    color: #4facfe;
+  }
+  
+  /* Text alignment utilities */
+  .text-right {
+    text-align: right;
+  }
+  
+  .text-center {
+    text-align: center;
+  }
+  
+  /* ========== RESPONSIVE DESIGN ========== */
+  @media (max-width: 1024px) {
+    .operateur-layout {
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+    
+    .kpi-value-large {
+      font-size: 22px;
+    }
+    
+    .performance-value {
+      font-size: 16px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .operateur-container {
+      padding: 15px;
+    }
+    
+    .operateur-layout {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .operator-list-card {
+      order: 2;
+    }
+    
+    .operator-details {
+      order: 1;
+    }
+    
+    .kpi-grid-operator {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    
+    .performance-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    
+    .operator-name-large {
+      font-size: 22px;
+    }
+    
+    .kpi-value-large {
+      font-size: 24px;
+    }
+    
+    .chart-container {
+      height: 250px;
+    }
+    
+    .trains-table-container {
+      max-height: 300px;
+    }
+    
+    .trains-table th,
+    .trains-table td {
+      padding: 8px;
+      font-size: 12px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .operator-header {
+      padding: 15px;
+    }
+    
+    .operator-name-large {
+      font-size: 18px;
+    }
+    
+    .kpi-card {
+      padding: 15px;
+    }
+    
+    .kpi-value-large {
+      font-size: 20px;
+    }
+    
+    .performance-value {
+      font-size: 14px;
+    }
+    
+    .trains-table th,
+    .trains-table td {
+      padding: 6px;
+      font-size: 11px;
+    }
+    
+    .train-type-badge {
+      padding: 2px 8px;
+      font-size: 10px;
+    }
+  }

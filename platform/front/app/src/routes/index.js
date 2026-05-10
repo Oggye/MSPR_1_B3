@@ -10,10 +10,10 @@ import HomePage from '../pages/HomePage';
 
 // IMPORT DES PAGES EXTERNES (partenaire)
 import ExterneHomePage from '../pages/externe/HomePage';
-import MapPage from '../pages/externe/Map';
-import TrainPage from '../pages/externe/Trajets';
-import StatistiquePage from '../pages/externe/Statistique';
-import OperateurPage from '../pages/externe/Operateur';
+import MapPage from '../pages/externe/MapPage';
+import TrainPage from '../pages/externe/TrajetsPage';
+import StatisticsPage from '../pages/externe/StatisticsPage';
+import OperatorsPage from '../pages/externe/OperatorsPage';
 
 // IMPORT DES PAGES INTERNES (admin)
 import InterneHomePage from '../pages/interne/HomePage';
@@ -32,8 +32,8 @@ export default function AppRoutes() {
             <Route path="HomePage" element={<ExterneHomePage />} />
             <Route path="Map" element={<MapPage />} />
             <Route path="Trajets" element={<TrainPage />} />
-            <Route path="Statistique" element={<StatistiquePage />} />
-            <Route path="Operateur" element={<OperateurPage />} />
+            <Route path="Statistique" element={<StatisticsPage />} />
+            <Route path="Operateur" element={<OperatorsPage />} />
         </Route>
 
         {/* ROUTES INTERNES (avec LayoutInterne) */}

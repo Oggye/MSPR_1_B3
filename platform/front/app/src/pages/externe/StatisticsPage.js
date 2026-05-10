@@ -25,7 +25,7 @@ import {
   getPolicyRecommendations,
   getCountryStats
 } from '../../services/api';
-import './StatistiquesPage.css';
+import './css/StatisticsPage.css';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(
@@ -41,7 +41,7 @@ ChartJS.register(
   RadialLinearScale
 );
 
-const StatistiquesPage = () => {
+const StatisticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trainTypeData, setTrainTypeData] = useState([]);
@@ -490,4 +490,4 @@ const StatistiquesPage = () => {
   );
 };
 
-export default StatistiquesPage;
+export default StatisticsPage;

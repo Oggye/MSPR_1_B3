@@ -15,7 +15,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 import { getNightTrains, getCountries } from '../../services/api';
 import 'leaflet/dist/leaflet.css';
-import './MapPage.css';
+import './css/MapPage.css';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(
