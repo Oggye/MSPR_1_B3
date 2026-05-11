@@ -69,3 +69,28 @@ jobs:
 
       - name: Build Docker images
         run: docker compose build
+
+
+
+  docker-push:
+    needs: [docker-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & Push images
+        run: |
+          docker compose build
+          docker tag mspr_1_b3-front ${{ secrets.DOCKER_USERNAME }}/obrail-front:latest
+          docker tag mspr_1_b3-api ${{ secrets.DOCKER_USERNAME }}/obrail-api:latest
+          docker tag mspr_1_b3-etl ${{ secrets.DOCKER_USERNAME }}/obrail-etl:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/obrail-front:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/obrail-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/obrail-etl:latest
