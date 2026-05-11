@@ -288,6 +288,7 @@ On utilise des mocks (MagicMock) pour simuler les données.
 
 
 3. Configuration utilisée
+
 Contrairement aux tests d’intégration :
 
 - ❌ pas de vraie base PostgreSQL
