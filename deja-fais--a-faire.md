@@ -264,7 +264,45 @@ Partit client :
 ----------------------------------
 # Tests :
 ## Tests Unitaires :
-À compléter
+
+📁 1. Structure mise en place
+Fichiers de tests créés (3 modules principaux)
+test_analysis.py
+→ tests unitaires des fonctions d’analyse métier
+test_statistics.py
+→ tests unitaires des fonctions statistiques (timeline, ranking CO2)
+test_night_trains.py
+→ tests unitaires des fonctions utilitaires du module night_trains
+
+
+2. Objectif des tests unitaires
+Les tests unitaires ont pour objectif de vérifier chaque fonction indépendamment, sans dépendance à :
+
+- la base de données réelle
+- l’API HTTP
+- les services externes
+
+On utilise des mocks (MagicMock) pour simuler les données.
+
+
+3. Configuration utilisée
+Contrairement aux tests d’intégration :
+
+❌ pas de vraie base PostgreSQL
+❌ pas de FastAPI TestClient
+❌ pas d’appel HTTP
+
+✔️ Outils utilisés :
+- pytest
+- unittest.mock (MagicMock)
+- SimpleNamespace (pour simuler des objets DB)
+- fonctions appelées directement depuis les routers
+
+✅Résultat final
+- 11 tests unitaires créés et fonctionnels
+- 100% de succès (11/11 tests passent)
+
+
 
 ## Tests d'Intégration API + DB :
   📁 Structure mise en place
