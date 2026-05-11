@@ -89,9 +89,9 @@ jobs:
       - name: Build & Push images
         run: |
           docker compose build
-          docker tag mspr_1_b3-front ghcr.io/${{ github.repository_owner }}/obrail-front:latest
-          docker tag mspr_1_b3-api ghcr.io/${{ github.repository_owner }}/obrail-api:latest
-          docker tag mspr_1_b3-etl ghcr.io/${{ github.repository_owner }}/obrail-etl:latest
-          docker push ghcr.io/${{ github.repository_owner }}/obrail-front:latest
-          docker push ghcr.io/${{ github.repository_owner }}/obrail-api:latest
-          docker push ghcr.io/${{ github.repository_owner }}/obrail-etl:latest
+          docker tag mspr_1_b3-front ghcr.io/oggye/obrail-front:latest
+          docker tag mspr_1_b3-api ghcr.io/oggye/obrail-api:latest
+          docker tag mspr_1_b3-etl ghcr.io/oggye/obrail-etl:latest
+          docker push ghcr.io/oggye/obrail-front:latest
+          docker push ghcr.io/oggye/obrail-api:latest
+          docker push ghcr.io/oggye/obrail-etl:latest
