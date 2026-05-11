@@ -1,0 +1,389 @@
+/* pages/TrainSearch.css */
+.train-search-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h1 {
+  color: #2c3e50;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 10px;
+  margin-bottom: 25px;
+}
+
+/* Panneau de filtres */
+.filters-panel {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 180px;
+}
+
+.filter-group label {
+  display: block;
+  color: white;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.filter-group input,
+.filter-group select {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+}
+
+.radio-group {
+  display: flex;
+  gap: 15px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.radio-group label {
+  color: #333;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.refresh-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+}
+
+/* Conteneur des résultats */
+.results-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.trains-list {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.trains-list h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 20px;
+}
+
+.loading, .error, .no-results {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+/* Cartes des trains */
+.train-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.train-card {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.train-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.train-card.selected {
+  border-color: #3498db;
+  background: #ebf5ff;
+}
+
+.train-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.train-type-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.train-type-badge[data-type="night"] {
+  background: #2c3e50;
+  color: #f1c40f;
+}
+
+.train-type-badge[data-type="day"] {
+  background: #f39c12;
+  color: white;
+}
+
+.train-id {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.train-body {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.train-info strong {
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.train-info div {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin-top: 4px;
+}
+
+.route-preview {
+  text-align: right;
+  font-size: 13px;
+  color: #555;
+}
+
+.select-btn {
+  width: 100%;
+  padding: 8px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.3s;
+}
+
+.select-btn:hover {
+  background: #2980b9;
+}
+
+/* Détails de l'itinéraire */
+.route-details {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.itinerary h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 22px;
+}
+
+.route-summary {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.summary-item .label {
+  font-weight: 600;
+  color: #555;
+}
+
+.summary-item .value {
+  color: #2c3e50;
+}
+
+/* Étapes du voyage */
+.journey-stages {
+  margin: 20px 0;
+  position: relative;
+}
+
+.stage {
+  display: flex;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.stage-icon {
+  width: 40px;
+  height: 40px;
+  background: #3498db;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  margin-right: 15px;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.stage-start .stage-icon {
+  background: #27ae60;
+}
+
+.stage-end .stage-icon {
+  background: #e74c3c;
+}
+
+.stage-intermediate .stage-icon {
+  background: #f39c12;
+}
+
+.stage-content {
+  flex: 1;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stage-city {
+  font-weight: 600;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.stage-country, .stage-time {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-top: 4px;
+}
+
+.stage-duration, .stage-distance {
+  font-size: 12px;
+  color: #3498db;
+  margin-top: 4px;
+}
+
+.stage-line {
+  position: absolute;
+  left: 19px;
+  width: 2px;
+  background: #bdc3c7;
+  top: 40px;
+  bottom: -20px;
+  z-index: 1;
+}
+
+.stage-end .stage-line {
+  display: none;
+}
+
+/* Informations supplémentaires */
+.additional-info {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.additional-info h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.info-item {
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.no-route-selected {
+  text-align: center;
+  padding: 60px 20px;
+  color: #bdc3c7;
+}
+
+.placeholder-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .results-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters-panel {
+    flex-direction: column;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .route-summary {
+    grid-template-columns: 1fr;
+  }
+}
