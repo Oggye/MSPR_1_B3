@@ -1,8 +1,7 @@
-# Test unitaire pour les fonctions de statistiques
+# Tests unitaires pour les fonctions de statistiques
 
 # Importer les modules nécessaires
 from unittest.mock import MagicMock
-
 from app.routers.statistics import get_timeline_data, get_co2_ranking
 
 

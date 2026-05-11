@@ -1,4 +1,5 @@
 # Importer les modules nécessaires pour les tests unitaires
+
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 from app.routers.night_trains import _to_response, _apply_pagination

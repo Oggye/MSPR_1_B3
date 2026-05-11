@@ -1,5 +1,4 @@
-# Test unitaire pour les fonctions d'analyse
-
+# Tests unitaires pour les fonctions d'analyse
 
 # Importation de MagicMock pour simuler la base de données et SimpleNamespace pour créer des objets simples
 from unittest.mock import MagicMock
