@@ -1,5 +1,6 @@
 node_modules
 .env
+.venv/
 __pycache__
 etl/extract/__pycache__/
 etl/transform/__pycache__/
