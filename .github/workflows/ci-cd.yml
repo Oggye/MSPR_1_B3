@@ -107,7 +107,7 @@ jobs:
         
 
   docker-build:
-    needs: [backend-tests, frontend-tests]
+    needs: [backend-tests, frontend-tests, code-quality]
     runs-on: ubuntu-latest
     
     if: always() && needs.backend-tests.result == 'success'
@@ -138,6 +138,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Créer fichier .env
+        run: |
+          echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
 
       - name: Build & Push images
         run: |
