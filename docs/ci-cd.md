@@ -97,4 +97,4 @@ git push origin main
 | Événement | Action |
 |---|---|
 | `push` sur `main` | Pipeline complet |
-| `pull_request` | Pipeline complet |
+| `pull_request` vers `main`| Pipeline complet |
