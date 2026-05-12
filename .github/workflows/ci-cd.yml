@@ -121,6 +121,7 @@ jobs:
 
 
 
+
   docker-push:
     needs: [docker-build]
     runs-on: ubuntu-latest
@@ -153,3 +154,30 @@ jobs:
           docker push ghcr.io/oggye/obrail-front:latest
           docker push ghcr.io/oggye/obrail-api:latest
           docker push ghcr.io/oggye/obrail-etl:latest
+
+
+
+  deploy:
+    needs: [docker-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Créer fichier .env
+        run: |
+          echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
+
+      - name: Démarrer les services
+        run: docker compose up -d db api front
+
+      - name: Vérifier que les containers tournent
+        run: |
+          sleep 10
+          docker compose ps
+          docker compose logs api --tail=20
+
+      - name: Arrêter les services
+        run: docker compose down
+       
