@@ -57,6 +57,55 @@ jobs:
           cd platform/front
           npm run test
 
+
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Flake8 - Linter Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Flake8
+        run: pip install flake8
+
+      - name: Run Flake8
+        run: |
+          cd platform/server
+          flake8 app/ --max-line-length=120 --ignore=E501,W503 --count
+        continue-on-error: true  # ← ne bloque pas si warnings
+
+      # ESLint - Linter JavaScript
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install ESLint dependencies
+        run: |
+          cd platform/front
+          npm install
+
+      - name: Run ESLint
+        run: |
+          cd platform/front
+          npx eslint src/ --ext .js,.jsx --max-warnings=50
+        continue-on-error: true  
+
+       # Prettier - Vérification format
+      - name: Run Prettier
+        run: |
+          cd platform/front
+          npx prettier --check src/
+        continue-on-error: true
+
+        
+
   docker-build:
     needs: [backend-tests, frontend-tests]
     runs-on: ubuntu-latest
