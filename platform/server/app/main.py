@@ -2,7 +2,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import countries, night_trains, dashboard, analysis, operators, metadata, statistics, internal
-from prometheus_fastapi_instrumentator import Instrumentator
+
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+except ImportError:
+    Instrumentator = None
 
 app = FastAPI(
     title="ObRail API - Observatoire Européen du Rail",
@@ -23,7 +27,8 @@ app = FastAPI(
 
 )
 
-Instrumentator().instrument(app).expose(app)
+if Instrumentator is not None:
+    Instrumentator().instrument(app).expose(app)
 
 # Permet au frontend de communiquer avec l'API
 app.add_middleware(
