@@ -1,7 +1,7 @@
 #app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import countries, night_trains, dashboard, analysis, operators, metadata, statistics
+from app.routers import countries, night_trains, dashboard, analysis, operators, metadata, statistics, internal
 from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(
@@ -44,6 +44,7 @@ app.include_router(analysis.router)
 app.include_router(operators.router)
 app.include_router(metadata.router)
 app.include_router(statistics.router)
+app.include_router(internal.router)
 
 @app.get("/")
 def read_root():
