@@ -55,8 +55,7 @@ jobs:
       - name: Run tests
         run: |
           cd platform/front/app
-          CI=false npm run test --passWithNoTests || true
-        continue-on-error: true
+          npm run test --passWithNoTests
 
 
 
