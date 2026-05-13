@@ -1,9 +1,10 @@
 # server/app/routers/operators.py
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import func
+from typing import List, Optional
 from app.dependencies import get_db
-from app.models import DimOperators, FactsNightTrains, DimCountries, OperatorDashboard
+from app.models import DimOperators, FactsNightTrains, DimCountries, FactsCountryStats, OperatorDashboard
 from app.schemas.operators import OperatorResponse, OperatorRanking
 
 router = APIRouter()
@@ -13,10 +14,15 @@ router = APIRouter()
 def get_operators(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500)
+    limit: Optional[int] = Query(None, ge=1)
 ):
     """Récupère la liste des opérateurs ferroviaires."""
-    operators = db.query(DimOperators).offset(skip).limit(limit).all()
+    query = db.query(DimOperators).offset(skip)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    operators = query.all()
     return [
         OperatorResponse(
             operator_id=op.operator_id,
@@ -51,6 +57,16 @@ def get_operator_stats(
         FactsNightTrains.operator_id == operator_id
     ).distinct().all()
 
+    avg_co2 = db.query(
+        func.avg(FactsCountryStats.co2_per_passenger)
+    ).join(
+        FactsNightTrains,
+        (FactsCountryStats.country_id == FactsNightTrains.country_id) &
+        (FactsCountryStats.year_id == FactsNightTrains.year_id)
+    ).filter(
+        FactsNightTrains.operator_id == operator_id
+    ).scalar()
+
     return OperatorRanking(
         operator_id=dashboard.operator_id,
         operator_name=dashboard.operator_name,
@@ -59,6 +75,7 @@ def get_operator_stats(
         day_trains=dashboard.nb_trains_jour or 0,
         distance_totale_km=float(dashboard.distance_totale_km or 0),
         duree_moyenne_min=float(dashboard.duree_moyenne_min or 0),
+        avg_co2_per_passenger=float(avg_co2) if avg_co2 is not None else None,
         countries_served=[c.country_name for c in countries],
         countries_count=len(countries)
     )

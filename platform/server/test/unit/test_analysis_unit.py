@@ -10,27 +10,26 @@ from app.routers.analysis import compare_train_types, get_policy_recommendations
 def test_compare_train_types():
     db = MagicMock()
 
-    #  Mock des stats globales par type de train
-    db.query.return_value.group_by.return_value.all.return_value = [
+    query_mock = MagicMock()
+    query_mock.outerjoin.return_value.group_by.return_value.all.return_value = [
         SimpleNamespace(
             is_night=True,
             nb_trains=10,
             avg_distance=100.0,
-            avg_duration=200.0
+            avg_duration=200.0,
+            avg_co2=0.04,
+            avg_passengers=500
         ),
         SimpleNamespace(
             is_night=False,
             nb_trains=20,
             avg_distance=200.0,
-            avg_duration=400.0
+            avg_duration=400.0,
+            avg_co2=0.08,
+            avg_passengers=700
         ),
     ]
-
-    #  Mock des stats globales pour calcul de l'efficacité
-    db.query.return_value.first.return_value = SimpleNamespace(
-        avg_co2=0.04,
-        avg_passengers=500
-    )
+    db.query.return_value = query_mock
 
     result = compare_train_types(db)
 
@@ -38,6 +37,7 @@ def test_compare_train_types():
 
     assert result[0].train_type in ["night", "day"]
     assert hasattr(result[0], "efficiency_score")
+    assert result[0].avg_co2_per_passenger != result[1].avg_co2_per_passenger
 
 
 

@@ -13,6 +13,7 @@ const {
   getHealth,
   getNightTrainsOnly,
   getOperatorById,
+  getOperators,
 } = require('./api');
 
 beforeEach(() => {
@@ -41,11 +42,11 @@ test('passes filters for night trains only', () => {
   });
 });
 
-test('uses default limit for CO2 ranking', () => {
+test('does not limit CO2 ranking by default', () => {
   getCo2Ranking();
 
   expect(mockGet).toHaveBeenCalledWith('/statistics/co2-ranking', {
-    params: { limit: 10 },
+    params: {},
   });
 });
 
@@ -53,6 +54,16 @@ test('calls countries and operator stats endpoints', () => {
   getCountries();
   getOperatorById(3);
 
-  expect(mockGet).toHaveBeenCalledWith('/countries');
+  expect(mockGet).toHaveBeenCalledWith('/countries', {
+    params: { skip: 0 },
+  });
   expect(mockGet).toHaveBeenCalledWith('/operators/3/stats');
+});
+
+test('does not limit operators by default', () => {
+  getOperators();
+
+  expect(mockGet).toHaveBeenCalledWith('/operators', {
+    params: { skip: 0 },
+  });
 });

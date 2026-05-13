@@ -12,8 +12,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { getSummary, getTimeline, getDashboardKpis } from '../../services/api';
+import './css/HomePage.css';
 
-// Enregistrement des composants Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -30,26 +30,101 @@ export default function ExterneHomePage() {
   const [timeline, setTimeline] = useState([]);
   const [kpis, setKpis] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resSummary, resTimeline, resKpis] = await Promise.all([
-          getSummary(), getTimeline(), getDashboardKpis()
-        ]);
-        setSummary(resSummary.data);
-        setTimeline(resTimeline.data);
-        setKpis(resKpis.data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchData();
+  useEffect(function () {
+    getSummary()
+      .then(function (response) {
+        setSummary(response.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+    getTimeline()
+      .then(function (response) {
+        setTimeline(response.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+    getDashboardKpis()
+      .then(function (response) {
+        setKpis(response.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }, []);
 
-  // Préparer les données pour Chart.js
-  const years = timeline.map(item => item.year);
-  const passengers = timeline.map(item => (item.passengers || 0) / 1000000); // Convertir en millions
-  const co2Emissions = timeline.map(item => (item.co2_emissions || 0) / 1000); // Convertir en milliers de tonnes
+  const years = timeline.map(function (item) {
+    return item.year;
+  });
+
+  const passengers = timeline.map(function (item) {
+    if (item.passengers) {
+      return item.passengers / 1000000;
+    }
+
+    return 0;
+  });
+
+  const co2Emissions = timeline.map(function (item) {
+    if (item.co2_emissions) {
+      return item.co2_emissions / 1000;
+    }
+
+    return 0;
+  });
+
+  let totalTrains = 0;
+  let totalNightTrains = 0;
+  let totalDayTrains = 0;
+  let totalCountries = 0;
+  let avgCo2 = 0;
+  let totalPassengers = 0;
+  let totalCo2 = 0;
+  let yearsCovered = '2010-2024';
+  let totalOperators = 0;
+
+  if (summary !== null) {
+    if (summary.total_trains) {
+      totalTrains = summary.total_trains;
+    }
+
+    if (summary.total_night_trains) {
+      totalNightTrains = summary.total_night_trains;
+    }
+
+    if (summary.total_day_trains) {
+      totalDayTrains = summary.total_day_trains;
+    }
+  }
+
+  if (kpis !== null) {
+    if (kpis.total_countries) {
+      totalCountries = kpis.total_countries;
+    }
+
+    if (kpis.avg_co2_per_passenger) {
+      avgCo2 = kpis.avg_co2_per_passenger;
+    }
+
+    if (kpis.total_passengers) {
+      totalPassengers = kpis.total_passengers;
+    }
+
+    if (kpis.total_co2_emissions) {
+      totalCo2 = kpis.total_co2_emissions;
+    }
+
+    if (kpis.years_covered) {
+      yearsCovered = kpis.years_covered;
+    }
+
+    if (kpis.total_operators) {
+      totalOperators = kpis.total_operators;
+    }
+  }
 
   const chartData = {
     labels: years,
@@ -57,55 +132,56 @@ export default function ExterneHomePage() {
       {
         label: 'Passagers (millions)',
         data: passengers,
-        borderColor: '#3498db',
-        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+        borderColor: '#1769aa',
+        backgroundColor: 'rgba(23, 105, 170, 0.1)',
         borderWidth: 3,
         pointRadius: 6,
         pointHoverRadius: 8,
-        pointBackgroundColor: '#3498db',
+        pointBackgroundColor: '#1769aa',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         tension: 0.4,
         fill: true,
-        yAxisID: 'y',
+        yAxisID: 'y'
       },
       {
-        label: 'Émissions CO₂ (milliers de tonnes)',
+        label: 'Emissions CO2 (milliers de tonnes)',
         data: co2Emissions,
-        borderColor: '#2ecc71',
-        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+        borderColor: '#20a464',
+        backgroundColor: 'rgba(32, 164, 100, 0.1)',
         borderWidth: 3,
         borderDash: [8, 4],
         pointRadius: 6,
         pointHoverRadius: 8,
-        pointBackgroundColor: '#2ecc71',
+        pointBackgroundColor: '#20a464',
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         tension: 0.4,
         fill: true,
-        yAxisID: 'y1',
+        yAxisID: 'y1'
       }
     ]
   };
 
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: 'index',
-      intersect: false,
+      intersect: false
     },
     plugins: {
       tooltip: {
         callbacks: {
-          label: function(context) {
-            let label = context.dataset.label || '';
-            let value = context.raw;
-            if (context.dataset.label.includes('Passagers')) {
-              return `${label}: ${value.toFixed(1)} millions`;
-            } else {
-              return `${label}: ${value.toFixed(0)} milliers de tonnes`;
+          label: function (context) {
+            const label = context.dataset.label;
+            const value = context.raw;
+
+            if (label.includes('Passagers')) {
+              return label + ': ' + value.toFixed(1) + ' millions';
             }
+
+            return label + ': ' + value.toFixed(0) + ' milliers de tonnes';
           }
         }
       },
@@ -131,14 +207,14 @@ export default function ExterneHomePage() {
         title: {
           display: true,
           text: 'Passagers (millions)',
-          color: '#3498db',
+          color: '#1769aa',
           font: {
             weight: 'bold',
             size: 12
           }
         },
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             return value.toFixed(0) + 'M';
           }
         },
@@ -154,26 +230,26 @@ export default function ExterneHomePage() {
         position: 'right',
         title: {
           display: true,
-          text: 'Émissions CO₂ (milliers de tonnes)',
-          color: '#2ecc71',
+          text: 'Emissions CO2 (milliers de tonnes)',
+          color: '#20a464',
           font: {
             weight: 'bold',
             size: 12
           }
         },
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             return value.toFixed(0) + 'k';
           }
         },
         grid: {
-          drawOnChartArea: false,
+          drawOnChartArea: false
         }
       },
       x: {
         title: {
           display: true,
-          text: 'Année',
+          text: 'Annee',
           font: {
             weight: 'bold',
             size: 12
@@ -187,151 +263,92 @@ export default function ExterneHomePage() {
     },
     elements: {
       line: {
-        fill: true,
+        fill: true
       },
       point: {
-        hoverRadius: 8,
+        hoverRadius: 8
       }
     }
   };
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      <h1 style={{ color: '#333', marginBottom: '30px' }}>Dashboard</h1>
-      
-      {/* KPI Cards */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '20px',
-        marginBottom: '40px'
-      }}>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '10px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          transition: 'transform 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🚆 Trains</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>{summary?.total_trains?.toLocaleString() || 0}</p>
+    <div className="homepage-container">
+      <h1 className="homepage-title">Dashboard</h1>
+
+      <div className="kpi-grid">
+        <div className="kpi-card kpi-card-purple">
+          <h3 className="kpi-card-title">Trains</h3>
+          <p className="kpi-card-value">{totalTrains.toLocaleString()}</p>
         </div>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          borderRadius: '10px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          transition: 'transform 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🌙 Nuit</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>{summary?.total_night_trains?.toLocaleString() || 0}</p>
+
+        <div className="kpi-card kpi-card-pink">
+          <h3 className="kpi-card-title">Nuit</h3>
+          <p className="kpi-card-value">{totalNightTrains.toLocaleString()}</p>
         </div>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-          borderRadius: '10px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          transition: 'transform 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>☀️ Jour</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>{summary?.total_day_trains?.toLocaleString() || 0}</p>
+
+        <div className="kpi-card kpi-card-blue">
+          <h3 className="kpi-card-title">Jour</h3>
+          <p className="kpi-card-value">{totalDayTrains.toLocaleString()}</p>
         </div>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-          borderRadius: '10px',
-          padding: '20px',
-          color: 'white',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          transition: 'transform 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🌍 Pays</h3>
-          <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>{kpis?.total_countries?.toLocaleString() || 0}</p>
+
+        <div className="kpi-card kpi-card-green">
+          <h3 className="kpi-card-title">Pays</h3>
+          <p className="kpi-card-value">{totalCountries.toLocaleString()}</p>
         </div>
       </div>
-{/* Statistiques supplémentaires */}
-<div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '20px',
-        marginTop: '20px'
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '10px',
-          padding: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ color: '#333', marginBottom: '15px' }}>📊 Indicateurs Clés</h3>
-          <div style={{ marginBottom: '15px' }}>
-            <span style={{ color: '#666', fontSize: '14px' }}>CO₂ moyen par passager</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '24px', fontWeight: 'bold', color: '#2ecc71' }}>
-              {kpis?.avg_co2_per_passenger?.toFixed(3) || 0} kg
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h3 className="stat-card-title">Indicateurs cles</h3>
+
+          <div className="stat-item">
+            <span className="stat-label">CO2 moyen par passager</span>
+            <p className="stat-value stat-value-green">
+              {avgCo2.toFixed(3)} kg
             </p>
           </div>
-          <div style={{ marginBottom: '15px' }}>
-            <span style={{ color: '#666', fontSize: '14px' }}>Total passagers</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>
-              {(kpis?.total_passengers / 1000000)?.toFixed(1) || 0} millions
+
+          <div className="stat-item">
+            <span className="stat-label">Total passagers</span>
+            <p className="stat-value stat-value-blue">
+              {(totalPassengers / 1000000).toFixed(1)} millions
             </p>
           </div>
+
           <div>
-            <span style={{ color: '#666', fontSize: '14px' }}>Total émissions CO₂</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '24px', fontWeight: 'bold', color: '#e67e22' }}>
-              {(kpis?.total_co2_emissions / 1000)?.toFixed(0) || 0} kt
+            <span className="stat-label">Total emissions CO2</span>
+            <p className="stat-value stat-value-orange">
+              {(totalCo2 / 1000).toFixed(0)} kt
             </p>
           </div>
         </div>
 
-        <div style={{
-          background: 'white',
-          borderRadius: '10px',
-          padding: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ color: '#333', marginBottom: '15px' }}>📅 Période couverte</h3>
+        <div className="stat-card">
+          <h3 className="stat-card-title">Periode couverte</h3>
+
           <div>
-            <span style={{ color: '#666', fontSize: '14px' }}>Années d'analyse</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '24px', fontWeight: 'bold', color: '#9b59b6' }}>
-              {kpis?.years_covered || '2010-2024'}
+            <span className="stat-label">Annees d'analyse</span>
+            <p className="stat-value stat-value-purple">
+              {yearsCovered}
             </p>
           </div>
-          <div style={{ marginTop: '15px' }}>
-            <span style={{ color: '#666', fontSize: '14px' }}>Opérateurs</span>
-            <p style={{ margin: '5px 0 0 0', fontSize: '24px', fontWeight: 'bold', color: '#e74c3c' }}>
-              {kpis?.total_operators?.toLocaleString() || 0}
+
+          <div className="stat-item-top">
+            <span className="stat-label">Operateurs</span>
+            <p className="stat-value stat-value-red">
+              {totalOperators.toLocaleString()}
             </p>
           </div>
         </div>
       </div>
-      {/* Graphique Évolution temporelle avec Chart.js */}
-      <div style={{ 
-        marginBottom: '40px',
-        background: 'white',
-        borderRadius: '10px',
-        padding: '20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h1 style={{ color: '#333', marginBottom: '10px' }}>📈 Évolution temporelle</h1>
-        <h3 style={{ color: '#666', marginBottom: '30px', fontSize: '16px', fontWeight: 'normal' }}>
-          Évolution des passagers et émissions CO₂
+
+      <div className="chart-container">
+        <h1 className="chart-title">Evolution temporelle</h1>
+        <h3 className="chart-subtitle">
+          Evolution des passagers et emissions CO2
         </h3>
-        
-        <div style={{ height: '500px' }}>
+
+        <div className="chart-wrapper">
           <Line data={chartData} options={chartOptions} />
         </div>
       </div>

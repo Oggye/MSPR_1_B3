@@ -27,16 +27,17 @@ export default function LayoutExterne() {
   const sidebarStyles = {
     position: isMobile ? 'fixed' : 'relative',
     width: isMobile ? (isMobileMenuOpen ? '260px' : '0px') : '260px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: '#12263a',
     color: 'white',
     padding: isMobile ? (isMobileMenuOpen ? '24px 16px' : '0px') : '24px 16px',
     minHeight: '100vh',
-    boxShadow: '2px 0 8px rgba(0,0,0,0.1)',
+    boxShadow: '2px 0 8px rgba(18,38,58,0.12)',
     transition: 'all 0.3s ease',
     overflow: 'hidden',
     zIndex: 1000,
     left: 0,
-    top: 0
+    top: 0,
+    borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.08)'
   };
 
   const overlayStyles = {
@@ -45,13 +46,13 @@ export default function LayoutExterne() {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(18,38,58,0.55)',
     zIndex: 999,
     display: isMobile && isMobileMenuOpen ? 'block' : 'none'
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f4f6f8', color: '#17202a' }}>
       {/* Overlay pour mobile */}
       <div style={overlayStyles} onClick={() => setIsMobileMenuOpen(false)} />
       
@@ -63,8 +64,8 @@ export default function LayoutExterne() {
           opacity: isMobile && !isMobileMenuOpen ? 0 : 1,
           transition: 'opacity 0.2s ease'
         }}>
-          <h2 style={{ margin: 0, fontSize: 24 }}>🚆 ObRail</h2>
-          <p style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>Espace Client</p>
+          <h2 style={{ margin: 0, fontSize: 24, letterSpacing: 0 }}>🚆 ObRail</h2>
+          <p style={{ fontSize: 12, color: '#b7c4d1', marginTop: 8 }}>Espace Client</p>
         </div>
         
         <ul style={{ 
@@ -80,12 +81,13 @@ export default function LayoutExterne() {
                 to={item.path} 
                 onClick={() => isMobile && setIsMobileMenuOpen(false)}
                 style={{ 
-                  color: 'white', 
+                  color: '#e7eef6', 
                   textDecoration: 'none',
                   display: 'block',
                   padding: '10px 16px',
-                  borderRadius: 8,
+                  borderRadius: 6,
                   transition: 'background 0.2s ease',
+                  fontWeight: 700
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
@@ -101,7 +103,7 @@ export default function LayoutExterne() {
       <main style={{ 
         flex: 1, 
         padding: isMobile ? '16px' : '24px', 
-        background: '#f5f7fa',
+        background: '#f4f6f8',
         width: '100%',
         overflowX: 'auto'
       }}>
@@ -114,14 +116,14 @@ export default function LayoutExterne() {
               top: '16px',
               left: '16px',
               zIndex: 1001,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: '#1769aa',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               color: 'white',
               padding: '10px 12px',
               cursor: 'pointer',
               fontSize: '20px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+              boxShadow: '0 2px 8px rgba(18,38,58,0.18)'
             }}
           >
             ☰
@@ -156,17 +158,17 @@ export default function LayoutExterne() {
         }
         
         ::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: #edf2f7;
           border-radius: 4px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: #888;
+          background: #9aa9b5;
           border-radius: 4px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: #555;
+          background: #52616f;
         }
       `}</style>
     </div>

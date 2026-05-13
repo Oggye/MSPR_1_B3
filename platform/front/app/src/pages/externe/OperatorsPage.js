@@ -36,6 +36,11 @@ export default function OperateurPage() {
   const [operatorTrains, setOperatorTrains] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  const isTablet = windowWidth <= 1024;
+  const isMobile = windowWidth <= 768;
+  const isSmallMobile = windowWidth <= 480;
 
   // Charger la liste des opérateurs au démarrage
   useEffect(() => {
@@ -49,6 +54,15 @@ export default function OperateurPage() {
       }
     };
     fetchOperators();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Fonction pour charger les détails d'un opérateur
@@ -98,8 +112,8 @@ export default function OperateurPage() {
   const calculateEfficiencyScore = (details) => {
     if (!details) return 0;
     let score = 50; // Score de base
-    if (details.avg_co2_per_passenger_kg < 0.05) score += 30;
-    else if (details.avg_co2_per_passenger_kg < 0.1) score += 15;
+    if (details.avg_co2_per_passenger < 0.05) score += 30;
+    else if (details.avg_co2_per_passenger < 0.1) score += 15;
     if (details.night_trains > details.day_trains) score += 10;
     if (details.total_trains > 200) score += 10;
     return Math.min(score, 100);
@@ -114,7 +128,7 @@ export default function OperateurPage() {
         {
           label: 'Nombre de trains',
           data: [operatorDetails.day_trains || 0, operatorDetails.night_trains || 0],
-          backgroundColor: ['#4facfe', '#f093fb'],
+          backgroundColor: ['#1769aa', '#12263a'],
           borderColor: ['#fff', '#fff'],
           borderWidth: 2,
           borderRadius: 8,
@@ -132,7 +146,7 @@ export default function OperateurPage() {
       datasets: [
         {
           data: [score, 100 - score],
-          backgroundColor: ['#43e97b', '#e0e0e0'],
+          backgroundColor: ['#20a464', '#d8e0e8'],
           borderColor: ['#fff', '#fff'],
           borderWidth: 2,
           cutout: '70%',
@@ -156,24 +170,24 @@ export default function OperateurPage() {
         {
           label: 'Trains de Nuit',
           data: nightCounts,
-          borderColor: '#f093fb',
-          backgroundColor: 'rgba(240, 147, 251, 0.1)',
+          borderColor: '#12263a',
+          backgroundColor: 'rgba(18, 38, 58, 0.1)',
           tension: 0.4,
           fill: true,
           pointRadius: 5,
           pointHoverRadius: 7,
-          pointBackgroundColor: '#f093fb',
+          pointBackgroundColor: '#12263a',
         },
         {
           label: 'Trains de Jour',
           data: dayCounts,
-          borderColor: '#4facfe',
-          backgroundColor: 'rgba(79, 172, 254, 0.1)',
+          borderColor: '#1769aa',
+          backgroundColor: 'rgba(23, 105, 170, 0.1)',
           tension: 0.4,
           fill: true,
           pointRadius: 5,
           pointHoverRadius: 7,
-          pointBackgroundColor: '#4facfe',
+          pointBackgroundColor: '#1769aa',
         }
       ]
     };
@@ -269,21 +283,22 @@ export default function OperateurPage() {
   };
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1400px', margin: '0 auto', padding: '20px' }}>
-      <h1 style={{ color: '#333', marginBottom: '30px' }}>🚆 Opérateurs Ferroviaires</h1>
+    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1400px', margin: '0 auto', padding: isSmallMobile ? '10px' : isMobile ? '14px' : '20px', color: '#17202a' }}>
+      <h1 style={{ color: '#12263a', marginBottom: isMobile ? '18px' : '30px', fontSize: isSmallMobile ? '24px' : isMobile ? '28px' : '32px' }}>🚆 Opérateurs Ferroviaires</h1>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '30px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '350px 1fr', gap: isMobile ? '16px' : isTablet ? '20px' : '30px' }}>
         
         {/* Colonne gauche - Liste des opérateurs */}
         <div style={{ 
           background: 'white',
-          borderRadius: '10px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: '1px solid #dde5ed',
+          borderRadius: '8px',
+          boxShadow: '0 1px 2px rgba(18,38,58,0.04)',
           overflow: 'hidden',
           height: 'fit-content'
         }}>
-          <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0' }}>
-            <h3 style={{ margin: 0, marginBottom: '15px', color: '#555' }}>🔍 Rechercher un opérateur</h3>
+          <div style={{ padding: isMobile ? '14px' : '20px', borderBottom: '1px solid #dde5ed' }}>
+            <h3 style={{ margin: 0, marginBottom: '15px', color: '#12263a', fontSize: isMobile ? '16px' : '18px' }}>🔍 Rechercher un opérateur</h3>
             <input
               type="text"
               placeholder="Nom de l'opérateur..."
@@ -292,20 +307,20 @@ export default function OperateurPage() {
               style={{
                 width: '100%',
                 padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '5px',
+                border: '1px solid #c9d2dc',
+                borderRadius: '6px',
                 fontSize: '14px',
                 boxSizing: 'border-box'
               }}
             />
           </div>
           
-          <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: isTablet ? '280px' : '500px', overflowY: 'auto', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{ position: 'sticky', top: 0, background: '#f8f9fa' }}>
-                <tr style={{ borderBottom: '2px solid #e9ecef' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#666' }}>ID</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#666' }}>Nom</th>
+              <thead style={{ position: 'sticky', top: 0, background: '#f4f6f8' }}>
+                <tr style={{ borderBottom: '2px solid #dde5ed' }}>
+                  <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#52616f' }}>ID</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#52616f' }}>Nom</th>
                  </tr>
               </thead>
               <tbody>
@@ -315,13 +330,13 @@ export default function OperateurPage() {
                     onClick={() => handleSelectOperator(operator.operator_id, operator.operator_name)}
                     style={{
                       cursor: 'pointer',
-                      background: selectedOperator?.id === operator.operator_id ? '#e3f2fd' : 'white',
+                      background: selectedOperator?.id === operator.operator_id ? '#edf2f7' : 'white',
                       transition: 'background 0.2s',
-                      borderBottom: '1px solid #f0f0f0'
+                      borderBottom: '1px solid #e6edf3'
                     }}
                     onMouseEnter={(e) => {
                       if (selectedOperator?.id !== operator.operator_id) {
-                        e.currentTarget.style.background = '#f5f5f5';
+                        e.currentTarget.style.background = '#f4f6f8';
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -330,7 +345,7 @@ export default function OperateurPage() {
                       }
                     }}
                   >
-                    <td style={{ padding: '12px', fontSize: '14px', color: '#666' }}>
+                    <td style={{ padding: '12px', fontSize: '14px', color: '#52616f' }}>
                       {operator.operator_id}
                     </td>
                     <td style={{ padding: '12px', fontSize: '14px', fontWeight: '500' }}>
@@ -341,7 +356,7 @@ export default function OperateurPage() {
               </tbody>
             </table>
             {filteredOperators.length === 0 && (
-              <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+              <div style={{ padding: '40px', textAlign: 'center', color: '#6f7d89' }}>
                 Aucun opérateur trouvé
               </div>
             )}
@@ -353,35 +368,37 @@ export default function OperateurPage() {
           {!selectedOperator ? (
             <div style={{
               background: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '60px',
+              border: '1px solid #dde5ed',
+              borderRadius: '8px',
+              boxShadow: '0 1px 2px rgba(18,38,58,0.04)',
+              padding: isMobile ? '28px 16px' : '60px',
               textAlign: 'center',
-              color: '#999'
+              color: '#6f7d89'
             }}>
-              <span style={{ fontSize: '48px' }}>👈</span>
-              <p style={{ marginTop: '20px', fontSize: '16px' }}>
+              <span style={{ fontSize: isMobile ? '36px' : '48px' }}>👈</span>
+              <p style={{ marginTop: '20px', fontSize: isMobile ? '14px' : '16px' }}>
                 Sélectionnez un opérateur dans la liste de gauche
               </p>
             </div>
           ) : loading ? (
             <div style={{
               background: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '60px',
+              border: '1px solid #dde5ed',
+              borderRadius: '8px',
+              boxShadow: '0 1px 2px rgba(18,38,58,0.04)',
+              padding: isMobile ? '28px 16px' : '60px',
               textAlign: 'center'
             }}>
               <div style={{ 
                 display: 'inline-block',
                 width: '40px',
                 height: '40px',
-                border: '4px solid #f3f3f3',
-                borderTop: '4px solid #3498db',
+                border: '4px solid #d8e0e8',
+                borderTop: '4px solid #1769aa',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }}></div>
-              <p style={{ marginTop: '20px', color: '#666' }}>Chargement des données...</p>
+              <p style={{ marginTop: '20px', color: '#52616f' }}>Chargement des données...</p>
               <style>{`
                 @keyframes spin {
                   0% { transform: rotate(0deg); }
@@ -393,13 +410,13 @@ export default function OperateurPage() {
             <div>
               {/* En-tête avec le nom de l'opérateur */}
               <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '10px',
-                padding: '25px',
+                background: '#12263a',
+                borderRadius: '8px',
+                padding: isMobile ? '18px' : '25px',
                 color: 'white',
                 marginBottom: '20px'
               }}>
-                <h2 style={{ margin: 0, fontSize: '28px' }}>
+                <h2 style={{ margin: 0, fontSize: isSmallMobile ? '20px' : isMobile ? '24px' : '28px', overflowWrap: 'anywhere' }}>
                   {selectedOperator.name}
                 </h2>
                 <p style={{ margin: '10px 0 0 0', opacity: 0.9, fontSize: '14px' }}>
@@ -415,43 +432,43 @@ export default function OperateurPage() {
               {/* Cartes KPI */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '15px',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                gap: isMobile ? '10px' : '15px',
                 marginBottom: '20px'
               }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '10px',
-                  padding: '20px',
+                  background: '#12263a',
+                  borderRadius: '8px',
+                  padding: isMobile ? '15px' : '20px',
                   color: 'white',
                   textAlign: 'center'
                 }}>
                   <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🚆 TOTAL TRAINS</h4>
-                  <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+                  <p style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', fontWeight: 'bold' }}>
                     {formatNumber(operatorDetails?.total_trains)}
                   </p>
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  borderRadius: '10px',
-                  padding: '20px',
+                  background: '#1769aa',
+                  borderRadius: '8px',
+                  padding: isMobile ? '15px' : '20px',
                   color: 'white',
                   textAlign: 'center'
                 }}>
                   <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🌙 TRAINS DE NUIT</h4>
-                  <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+                  <p style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', fontWeight: 'bold' }}>
                     {formatNumber(operatorDetails?.night_trains)}
                   </p>
                 </div>
                 <div style={{
-                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                  borderRadius: '10px',
-                  padding: '20px',
+                  background: '#52616f',
+                  borderRadius: '8px',
+                  padding: isMobile ? '15px' : '20px',
                   color: 'white',
                   textAlign: 'center'
                 }}>
                   <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>☀️ TRAINS JOUR</h4>
-                  <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+                  <p style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', fontWeight: 'bold' }}>
                     {formatNumber(operatorDetails?.day_trains)}
                   </p>
                 </div>
@@ -461,15 +478,16 @@ export default function OperateurPage() {
               {getTimelineData() && (
                 <div style={{
                   background: 'white',
-                  borderRadius: '10px',
-                  padding: '20px',
+                  border: '1px solid #dde5ed',
+                  borderRadius: '8px',
+                  padding: isMobile ? '14px' : '20px',
                   marginBottom: '20px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  boxShadow: '0 1px 2px rgba(18,38,58,0.04)'
                 }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px', textAlign: 'center' }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#12263a', fontSize: '16px', textAlign: 'center' }}>
                     📈 Évolution du nombre de trains (2020-2024)
                   </h3>
-                  <div style={{ height: '300px' }}>
+                  <div style={{ height: isMobile ? '240px' : '300px' }}>
                     <Line data={getTimelineData()} options={timelineOptions} />
                   </div>
                 </div>
@@ -478,34 +496,35 @@ export default function OperateurPage() {
               {/* Indicateurs de performance */}
               <div style={{
                 background: 'white',
-                borderRadius: '10px',
-                padding: '20px',
+                border: '1px solid #dde5ed',
+                borderRadius: '8px',
+                padding: isMobile ? '14px' : '20px',
                 marginBottom: '20px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                boxShadow: '0 1px 2px rgba(18,38,58,0.04)'
               }}>
-                <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>📊 INDICATEURS DE PERFORMANCE</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                <h3 style={{ margin: '0 0 15px 0', color: '#12263a' }}>📊 INDICATEURS DE PERFORMANCE</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '10px' : '15px' }}>
                   <div>
-                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>Distance totale parcourue</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+                    <div style={{ fontSize: '12px', color: '#52616f', marginBottom: '5px' }}>Distance totale parcourue</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#12263a' }}>
                       {formatDistance(operatorDetails?.distance_totale_km)}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>Durée moyenne des trajets</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+                    <div style={{ fontSize: '12px', color: '#52616f', marginBottom: '5px' }}>Durée moyenne des trajets</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#12263a' }}>
                       {formatDuration(operatorDetails?.duree_moyenne_min / 60)}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>Pays desservis</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+                    <div style={{ fontSize: '12px', color: '#52616f', marginBottom: '5px' }}>Pays desservis</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#12263a' }}>
                       {operatorDetails?.countries_count || 0}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>CO₂ moyen par passager</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#28a745' }}>
+                    <div style={{ fontSize: '12px', color: '#52616f', marginBottom: '5px' }}>CO₂ moyen par passager</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0d7a3b' }}>
                       {operatorDetails?.avg_co2_per_passenger?.toFixed(3) || 'N/A'} kg
                     </div>
                   </div>
@@ -515,26 +534,27 @@ export default function OperateurPage() {
               {/* Liste des trajets */}
               <div style={{
                 background: 'white',
-                borderRadius: '10px',
-                padding: '20px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                border: '1px solid #dde5ed',
+                borderRadius: '8px',
+                padding: isMobile ? '14px' : '20px',
+                boxShadow: '0 1px 2px rgba(18,38,58,0.04)'
               }}>
-                <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🚆 LISTE DES TRAJETS {selectedOperator.name}</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: '#12263a', fontSize: isMobile ? '16px' : '18px', overflowWrap: 'anywhere' }}>🚆 LISTE DES TRAJETS {selectedOperator.name}</h3>
                 <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ position: 'sticky', top: 0, background: '#f8f9fa' }}>
-                      <tr style={{ borderBottom: '2px solid #e9ecef' }}>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#666' }}>Pays</th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#666' }}>Opérateur</th>
-                        <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#666' }}>Type</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#666' }}>Distance</th>
-                        <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#666' }}>Durée</th>
-                        <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#666' }}>Année</th>
+                    <thead style={{ position: 'sticky', top: 0, background: '#f4f6f8' }}>
+                      <tr style={{ borderBottom: '2px solid #dde5ed' }}>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#52616f' }}>Pays</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', color: '#52616f' }}>Opérateur</th>
+                        <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#52616f' }}>Type</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#52616f' }}>Distance</th>
+                        <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#52616f' }}>Durée</th>
+                        <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: '#52616f' }}>Année</th>
                       </tr>
                     </thead>
                     <tbody>
                       {operatorTrains.map((train, index) => (
-                        <tr key={train.fact_id || index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                        <tr key={train.fact_id || index} style={{ borderBottom: '1px solid #e6edf3' }}>
                           <td style={{ padding: '12px', fontSize: '14px' }}>
                             {train.country_name} ({train.country_code})
                           </td>
@@ -546,8 +566,8 @@ export default function OperateurPage() {
                               borderRadius: '20px',
                               fontSize: '12px',
                               fontWeight: 'bold',
-                              background: train.is_night ? '#f093fb20' : '#4facfe20',
-                              color: train.is_night ? '#f5576c' : '#4facfe'
+                              background: train.is_night ? '#edf2f7' : '#e5f7ed',
+                              color: train.is_night ? '#12263a' : '#0d7a3b'
                             }}>
                               {train.is_night ? '🌙 Nuit' : '☀️ Jour'}
                             </span>
@@ -567,7 +587,7 @@ export default function OperateurPage() {
                   </table>
                 </div>
                 {operatorTrains.length === 0 && (
-                  <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+                  <div style={{ padding: '40px', textAlign: 'center', color: '#6f7d89' }}>
                     Aucun trajet trouvé pour cet opérateur
                   </div>
                 )}

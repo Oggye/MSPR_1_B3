@@ -6,7 +6,7 @@ from .base import BaseSchema
 
 class NightTrainBase(BaseSchema):
     """Schéma de base pour un train."""
-    route_id: str          # corrigé : str au lieu de int
+    route_id: str         
     night_train: str
 
 

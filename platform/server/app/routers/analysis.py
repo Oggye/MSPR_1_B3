@@ -1,7 +1,7 @@
 # server/app/routers/analysis.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from typing import List
 from app.dependencies import get_db
 from app.models import FactsCountryStats, FactsNightTrains, DimCountries
@@ -14,8 +14,8 @@ router = APIRouter()
 def compare_train_types(db: Session = Depends(get_db)):
     """
     Compare les indicateurs entre trains de jour et trains de nuit.
-    Groupé par is_night directement sur facts_night_trains,
-    sans jointure avec facts_country_stats pour éviter les duplications.
+    Les donnees CO2/passagers viennent des statistiques pays/annee
+    correspondant au pays et a l'annee de chaque train.
     """
     REFERENCE_CO2 = 0.05
 
@@ -24,25 +24,24 @@ def compare_train_types(db: Session = Depends(get_db)):
         func.count(FactsNightTrains.fact_id).label("nb_trains"),
         func.avg(FactsNightTrains.distance_km).label("avg_distance"),
         func.avg(FactsNightTrains.duration_min).label("avg_duration"),
+        func.avg(FactsCountryStats.co2_per_passenger).label("avg_co2"),
+        func.avg(FactsCountryStats.passengers).label("avg_passengers"),
+    ).outerjoin(
+        FactsCountryStats,
+        and_(
+            FactsCountryStats.country_id == FactsNightTrains.country_id,
+            FactsCountryStats.year_id == FactsNightTrains.year_id,
+        )
     ).group_by(
         FactsNightTrains.is_night
     ).all()
 
-    # Stats CO2/passagers depuis facts_country_stats (global, pas de jointure croisée)
-    co2_stats = db.query(
-        func.avg(FactsCountryStats.co2_per_passenger).label("avg_co2"),
-        func.avg(FactsCountryStats.passengers).label("avg_passengers"),
-    ).first()
-
-    avg_co2 = float(co2_stats.avg_co2 or 0)
-    avg_passengers = float(co2_stats.avg_passengers or 0)
-
     comparisons = []
     for row in results:
         train_type = "night" if row.is_night else "day"
-        avg_distance = float(row.avg_distance or 0)
-        # Score d'efficacité basé sur la distance moyenne normalisée
-        efficiency = min(100, (avg_distance / 1000) * 100) if avg_distance > 0 else 0
+        avg_co2 = float(row.avg_co2 or 0)
+        avg_passengers = float(row.avg_passengers or 0)
+        efficiency = min(100, (REFERENCE_CO2 / avg_co2) * 100) if avg_co2 > 0 else 0
 
         comparisons.append(TrainTypeComparison(
             train_type=train_type,

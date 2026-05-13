@@ -19,5 +19,6 @@ class OperatorRanking(BaseSchema):
     day_trains: int
     distance_totale_km: float
     duree_moyenne_min: float
+    avg_co2_per_passenger: Optional[float] = None
     countries_served: List[str]
     countries_count: int

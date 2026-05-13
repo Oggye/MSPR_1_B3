@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   getNightTrains,
   getNightTrainsOnly,
@@ -16,7 +16,7 @@ const TrainPage = () => {
   const [error, setError] = useState(null);
   
   // États des sélections
-  const [selectedTrainId, setSelectedTrainId] = useState('');
+  const [operatorSearch, setOperatorSearch] = useState('');
   const [departureCountry, setDepartureCountry] = useState('');
   const [arrivalCountry, setArrivalCountry] = useState('');
   const [trainType, setTrainType] = useState('all'); // 'all', 'night', 'day'
@@ -24,18 +24,7 @@ const TrainPage = () => {
   // État pour l'itinéraire sélectionné
   const [selectedRoute, setSelectedRoute] = useState(null);
 
-  // Chargement des pays au montage
-  useEffect(() => {
-    loadCountries();
-    loadTrains();
-  }, []);
-
-  // Filtrage des trains quand les critères changent
-  useEffect(() => {
-    filterTrains();
-  }, [trains, departureCountry, arrivalCountry, trainType, selectedTrainId]);
-
-  const loadCountries = async () => {
+  const loadCountries = useCallback(async () => {
     try {
       const response = await getCountries();
       setCountries(response.data || []);
@@ -43,9 +32,9 @@ const TrainPage = () => {
       console.error('Erreur chargement pays:', err);
       setError('Impossible de charger la liste des pays');
     }
-  };
+  }, []);
 
-  const loadTrains = async () => {
+  const loadTrains = useCallback(async () => {
     setLoading(true);
     try {
       let response;
@@ -54,7 +43,7 @@ const TrainPage = () => {
       } else if (trainType === 'day') {
         response = await getDayTrainsOnly();
       } else {
-        response = await getNightTrains(0, 500);
+        response = await getNightTrains();
       }
       
       let trainsData = response.data || [];
@@ -82,9 +71,9 @@ const TrainPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [trainType]);
 
-  const filterTrains = () => {
+  const filterTrains = useCallback(() => {
     let filtered = [...trains];
     
     // Filtre par pays de départ
@@ -103,16 +92,34 @@ const TrainPage = () => {
       );
     }
     
-    // Filtre par ID de train
-    if (selectedTrainId) {
-      filtered = filtered.filter(train => 
-        train.fact_id?.toString() === selectedTrainId ||
-        train.route_id?.toString().includes(selectedTrainId)
+    // Filtre par nom d'operateur
+    if (operatorSearch) {
+      filtered = filtered.filter(train =>
+        train.operator_name?.toLowerCase().includes(operatorSearch.toLowerCase())
       );
+    }
+
+    // Filtre par type de train
+    if (trainType !== 'all') {
+      filtered = filtered.filter(train => train.train_type === trainType);
     }
     
     setFilteredTrains(filtered);
-  };
+  }, [trains, departureCountry, arrivalCountry, trainType, operatorSearch]);
+
+  // Chargement des pays au montage
+  useEffect(() => {
+    loadCountries();
+  }, [loadCountries]);
+
+  useEffect(() => {
+    loadTrains();
+  }, [loadTrains]);
+
+  // Filtrage des trains quand les critères changent
+  useEffect(() => {
+    filterTrains();
+  }, [filterTrains]);
 
   const handleSelectRoute = (train) => {
     setSelectedRoute(train);
@@ -137,18 +144,18 @@ const TrainPage = () => {
       {/* Panneau de filtres */}
       <div className="filters-panel">
         <div className="filter-group">
-          <label>Train (ID / Nom):</label>
+          <label>Operateur:</label>
           <input
             type="text"
-            placeholder="Sélectionner un train..."
-            list="train-options"
-            value={selectedTrainId}
-            onChange={(e) => setSelectedTrainId(e.target.value)}
+            placeholder="Ecrire un operateur..."
+            list="operator-options"
+            value={operatorSearch}
+            onChange={(e) => setOperatorSearch(e.target.value)}
           />
-          <datalist id="train-options">
+          <datalist id="operator-options">
             {trains.map(train => (
-              <option key={train.fact_id} value={train.fact_id}>
-                {train.route_id || `Train ${train.fact_id}`} - {train.operator_name}
+              <option key={train.fact_id} value={train.operator_name}>
+                {train.operator_name}
               </option>
             ))}
           </datalist>

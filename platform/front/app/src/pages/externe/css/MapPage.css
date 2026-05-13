@@ -4,6 +4,7 @@
     margin: 0 auto;
     padding: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #17202a;
   }
   
   /* Header */
@@ -11,8 +12,8 @@
     text-align: center;
     margin-bottom: 30px;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
+    background: #12263a;
+    border-radius: 8px;
     color: white;
   }
   
@@ -29,10 +30,11 @@
   /* Section Filtres */
   .filters-section {
     background: white;
-    border-radius: 15px;
+    border: 1px solid #dde5ed;
+    border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(18, 38, 58, 0.04);
   }
   
   .filters-container {
@@ -53,14 +55,14 @@
     margin-bottom: 5px;
     font-size: 13px;
     font-weight: 600;
-    color: #555;
+    color: #52616f;
   }
   
   .filter-select {
     width: 100%;
     padding: 10px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid #c9d2dc;
+    border-radius: 6px;
     font-size: 14px;
     background: white;
     cursor: pointer;
@@ -68,21 +70,21 @@
   }
   
   .filter-select:hover {
-    border-color: #667eea;
+    border-color: #1769aa;
   }
   
   .filter-select:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #1769aa;
+    box-shadow: 0 0 0 3px rgba(23, 105, 170, 0.18);
   }
   
   .reset-btn {
     padding: 10px 20px;
-    background: #f44336;
+    background: #1769aa;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
@@ -90,7 +92,7 @@
   }
   
   .reset-btn:hover {
-    background: #d32f2f;
+    background: #12263a;
     transform: translateY(-2px);
   }
   
@@ -107,8 +109,9 @@
     align-items: center;
     gap: 15px;
     padding: 15px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    border-radius: 10px;
+    background: #f4f6f8;
+    border: 1px solid #dde5ed;
+    border-radius: 8px;
     transition: transform 0.3s ease;
   }
   
@@ -117,12 +120,12 @@
   }
   
   .stat-card.night {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #12263a;
     color: white;
   }
   
   .stat-card.day {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: #1769aa;
     color: white;
   }
   
@@ -148,9 +151,10 @@
   .map-container {
     position: relative;
     margin-bottom: 30px;
-    border-radius: 15px;
+    border: 1px solid #dde5ed;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 1px 2px rgba(18, 38, 58, 0.08);
   }
   
   .map-legend {
@@ -160,7 +164,8 @@
     background: white;
     padding: 10px 15px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid #dde5ed;
+    box-shadow: 0 1px 2px rgba(18, 38, 58, 0.08);
     display: flex;
     gap: 15px;
     z-index: 1000;
@@ -180,15 +185,15 @@
   }
   
   .legend-marker.night-marker {
-    background: #9c27b0;
+    background: #12263a;
     border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #9c27b0;
+    box-shadow: 0 0 0 2px #12263a;
   }
   
   .legend-marker.day-marker {
-    background: #2196f3;
+    background: #1769aa;
     border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #2196f3;
+    box-shadow: 0 0 0 2px #1769aa;
   }
   
   /* Popup personnalisé */
@@ -198,31 +203,32 @@
   
   .popup-content h3 {
     margin: 0 0 10px 0;
-    color: #333;
+    color: #12263a;
     font-size: 16px;
   }
   
   .popup-content p {
     margin: 5px 0;
     font-size: 13px;
-    color: #666;
+    color: #5c6b78;
   }
   
   .popup-content strong {
-    color: #333;
+    color: #12263a;
   }
   
   /* Section Graphique */
   .chart-section {
     background: white;
-    border-radius: 15px;
+    border: 1px solid #dde5ed;
+    border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(18, 38, 58, 0.04);
   }
   
   .chart-section h2 {
     margin: 0 0 20px 0;
-    color: #333;
+    color: #12263a;
     font-size: 20px;
     text-align: center;
   }
@@ -239,9 +245,9 @@
     justify-content: center;
     height: 100%;
     min-height: 300px;
-    background: #f8f9fa;
+    background: #f4f6f8;
     border-radius: 10px;
-    color: #999;
+    color: #6f7d89;
     font-size: 16px;
   }
   
@@ -257,8 +263,8 @@
   .spinner {
     width: 50px;
     height: 50px;
-    border: 4px solid #e0e0e0;
-    border-top-color: #667eea;
+    border: 4px solid #d8e0e8;
+    border-top-color: #1769aa;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }

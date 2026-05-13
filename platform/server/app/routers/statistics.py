@@ -68,20 +68,25 @@ def get_timeline_data(db: Session = Depends(get_db)):
 @router.get("/api/statistics/co2-ranking", response_model=List[CO2RankingItem])
 def get_co2_ranking(
     db: Session = Depends(get_db),
-    limit: int = Query(10, ge=1, le=50)
+    limit: Optional[int] = Query(None, ge=1)
 ):
     """
     Classe les pays par performance CO2.
     Vue: dashboard_metrics
     """
     # Récupère les données de la vue dashboard_metrics
-    ranking_data = db.query(
+    query = db.query(
         DashboardMetrics.country_name,
         DashboardMetrics.country_code,
         DashboardMetrics.avg_co2_per_passenger
     ).order_by(
         DashboardMetrics.avg_co2_per_passenger.asc()
-    ).limit(limit).all()
+    )
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    ranking_data = query.all()
     
     # Construction du classement avec catégorisation
     ranking_items = []

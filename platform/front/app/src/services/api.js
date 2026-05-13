@@ -19,8 +19,14 @@ export const getTimeline = () => {
   return api.get('/statistics/timeline');
 };
 
-export const getCo2Ranking = (limit = 10) => {
-  return api.get('/statistics/co2-ranking', { params: { limit } });
+export const getCo2Ranking = (limit = null) => {
+  const params = {};
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/statistics/co2-ranking', { params });
 };
 
 export const getDashboardKpis = () => {
@@ -28,16 +34,34 @@ export const getDashboardKpis = () => {
 };
 
 // Carte
-export const getNightTrains = () => {
-  return api.get('/night-trains');
+export const getNightTrains = (skip = 0, limit = null, filters = {}) => {
+  const params = { skip, ...filters };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/night-trains', { params });
 };
 
 export const getNightTrainsOnly = (filters = {}) => {
-  return api.get('/night-trains/night', { params: filters });
+  const params = { ...filters };
+
+  if (params.limit === undefined) {
+    delete params.limit;
+  }
+
+  return api.get('/night-trains/night', { params });
 };
 
 export const getDayTrainsOnly = (filters = {}) => {
-  return api.get('/night-trains/day', { params: filters });
+  const params = { ...filters };
+
+  if (params.limit === undefined) {
+    delete params.limit;
+  }
+
+  return api.get('/night-trains/day', { params });
 };
 
 export const getGeographicCoverage = () => {
@@ -45,32 +69,54 @@ export const getGeographicCoverage = () => {
 };
 
 // Liste des trajets
-export const getAllTrains = (skip = 0, limit = 100, filters = {}) => {
-  return api.get('/night-trains', { 
-    params: { skip, limit, ...filters } 
-  });
+export const getAllTrains = (skip = 0, limit = null, filters = {}) => {
+  const params = { skip, ...filters };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/night-trains', { params });
 };
 
-export const getTrainsByCountry = (countryCode, skip = 0, limit = 20) => {
-  return api.get('/night-trains', { 
-    params: { country_code: countryCode, skip, limit } 
-  });
+export const getTrainsByCountry = (countryCode, skip = 0, limit = null) => {
+  const params = { country_code: countryCode, skip };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/night-trains', { params });
 };
 
-export const getTrainsByOperator = (operatorName, skip = 0, limit = 20) => {
-  return api.get('/night-trains', { 
-    params: { operator_name: operatorName, skip, limit } 
-  });
+export const getTrainsByOperator = (operatorName, skip = 0, limit = null) => {
+  const params = { operator_name: operatorName, skip };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/night-trains', { params });
 };
 
-export const getTrainsByYear = (year, skip = 0, limit = 20) => {
-  return api.get('/night-trains', { 
-    params: { year, skip, limit } 
-  });
+export const getTrainsByYear = (year, skip = 0, limit = null) => {
+  const params = { year, skip };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/night-trains', { params });
 };
 
-export const getCountries = () => {
-  return api.get('/countries');
+export const getCountries = (skip = 0, limit = null) => {
+  const params = { skip };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/countries', { params });
 };
 
 // Statistiques avancées
@@ -86,13 +132,25 @@ export const getOperatorStats = (operatorId) => {
   return api.get(`/operators/${operatorId}/stats`);
 };
 
-export const getCountryStats = (filters = {}) => {
-  return api.get('/countries/stats', { params: filters });
+export const getCountryStats = (filters = {}, skip = 0, limit = null) => {
+  const params = { skip, ...filters };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/countries/stats', { params });
 };
 
 // Opérateurs
-export const getOperators = (skip = 0, limit = 100) => {
-  return api.get('/operators', { params: { skip, limit } });
+export const getOperators = (skip = 0, limit = null) => {
+  const params = { skip };
+
+  if (limit !== null) {
+    params.limit = limit;
+  }
+
+  return api.get('/operators', { params });
 };
 
 export const getOperatorById = (id) => {

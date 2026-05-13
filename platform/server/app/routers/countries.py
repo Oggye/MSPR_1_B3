@@ -1,7 +1,7 @@
 # server/app/routers/countries.py
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.dependencies import get_db
 from app.models import DimCountries, FactsCountryStats, DimYears
 from app.schemas.countries import CountryResponse, CountryStatsResponse, CountryStatsFilter
@@ -13,10 +13,15 @@ router = APIRouter()
 def get_countries(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500)
+    limit: Optional[int] = Query(None, ge=1)
 ):
     """Récupère la liste des pays européens référencés."""
-    return db.query(DimCountries).offset(skip).limit(limit).all()
+    query = db.query(DimCountries).offset(skip)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    return query.all()
 
 
 @router.get("/api/countries/stats", response_model=List[CountryStatsResponse])
@@ -24,7 +29,7 @@ def get_country_stats(
     filter: CountryStatsFilter = Depends(),
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500)
+    limit: Optional[int] = Query(None, ge=1)
 ):
     """Récupère les statistiques par pays avec filtrage avancé."""
     query = db.query(
@@ -51,7 +56,12 @@ def get_country_stats(
     if filter.max_co2_per_passenger is not None:
         query = query.filter(FactsCountryStats.co2_per_passenger <= filter.max_co2_per_passenger)
 
-    results = query.offset(skip).limit(limit).all()
+    query = query.offset(skip)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    results = query.all()
 
     transformed_results = []
     for stats, country_name, country_code, year in results:

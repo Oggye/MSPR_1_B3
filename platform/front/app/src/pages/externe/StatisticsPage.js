@@ -67,7 +67,7 @@ const StatisticsPage = () => {
       ] = await Promise.all([
         getTrainTypeComparison(),
         getTimeline(),
-        getCo2Ranking(20),
+        getCo2Ranking(),
         getPolicyRecommendations(),
         getCountryStats()
       ]);
