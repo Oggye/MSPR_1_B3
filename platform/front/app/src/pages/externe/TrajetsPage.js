@@ -148,17 +148,9 @@ const TrainPage = () => {
           <input
             type="text"
             placeholder="Ecrire un operateur..."
-            list="operator-options"
             value={operatorSearch}
             onChange={(e) => setOperatorSearch(e.target.value)}
           />
-          <datalist id="operator-options">
-            {trains.map(train => (
-              <option key={train.fact_id} value={train.operator_name}>
-                {train.operator_name}
-              </option>
-            ))}
-          </datalist>
         </div>
 
         <div className="filter-group">

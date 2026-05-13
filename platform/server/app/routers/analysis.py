@@ -41,11 +41,13 @@ def compare_train_types(db: Session = Depends(get_db)):
         train_type = "night" if row.is_night else "day"
         avg_co2 = float(row.avg_co2 or 0)
         avg_passengers = float(row.avg_passengers or 0)
+        avg_distance = float(row.avg_distance or 0)
         efficiency = min(100, (REFERENCE_CO2 / avg_co2) * 100) if avg_co2 > 0 else 0
 
         comparisons.append(TrainTypeComparison(
             train_type=train_type,
             avg_passengers=avg_passengers,
+            avg_distance=avg_distance,
             avg_co2_per_passenger=avg_co2,
             efficiency_score=efficiency
         ))
@@ -53,8 +55,8 @@ def compare_train_types(db: Session = Depends(get_db)):
     # Si pas de données, retourner des valeurs neutres
     if not comparisons:
         return [
-            TrainTypeComparison(train_type="night", avg_passengers=0, avg_co2_per_passenger=0, efficiency_score=0),
-            TrainTypeComparison(train_type="day", avg_passengers=0, avg_co2_per_passenger=0, efficiency_score=0),
+            TrainTypeComparison(train_type="night", avg_passengers=0, avg_distance=0, avg_co2_per_passenger=0, efficiency_score=0),
+            TrainTypeComparison(train_type="day", avg_passengers=0, avg_distance=0, avg_co2_per_passenger=0, efficiency_score=0),
         ]
 
     return comparisons

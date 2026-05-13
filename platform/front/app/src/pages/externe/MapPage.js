@@ -55,6 +55,9 @@ const dayTrainIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+const MAX_TRAINS_TOTAL = 1000;
+const MAX_TRAINS_PER_TYPE = 500;
+
 // Composant pour recentrer la carte
 function ChangeView({ center, zoom }) {
   const map = useMap();
@@ -125,6 +128,25 @@ const MapPage = () => {
     // Filtre par année
     if (filters.year !== 'all') {
       filtered = filtered.filter(train => train.year === parseInt(filters.year));
+    }
+
+    if (filters.trainType === 'night') {
+      filtered = filtered.slice(0, MAX_TRAINS_PER_TYPE);
+    } else if (filters.trainType === 'day') {
+      filtered = filtered.slice(0, MAX_TRAINS_PER_TYPE);
+    } else {
+      const nightTrains = filtered.filter(train => train.is_night).slice(0, MAX_TRAINS_PER_TYPE);
+      const dayTrains = filtered.filter(train => !train.is_night).slice(0, MAX_TRAINS_PER_TYPE);
+      const combined = [...nightTrains, ...dayTrains];
+
+      if (combined.length < MAX_TRAINS_TOTAL) {
+        const remainingNeeded = MAX_TRAINS_TOTAL - combined.length;
+        const remainingNight = filtered.filter(train => train.is_night).slice(MAX_TRAINS_PER_TYPE);
+        const remainingDay = filtered.filter(train => !train.is_night).slice(MAX_TRAINS_PER_TYPE);
+        filtered = [...combined, ...remainingNight, ...remainingDay].slice(0, combined.length + remainingNeeded);
+      } else {
+        filtered = combined.slice(0, MAX_TRAINS_TOTAL);
+      }
     }
     
     setFilteredTrains(filtered);

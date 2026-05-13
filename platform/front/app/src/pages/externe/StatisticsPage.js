@@ -144,12 +144,29 @@ const StatisticsPage = () => {
   };
 
   // Configuration graphique Efficacité
+  const calculateEfficiencyScore = (item) => {
+    const safeCo2 = Number(item?.avg_co2_per_passenger) || 0;
+    const safeDistance = Number(item?.avg_distance) || 0;
+
+    if (safeCo2 <= 0 && safeDistance <= 0) {
+      return 0;
+    }
+
+    const maxCo2 = Math.max(...trainTypeData.map(data => Number(data?.avg_co2_per_passenger) || 0), 1);
+    const maxDistance = Math.max(...trainTypeData.map(data => Number(data?.avg_distance) || 0), 1);
+
+    const co2Component = ((maxCo2 - safeCo2) / maxCo2) * 70;
+    const distanceComponent = (safeDistance / maxDistance) * 30;
+
+    return Math.max(0, Math.min(100, co2Component + distanceComponent));
+  };
+
   const efficiencyData = {
     labels: trainTypeData.map(item => item.train_type === 'night' ? 'Trains de nuit' : 'Trains de jour'),
     datasets: [
       {
         label: "Score d'efficacité environnementale (%)",
-        data: trainTypeData.map(item => item.efficiency_score),
+        data: trainTypeData.map(item => calculateEfficiencyScore(item)),
         backgroundColor: ['#82ca9d', '#ffc658'],
         borderColor: ['#6b9e7a', '#e5a800'],
         borderWidth: 2,
@@ -169,6 +186,12 @@ const StatisticsPage = () => {
         callbacks: {
           label: function(context) {
             return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+          },
+          afterLabel: function(context) {
+            const item = trainTypeData[context.dataIndex];
+            const avgDistance = Number(item?.avg_distance) || 0;
+            const avgCo2 = Number(item?.avg_co2_per_passenger) || 0;
+            return `Distance moyenne: ${avgDistance.toFixed(0)} km | CO₂: ${avgCo2.toFixed(3)} kg`;
           }
         }
       }

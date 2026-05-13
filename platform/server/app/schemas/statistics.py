@@ -50,5 +50,6 @@ class TrainTypeComparison(BaseSchema):
     """Schéma pour la comparaison entre trains de jour et de nuit."""
     train_type: str
     avg_passengers: float
+    avg_distance: float
     avg_co2_per_passenger: float
     efficiency_score: float

@@ -42,7 +42,6 @@ h1 {
 
 .filter-group input,
 .filter-group select {
-  width: 100%;
   padding: 10px;
   border: 1px solid #c9d2dc;
   border-radius: 6px;
