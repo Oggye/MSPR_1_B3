@@ -3,7 +3,6 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -105,17 +104,6 @@ export default function OperateurPage() {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h${m > 0 ? ` ${m}m` : ''}`;
-  };
-
-  // Calculer le score d'efficacité
-  const calculateEfficiencyScore = (details) => {
-    if (!details) return 0;
-    let score = 50; // Score de base
-    if (details.avg_co2_per_passenger < 0.05) score += 30;
-    else if (details.avg_co2_per_passenger < 0.1) score += 15;
-    if (details.night_trains > details.day_trains) score += 10;
-    if (details.total_trains > 200) score += 10;
-    return Math.min(score, 100);
   };
 
   // Préparer les données pour l'évolution temporelle (simulée)

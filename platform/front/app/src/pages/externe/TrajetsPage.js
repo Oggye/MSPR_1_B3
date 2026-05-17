@@ -47,13 +47,11 @@ const TrainPage = () => {
       
       let trainsData = response.data || [];
       
-      // Ajout de données simulées pour l'exemple (car votre API semble avoir des trajets par pays)
-      // Dans une vraie implémentation, vous feriez une requête plus spécifique
+      // Ajout de données simulées pour l'exemple
       trainsData = trainsData.map(train => ({
         ...train,
-        // Simulation de données d'itinéraire basées sur le pays
-        estimated_duration: Math.floor(Math.random() * 600) + 60, // minutes
-        estimated_distance: Math.floor(Math.random() * 1500) + 100, // km
+        estimated_duration: Math.floor(Math.random() * 600) + 60,
+        estimated_distance: Math.floor(Math.random() * 1500) + 100,
         departure_station: `${train.country_name} Centrale`,
         arrival_station: `Gare Principale`,
         intermediate_stops: [
@@ -75,7 +73,6 @@ const TrainPage = () => {
   const filterTrains = useCallback(() => {
     let filtered = [...trains];
     
-    // Filtre par pays de départ
     if (departureCountry) {
       filtered = filtered.filter(train => 
         train.country_code === departureCountry || 
@@ -83,14 +80,12 @@ const TrainPage = () => {
       );
     }
     
-    // Filtre par nom d'operateur
     if (operatorSearch) {
       filtered = filtered.filter(train =>
         train.operator_name?.toLowerCase().includes(operatorSearch.toLowerCase())
       );
     }
 
-    // Filtre par type de train
     if (trainType !== 'all') {
       filtered = filtered.filter(train => train.train_type === trainType);
     }
@@ -98,7 +93,6 @@ const TrainPage = () => {
     setFilteredTrains(filtered);
   }, [trains, departureCountry, trainType, operatorSearch]);
 
-  // Chargement des pays au montage
   useEffect(() => {
     loadCountries();
   }, [loadCountries]);
@@ -107,7 +101,6 @@ const TrainPage = () => {
     loadTrains();
   }, [loadTrains]);
 
-  // Filtrage des trains quand les critères changent
   useEffect(() => {
     filterTrains();
   }, [filterTrains]);
@@ -132,7 +125,6 @@ const TrainPage = () => {
     <div className="train-search-container">
       <h1>Recherche d'itinéraires ferroviaires</h1>
       
-      {/* Panneau de filtres */}
       <div className="filters-panel">
         <div className="filter-group">
           <label>Operateur:</label>
@@ -194,7 +186,6 @@ const TrainPage = () => {
         </button>
       </div>
 
-      {/* Résultats de recherche */}
       <div className="results-container">
         <div className="trains-list">
           <h2>Trajets disponibles ({filteredTrains.length})</h2>
@@ -235,7 +226,6 @@ const TrainPage = () => {
           </div>
         </div>
 
-        {/* Affichage de l'itinéraire détaillé */}
         <div className="route-details">
           {selectedRoute ? (
             <div className="itinerary">
