@@ -1,8 +1,9 @@
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(BASE_DIR))
+# parents[0] = E2E/, parents[1] = test/, parents[2] = server/
+SERVER_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(SERVER_DIR))
 
 import pytest
 from fastapi.testclient import TestClient
