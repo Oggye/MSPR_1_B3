@@ -1,3 +1,29 @@
+voici comment c derouler les conception du MSPR, le role de chacun et les probleme sur lequel on est tomber :
+les menbre du Groupe sont :
+-ABDILLAHI ABDI Mariam Marwo
+-SAMB Adja Nafissatou Lo
+-NKIBAN A ITCHIRI Orlane Emmanuelle Andrea
+-TOURE Zeinab Anne Marie
+-NDIAYE Mansour Djamil
+les tache de chacun sont detailler sur le trello "https://trello.com/invite/b/69e74e583f650936f382ba17/ATTIaa05d72d0f16e3a2a3827bc407c678ffA9A7D7CE/mspr-b3"
+voici comment c derouler le travail
+deja on a reutiliser se qui etaint deja fais dans l'ancien mspr, la documentation est present ici "archivre\mspr n1\docs\rapport_technique.md" 
+le premier a travailler est Djamil, il a commencer par s'occuper de revoir le docker et les different conteneur et l'arboresence du code (architechture), ensuit rajouter des donner dans le warehouse (les donner de trajet), puis c'est au tour de Andrea de travailler sur l'api en rajoutant les nouveau empoints et en corrigeant les erreur qu'il y'avais deja tels que la limite imposser de 500 sur les recuperation des donner des train qui est de venue ilimiter (verifier dans "deja-fais--a-faire.md") ensuit tout les autre menbre du groupe on pue commencer leur tache, nafissa avec les test unitaire, d'integration le CICD Mariam est zeynab on tout deux travailler sur l'interface front React? Mariam c'etant aucuper de la parti interne avec tout les graphe et se qui vas avec, zeinab elle de l'interface admin avec l'aide de djamil, djamil lui s'est occuper de mentre en place le Grafana ainsi que prometeus, LOKI et promtail "monitoring/" il ya eu un problemme avec graphana, il se trouve que sa configuration se fais directement sur le front dont un fois le docker redemarer, on perdais toit les dashboards pour palier a se problemme, les dashboard on ete creer et configurer sur l'interface puis exporter sur "monitoring\grafana\dashboards\obrail-dashboard.json" afin que se sois automatiquement charger pour que tout se qui recupere le git puissent voir le monitoring ensuite zeinab s'est aucuper du rest des liaison a l'interface interne (admin) mais se qui pose probleme a se jour est l'affichage du cicd directement sur l'interface, la methode utiliser est (explique se qui se passe) si le cicd ne s'affiche toujour pas sur linterface nous abondonerons cette fonctionaliter, Andrea c'est occuper d'une partie des test E2E puis a ete assister par Djamil pour le rest des test du a une contrainte de temps, Mariam s'est occuper a ette seul du front client (externe) ainsi que de la liaison au api et les respect de regle RGAA, bien sur chaque menbre a vue et compris la tache de chacun afin de bien maitriser sa propre tache se qui permet  a chacun de toucher a tout et de monter en capaciter
+parle des protentiel proble de chacun des solution touver et des axe d'amelioration ainsi que les potentiel evolution futur avec l'ajout d'un systeme de prediction
+la documentation des emploints complete se trouve ici "http://localhost:8000/api/docs"
+l’architecture globale de la solution (schémas exigés)
+
+voici se qui est attendu :
+Rapport technique complet
+Un rapport clair, structuré et professionnel devra être produit. Il constituera le document de référence duprojet. Le rapport devra au minimum contenir :l’architecture globale de la solution (schémas exigés),les choix techniques argumentés (frameworks, outils, standards),la description du pipeline CI/CD,les résultats des tests et leur couverture,les éléments relatifs à la supervision,les procédures d’installation et d’exécution,les mesures mises en œuvre pour garantir :
+la conformité RGPD,la sécurité,l’accessibilité,
+la stratégie de maintenance : mise à jour, correctifs, rollback.Ce rapport constitue un livrable central pour l’évaluation.
+
+
+
+
+
+
 # Structure COMPLÈTE de la documentation technique MSPR
 
 La meilleure approche :
