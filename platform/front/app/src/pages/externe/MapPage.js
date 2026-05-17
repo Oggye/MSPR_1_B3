@@ -85,7 +85,7 @@ const MapPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filters, trains, applyFilters]); // ✅ Correction : ajout de applyFilters
+  }, [filters, trains, applyFilters]);
 
   const fetchData = async () => {
     try {

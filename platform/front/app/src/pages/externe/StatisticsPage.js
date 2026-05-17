@@ -47,7 +47,6 @@ const StatisticsPage = () => {
   const [timelineData, setTimelineData] = useState([]);
   const [co2Ranking, setCo2Ranking] = useState([]);
   const [policyRecommendations, setPolicyRecommendations] = useState(null);
-  const [countryMetrics, setCountryMetrics] = useState([]);
 
   useEffect(() => {
     fetchAllData();
@@ -60,21 +59,18 @@ const StatisticsPage = () => {
         trainTypeRes,
         timelineRes,
         co2RankingRes,
-        policyRes,
-        countryStatsRes
+        policyRes
       ] = await Promise.all([
         getTrainTypeComparison(),
         getTimeline(),
         getCo2Ranking(),
-        getPolicyRecommendations(),
-        getCountryStats()
+        getPolicyRecommendations()
       ]);
 
       setTrainTypeData(trainTypeRes.data);
       setTimelineData(timelineRes.data);
       setCo2Ranking(co2RankingRes.data);
       setPolicyRecommendations(policyRes.data);
-      setCountryMetrics(countryStatsRes.data);
       setError(null);
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
