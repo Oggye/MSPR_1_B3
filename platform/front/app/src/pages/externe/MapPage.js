@@ -1,5 +1,5 @@
 // src/pages/TrainMapPage.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import {
@@ -76,8 +76,8 @@ const MapPage = () => {
     year: 'all'
   });
   const [availableYears, setAvailableYears] = useState([]);
-  const [mapCenter, setMapCenter] = useState([48.8566, 2.3522]); // Paris
-  const [mapZoom, setMapZoom] = useState(5);
+  const mapCenter = [48.8566, 2.3522]; // Paris
+  const mapZoom = 5;
 
   useEffect(() => {
     fetchData();
@@ -110,7 +110,7 @@ const MapPage = () => {
     }
   };
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...trains];
     
     // Filtre par type de train
@@ -150,7 +150,7 @@ const MapPage = () => {
     }
     
     setFilteredTrains(filtered);
-  };
+  }, [trains, filters]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

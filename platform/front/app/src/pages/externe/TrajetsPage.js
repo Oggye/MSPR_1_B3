@@ -18,7 +18,6 @@ const TrainPage = () => {
   // États des sélections
   const [operatorSearch, setOperatorSearch] = useState('');
   const [departureCountry, setDepartureCountry] = useState('');
-  const [arrivalCountry, setArrivalCountry] = useState('');
   const [trainType, setTrainType] = useState('all'); // 'all', 'night', 'day'
   
   // État pour l'itinéraire sélectionné
@@ -84,14 +83,6 @@ const TrainPage = () => {
       );
     }
     
-    // Filtre par pays d'arrivée
-    if (arrivalCountry) {
-      filtered = filtered.filter(train =>
-        train.arrival_country === arrivalCountry ||
-        train.country_name?.toLowerCase().includes(arrivalCountry.toLowerCase())
-      );
-    }
-    
     // Filtre par nom d'operateur
     if (operatorSearch) {
       filtered = filtered.filter(train =>
@@ -105,7 +96,7 @@ const TrainPage = () => {
     }
     
     setFilteredTrains(filtered);
-  }, [trains, departureCountry, arrivalCountry, trainType, operatorSearch]);
+  }, [trains, departureCountry, trainType, operatorSearch]);
 
   // Chargement des pays au montage
   useEffect(() => {

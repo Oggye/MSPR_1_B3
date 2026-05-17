@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Bar,
-  Line,
-  Scatter
+  Line
 } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -49,7 +48,6 @@ const StatisticsPage = () => {
   const [co2Ranking, setCo2Ranking] = useState([]);
   const [policyRecommendations, setPolicyRecommendations] = useState(null);
   const [countryMetrics, setCountryMetrics] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState(null);
 
   useEffect(() => {
     fetchAllData();
@@ -269,72 +267,6 @@ const StatisticsPage = () => {
         pointBackgroundColor: '#ffc658'
       }
     ]
-  };
-
-  // Configuration graphique Scatter (Passagers vs CO2)
-  const scatterData = {
-    datasets: [
-      {
-        label: 'Pays européens',
-        data: countryMetrics.map(country => ({
-          x: country.passengers / 1000000, // Convertir en millions
-          y: country.co2_per_passenger,
-          country_name: country.country_name,
-          country_code: country.country_code
-        })),
-        backgroundColor: countryMetrics.map(country => 
-          country.co2_per_passenger < 0.05 ? '#4caf50' : 
-          country.co2_per_passenger < 0.1 ? '#ff9800' : '#f44336'
-        ),
-        pointRadius: 8,
-        pointHoverRadius: 12,
-      }
-    ]
-  };
-
-  const scatterOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            const dataPoint = context.raw;
-            return [
-              `Pays: ${dataPoint.country_name}`,
-              `Passagers: ${dataPoint.x.toFixed(2)} millions`,
-              `CO₂: ${dataPoint.y.toFixed(3)} kg/passager`
-            ];
-          }
-        }
-      },
-      legend: {
-        position: 'top',
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Nombre de passagers (millions)'
-        },
-        beginAtZero: true
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'kg CO₂/passager'
-        },
-        beginAtZero: true
-      }
-    },
-    onClick: (event, activeElements) => {
-      if (activeElements && activeElements[0]) {
-        const index = activeElements[0].index;
-        const selected = countryMetrics[index];
-        setSelectedCountry(selected);
-      }
-    }
   };
 
   const getPerformanceLabel = (performance) => {

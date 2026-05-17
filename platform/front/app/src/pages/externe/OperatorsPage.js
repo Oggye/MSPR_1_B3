@@ -12,14 +12,13 @@ import {
   PointElement,
   LineElement
 } from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import { getOperators, getOperatorStats, getTrainsByOperator } from '../../services/api';
 
 // Enregistrement des composants Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -119,42 +118,6 @@ export default function OperateurPage() {
     return Math.min(score, 100);
   };
 
-  // Préparer les données pour le graphique en barres (distribution jour/nuit)
-  const getDistributionData = () => {
-    if (!operatorDetails) return null;
-    return {
-      labels: ['Trains de Jour', 'Trains de Nuit'],
-      datasets: [
-        {
-          label: 'Nombre de trains',
-          data: [operatorDetails.day_trains || 0, operatorDetails.night_trains || 0],
-          backgroundColor: ['#1769aa', '#12263a'],
-          borderColor: ['#fff', '#fff'],
-          borderWidth: 2,
-          borderRadius: 8,
-        }
-      ]
-    };
-  };
-
-  // Préparer les données pour le graphique en anneau (efficacité)
-  const getEfficiencyData = () => {
-    if (!operatorDetails) return null;
-    const score = calculateEfficiencyScore(operatorDetails);
-    return {
-      labels: ['Performance', 'Potentiel d\'amélioration'],
-      datasets: [
-        {
-          data: [score, 100 - score],
-          backgroundColor: ['#20a464', '#d8e0e8'],
-          borderColor: ['#fff', '#fff'],
-          borderWidth: 2,
-          cutout: '70%',
-        }
-      ]
-    };
-  };
-
   // Préparer les données pour l'évolution temporelle (simulée)
   const getTimelineData = () => {
     if (!operatorTrains || operatorTrains.length === 0) return null;
@@ -191,52 +154,6 @@ export default function OperateurPage() {
         }
       ]
     };
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-          font: { size: 11 }
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            let label = context.dataset.label || '';
-            let value = context.raw;
-            return `${label}: ${value.toLocaleString()}`;
-          }
-        }
-      }
-    }
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-          font: { size: 11 }
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            return `${context.label}: ${context.raw}%`;
-          }
-        }
-      }
-    }
   };
 
   const timelineOptions = {
