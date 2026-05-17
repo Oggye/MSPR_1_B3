@@ -197,9 +197,9 @@ jobs:
           OWNER_LC="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
           SHA_TAG="${GITHUB_SHA}"
 
-          FRONT_IMAGE_ID="$(docker compose images -q front)"
-          API_IMAGE_ID="$(docker compose images -q api)"
-          ETL_IMAGE_ID="$(docker compose images -q etl)"
+          FRONT_IMAGE_ID="$(docker image ls -q obrail-front:latest)"
+          API_IMAGE_ID="$(docker image ls -q obrail-api:latest)"
+          ETL_IMAGE_ID="$(docker image ls -q obrail-etl:latest)"
 
           if [ -z "${FRONT_IMAGE_ID}" ] || [ -z "${API_IMAGE_ID}" ] || [ -z "${ETL_IMAGE_ID}" ]; then
             echo "One or more image IDs are missing"
