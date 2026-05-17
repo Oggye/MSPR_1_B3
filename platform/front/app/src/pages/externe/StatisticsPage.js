@@ -458,57 +458,6 @@ const StatisticsPage = () => {
           ))}
         </div>
       </section>
-
-      {/* Section 5: Relation Passagers vs CO2 */}
-      <section className="section">
-        <h2>📊 Relation Passagers vs CO₂ par pays</h2>
-        <div className="chart-card full-width">
-          <div className="scatter-container">
-            <Scatter data={scatterData} options={scatterOptions} />
-          </div>
-          <div className="legend-container">
-            <div className="legend-item">
-              <div className="legend-color good"></div>
-              <span>Bonne performance (&lt;0.05 kg)</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color medium"></div>
-              <span>Performance moyenne (0.05-0.1 kg)</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color bad"></div>
-              <span>À améliorer (&gt;0.1 kg)</span>
-            </div>
-            <div className="legend-note">
-              💡 Cliquez sur un point pour voir les détails
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Modal Détails Pays */}
-      {selectedCountry && (
-        <div className="modal-overlay" onClick={() => setSelectedCountry(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>📌 {selectedCountry.country_name} ({selectedCountry.country_code})</h3>
-              <button className="modal-close" onClick={() => setSelectedCountry(null)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <div className="modal-stat">
-                <label>Total Passagers</label>
-                <div className="modal-value">{(selectedCountry.passengers / 1000000).toFixed(2)} millions</div>
-              </div>
-              <div className="modal-stat">
-                <label>Émissions CO₂ par passager</label>
-                <div className={`modal-value ${selectedCountry.co2_per_passenger < 0.05 ? 'value-good' : selectedCountry.co2_per_passenger < 0.1 ? 'value-medium' : 'value-bad'}`}>
-                  {selectedCountry.co2_per_passenger.toFixed(3)} kg
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

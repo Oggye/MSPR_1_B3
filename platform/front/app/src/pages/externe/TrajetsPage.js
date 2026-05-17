@@ -166,18 +166,6 @@ const TrainPage = () => {
         </div>
 
         <div className="filter-group">
-          <label>Pays d'arrivée:</label>
-          <select value={arrivalCountry} onChange={(e) => setArrivalCountry(e.target.value)}>
-            <option value="">Tous les pays</option>
-            {countries.map(country => (
-              <option key={country.country_id} value={country.country_code}>
-                {country.country_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
           <label>Type de train:</label>
           <div className="radio-group">
             <label>
@@ -196,7 +184,7 @@ const TrainPage = () => {
                 checked={trainType === 'night'}
                 onChange={(e) => setTrainType(e.target.value)}
               />
-              Train de nuit
+              🌙 Nuit
             </label>
             <label>
               <input
@@ -205,7 +193,7 @@ const TrainPage = () => {
                 checked={trainType === 'day'}
                 onChange={(e) => setTrainType(e.target.value)}
               />
-              Train de jour
+              ☀️ Jour
             </label>
           </div>
         </div>
@@ -281,29 +269,6 @@ const TrainPage = () => {
                 <div className="summary-item">
                   <span className="label">Durée totale:</span>
                   <span className="value">{formatDuration(selectedRoute.estimated_duration)}</span>
-                </div>
-              </div>
-
-              {/* Informations supplémentaires */}
-              <div className="additional-info">
-                <h3>ℹ️ Informations supplémentaires</h3>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <strong>Opérateur:</strong> {selectedRoute.operator_name}
-                  </div>
-                  <div className="info-item">
-                    <strong>Année de service:</strong> {selectedRoute.year}
-                  </div>
-                  {selectedRoute.distance_km && (
-                    <div className="info-item">
-                      <strong>Distance officielle:</strong> {formatDistance(selectedRoute.distance_km)}
-                    </div>
-                  )}
-                  {selectedRoute.duration_min && (
-                    <div className="info-item">
-                      <strong>Durée officielle:</strong> {formatDuration(selectedRoute.duration_min)}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
