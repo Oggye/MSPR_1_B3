@@ -148,9 +148,9 @@ jobs:
           SHA="${{ github.sha }}"
           
           # Find images
-          FRONT_ID=$(docker image ls -q obrail-front | head -1)
-          API_ID=$(docker image ls -q obrail-api | head -1)
-          ETL_ID=$(docker image ls -q obrail-etl | head -1)
+          FRONT_ID=$(docker image ls -q mspr_1_b3-front | head -1)
+          API_ID=$(docker image ls -q mspr_1_b3-api | head -1)
+          ETL_ID=$(docker image ls -q mspr_1_b3-etl | head -1)
           
           if [ -z "$FRONT_ID" ] || [ -z "$API_ID" ] || [ -z "$ETL_ID" ]; then
             echo "ERROR: Image not found"
@@ -159,11 +159,11 @@ jobs:
           fi
           
           # Tag images
-          docker tag $FRONT_ID ghcr.io/$OWNER/obrail-front:latest
-          docker tag $API_ID ghcr.io/$OWNER/obrail-api:latest
-          docker tag $ETL_ID ghcr.io/$OWNER/obrail-etl:latest
+          docker tag $FRONT_ID ghcr.io/$OWNER/mspr_1_b3-front:latest
+          docker tag $API_ID ghcr.io/$OWNER/mspr_1_b3-api:latest
+          docker tag $ETL_ID ghcr.io/$OWNER/mspr_1_b3-etl:latest
           
           # Push
-          docker push ghcr.io/$OWNER/obrail-front:latest
-          docker push ghcr.io/$OWNER/obrail-api:latest
-          docker push ghcr.io/$OWNER/obrail-etl:latest
+          docker push ghcr.io/$OWNER/mspr_1_b3-front:latest
+          docker push ghcr.io/$OWNER/mspr_1_b3-api:latest
+          docker push ghcr.io/$OWNER/mspr_1_b3-etl:latest
