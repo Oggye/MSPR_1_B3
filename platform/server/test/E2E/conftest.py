@@ -92,7 +92,6 @@ def sample_data(db_session):
     db_session.add_all(operators)
 
     stats = [
-<<<<<<< HEAD
         FactsCountryStats(
             stat_id=1,
             country_id=1,
@@ -117,11 +116,6 @@ def sample_data(db_session):
             co2_emissions=8000.0,
             co2_per_passenger=0.04,
         ),
-=======
-        FactsCountryStats(stat_id=1, country_id=1, year_id=1, passengers=100000.0, co2_emissions=5000.0, co2_per_passenger=0.05),
-        FactsCountryStats(stat_id=2, country_id=1, year_id=2, passengers=110000.0, co2_emissions=5200.0, co2_per_passenger=0.047),
-        FactsCountryStats(stat_id=3, country_id=2, year_id=1, passengers=200000.0, co2_emissions=8000.0, co2_per_passenger=0.04),
->>>>>>> d78f22f8d7eb11d2cce3ef3997985ddeb80536bf
     ]
     db_session.add_all(stats)
 
