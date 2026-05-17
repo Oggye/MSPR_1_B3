@@ -82,10 +82,10 @@ const MapPage = () => {
   useEffect(() => {
     fetchData();
   }, []);
-  
+
   useEffect(() => {
     applyFilters();
-  }, [filters, trains]);
+  }, [filters, trains, applyFilters]); // ✅ Correction : ajout de applyFilters
 
   const fetchData = async () => {
     try {
@@ -377,7 +377,7 @@ const MapPage = () => {
           />
           
           {filteredTrains.map((train, index) => {
-            // Simuler des coordonnées basées sur le pays (dans une application réelle, vous auriez des vraies coordonnées)
+            // Simuler des coordonnées basées sur le pays
             const countryCoords = {
               'FR': [46.603354, 1.888334],
               'DE': [51.165691, 10.451526],
