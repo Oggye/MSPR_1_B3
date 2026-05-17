@@ -79,6 +79,45 @@ const MapPage = () => {
   const mapCenter = [48.8566, 2.3522]; // Paris
   const mapZoom = 5;
 
+  const applyFilters = useCallback(() => {
+    let filtered = [...trains];
+    
+    if (filters.trainType === 'night') {
+      filtered = filtered.filter(train => train.is_night === true);
+    } else if (filters.trainType === 'day') {
+      filtered = filtered.filter(train => train.is_night === false);
+    }
+    
+    if (filters.country !== 'all') {
+      filtered = filtered.filter(train => train.country_code === filters.country);
+    }
+    
+    if (filters.year !== 'all') {
+      filtered = filtered.filter(train => train.year === parseInt(filters.year));
+    }
+
+    if (filters.trainType === 'night') {
+      filtered = filtered.slice(0, MAX_TRAINS_PER_TYPE);
+    } else if (filters.trainType === 'day') {
+      filtered = filtered.slice(0, MAX_TRAINS_PER_TYPE);
+    } else {
+      const nightTrains = filtered.filter(train => train.is_night).slice(0, MAX_TRAINS_PER_TYPE);
+      const dayTrains = filtered.filter(train => !train.is_night).slice(0, MAX_TRAINS_PER_TYPE);
+      const combined = [...nightTrains, ...dayTrains];
+
+      if (combined.length < MAX_TRAINS_TOTAL) {
+        const remainingNeeded = MAX_TRAINS_TOTAL - combined.length;
+        const remainingNight = filtered.filter(train => train.is_night).slice(MAX_TRAINS_PER_TYPE);
+        const remainingDay = filtered.filter(train => !train.is_night).slice(MAX_TRAINS_PER_TYPE);
+        filtered = [...combined, ...remainingNight, ...remainingDay].slice(0, combined.length + remainingNeeded);
+      } else {
+        filtered = combined.slice(0, MAX_TRAINS_TOTAL);
+      }
+    }
+
+    setFilteredTrains(filtered);
+  }, [trains, filters]);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -109,48 +148,6 @@ const MapPage = () => {
       setLoading(false);
     }
   };
-
-  const applyFilters = useCallback(() => {
-    let filtered = [...trains];
-    
-    // Filtre par type de train
-    if (filters.trainType === 'night') {
-      filtered = filtered.filter(train => train.is_night === true);
-    } else if (filters.trainType === 'day') {
-      filtered = filtered.filter(train => train.is_night === false);
-    }
-    
-    // Filtre par pays
-    if (filters.country !== 'all') {
-      filtered = filtered.filter(train => train.country_code === filters.country);
-    }
-    
-    // Filtre par année
-    if (filters.year !== 'all') {
-      filtered = filtered.filter(train => train.year === parseInt(filters.year));
-    }
-
-    if (filters.trainType === 'night') {
-      filtered = filtered.slice(0, MAX_TRAINS_PER_TYPE);
-    } else if (filters.trainType === 'day') {
-      filtered = filtered.slice(0, MAX_TRAINS_PER_TYPE);
-    } else {
-      const nightTrains = filtered.filter(train => train.is_night).slice(0, MAX_TRAINS_PER_TYPE);
-      const dayTrains = filtered.filter(train => !train.is_night).slice(0, MAX_TRAINS_PER_TYPE);
-      const combined = [...nightTrains, ...dayTrains];
-
-      if (combined.length < MAX_TRAINS_TOTAL) {
-        const remainingNeeded = MAX_TRAINS_TOTAL - combined.length;
-        const remainingNight = filtered.filter(train => train.is_night).slice(MAX_TRAINS_PER_TYPE);
-        const remainingDay = filtered.filter(train => !train.is_night).slice(MAX_TRAINS_PER_TYPE);
-        filtered = [...combined, ...remainingNight, ...remainingDay].slice(0, combined.length + remainingNeeded);
-      } else {
-        filtered = combined.slice(0, MAX_TRAINS_TOTAL);
-      }
-    }
-    
-    setFilteredTrains(filtered);
-  }, [trains, filters]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

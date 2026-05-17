@@ -21,8 +21,7 @@ import {
   getTrainTypeComparison,
   getTimeline,
   getCo2Ranking,
-  getPolicyRecommendations,
-  getCountryStats
+  getPolicyRecommendations
 } from '../../services/api';
 import './css/StatisticsPage.css';
 
