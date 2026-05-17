@@ -82,7 +82,7 @@ const MapPage = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
+  
   useEffect(() => {
     applyFilters();
   }, [filters, trains]);
