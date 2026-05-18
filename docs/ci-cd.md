@@ -17,12 +17,12 @@ push sur main
 ### 1. backend-tests
 - Installe Python 3.11 et les dépendances
 - Lance les tests unitaires et les tests d'intégration avec `pytest`
-- ❌ Si échec → pipeline bloqué
+- Si échec → pipeline bloqué
 
 ### 2. frontend-tests
 - Installe Node 20+ et les dépendances
 - Lance les tests E2E
-- ❌ Si échec → pipeline bloqué
+- Si échec → pipeline bloqué
 
 ### 3. code-quality
 - **Flake8** → vérifie le style du code Python

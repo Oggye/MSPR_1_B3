@@ -4,9 +4,9 @@
  
 | Catégorie | Fichiers | Tests | Durée | Résultat |
 |---|---|---|---|---|
-| Tests Unitaires | 6 | 23 | — | ✅ 23/23 |
-| Tests d'Intégration | 11 | 37 | 1.80s | ✅ 37/37 |
-| **Total** | **17** | **60** | | **✅ 60/60** |
+| Tests Unitaires | 6 | 23 | — | 23/23 |
+| Tests d'Intégration | 11 | 37 | 1.80s | 37/37 |
+| **Total** | **17** | **60** | | **60/60** |
  
 > Environnement : Python 3.12.1 · pytest 7.4.3 · Windows
  
@@ -42,9 +42,9 @@ test/
 Vérifier chaque fonction **de manière isolée**, sans dépendance à des services externes.
  
 **Ce qui est exclu :**
-- ❌ Base de données PostgreSQL réelle
-- ❌ FastAPI `TestClient`
-- ❌ Appels HTTP
+- Base de données PostgreSQL réelle
+- FastAPI `TestClient`
+- Appels HTTP
 **Outils utilisés :**
 - `pytest` — framework de tests
 - `unittest.mock.MagicMock` — simulation des dépendances
@@ -53,7 +53,7 @@ Vérifier chaque fonction **de manière isolée**, sans dépendance à des servi
 ### Résultat
  
 ```
-✅ 23/23 tests passent — 100% de succès
+23/23 tests passent — 100% de succès
 ```
  
 ---
@@ -108,7 +108,7 @@ Chaque test s'exécute sur une base de données fraîche et indépendante.
 ### Résultat
  
 ```
-✅ 37/37 tests passent — 100% de succès — 1.80s
+37/37 tests passent — 100% de succès — 1.80s
 ```
  
 - **Couverture** : tous les endpoints principaux testés
