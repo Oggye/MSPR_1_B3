@@ -1,92 +1,90 @@
-# CI/CD and Automated Tests - ObRail
+# Documentation CI/CD — ObRail
 
-## 1) Pipeline scope
+## Vue d'ensemble du pipeline
 
-Workflow file: `.github/workflows/ci-cd.yml`
-
-Executed on:
-- `push` on `main`
-- `pull_request` targeting `main`
-- manual run via `workflow_dispatch`
-
-Main jobs:
-1. `backend-tests`: unit + integration + backend E2E tests.
-2. `frontend-tests`: React unit tests + production build artifact (`admin-interface-build`).
-3. `code-quality`: Flake8, ESLint, Prettier checks (non-blocking for now).
-4. `docker-build`: automatic Docker image build (`front`, `api`, `etl`).
-5. `deploy-testable-admin`: local CI deployment + smoke checks (`/health`, `/interne/HomePage`).
-6. `docker-push`: GHCR image push on `push` to `main` only.
-
-## 2) Environment variables and secrets
-
-Reference file: `.env.example`
-
-Runtime variables:
-- `DB_HOST`
-- `DB_PORT`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `JWT_SECRET`
-- `PROMETHEUS_URL`
-- `GRAFANA_URL`
-- `REACT_APP_API_URL`
-
-CI expected secrets/values:
-- `GITHUB_TOKEN` (provided automatically by GitHub Actions)
-- `API_KEY` (if your deployment/integration uses it)
-- `DB_URL` (if your deployment/integration uses it)
-
-## 3) Local prerequisites
-
-- Python `3.11+`
-- Node.js `20+`
-- Docker + Docker Compose v2
-
-## 4) Local startup commands
-
-### Full stack (Docker)
-```bash
-docker compose up --build
+```
+push sur main
+      │
+      ├──► backend-tests    (Python / pytest)
+      ├──► frontend-tests   (Node / npm)
+      ├──► code-quality     (Flake8, ESLint, Prettier)
+      │
+      └──► docker-build ──► docker-push ──► deploy
 ```
 
-### Stop stack
+## Étapes du pipeline
+
+### 1. backend-tests
+- Installe Python 3.11 et les dépendances
+- Lance les tests unitaires et les tests d'intégration avec `pytest`
+- ❌ Si échec → pipeline bloqué
+
+### 2. frontend-tests
+- Installe Node 20+ et les dépendances
+- Lance les tests E2E
+- ❌ Si échec → pipeline bloqué
+
+### 3. code-quality
+- **Flake8** → vérifie le style du code Python
+- **ESLint** → vérifie le code JavaScript
+- **Prettier** → vérifie le formatage du code
+- ⚠️ Ne bloque pas le pipeline (continue-on-error) : pour signaler les problèmes sans bloquer le pipeline.
+
+### 4. docker-build
+- Build les 3 images Docker : `api`, `front`, `etl`
+- Se lance uniquement si les tests Backend et Frontend sont réussis
+  
+### 5. docker-push
+- Push les images sur GitHub Container Registry (GHCR)
+- Images disponibles sur `ghcr.io/oggye/obrail-*:latest`
+
+### 6. deploy
+- Crée le fichier `.env` depuis les secrets GitHub
+- Lance les containers avec `docker compose up`
+- Vérifie que les services démarrent correctement
+- Arrête les containers après vérification
+
+## Images Docker
+
+| Image | URL |
+|---|---|
+| API | `ghcr.io/oggye/obrail-api:latest` |
+| Frontend | `ghcr.io/oggye/obrail-front:latest` |
+| ETL | `ghcr.io/oggye/obrail-etl:latest` |
+
+## Secrets configurés
+
+| Nom | Usage |
+|---|---|
+| `GITHUB_TOKEN` | Authentification GHCR (automatique) |
+| `DB_URL` | URL de la base de données | 
+| `API_KEY` | Clé API de l'application |
+
+## Comment relancer le pipeline
+
+**Option 1 — Via un commit :**
 ```bash
-docker compose down -v
+git commit --allow-empty -m "relance pipeline"
+git push origin main
 ```
 
-## 5) Local test commands
+**Option 2 — Via GitHub Actions :**
+1. Onglet **Actions** sur GitHub
+2. Dernier workflow → **Re-run all jobs**
 
-### Backend
-```bash
-python -m pip install -r platform/server/requirements.txt
-python -m pytest -q platform/server/test/unit
-python -m pytest -q platform/server/test/integration/api_db
-python -m pytest -q platform/server/test/E2E
-```
+## Comment débugger
 
-### Frontend
-```bash
-cd platform/front/app
-npm ci
-CI=true npm test -- --watch=false --passWithNoTests
-npm run build
-```
+1. Aller sur GitHub → onglet **Actions**
+2. Cliquer sur le job en rouge
+3. Lire les logs ligne par ligne
+4. Erreurs fréquentes :
+   - `ModuleNotFoundError` → dépendance manquante dans `requirements.txt`
+   - `npm ERR!` → problème dans `package.json`
+   - `denied` → problème de permissions GHCR
 
-### Local CI smoke (admin interface)
-```bash
-docker compose up -d db
-docker compose up -d --no-deps api front
-curl -f http://localhost:8000/health
-curl -f http://localhost:3000/interne/HomePage
-docker compose down -v
-```
+## Triggers
 
-## 6) Notes on reliability and failures
-
-- Backend test suites are executed in separate commands in CI to avoid fixture cross-contamination.
-- Backend E2E tests use an isolated in-memory SQLite database and override FastAPI DB dependency safely per test.
-- If smoke checks fail, inspect:
-  - `docker compose ps`
-  - `docker compose logs api --tail=80`
-  - `docker compose logs front --tail=80`
+| Événement | Action |
+|---|---|
+| `push` sur `main` | Pipeline complet |
+| `pull_request` vers `main`| Pipeline complet |
