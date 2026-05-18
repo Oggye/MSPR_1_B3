@@ -661,7 +661,7 @@ Procedure type:
 La principale difficulte concernait l'integration des tests dans le pipeline CI/CD, notamment les tests E2E.  
 Le lancement automatique des services Docker et l'orchestration des dependances necessaires aux tests ont demande plusieurs ajustements du workflow GitHub Actions.
 
-Solution apportee:
+Solutions apportees:
 - Ajout d'etapes de demarrage automatique Docker Compose dans les jobs CI.
 - Stabilisation des temps d'attente et de disponibilite des services.
 - Separation des tests unitaires et E2E afin de simplifier le debug.
@@ -670,7 +670,7 @@ Solution apportee:
 
 Le principal probleme concernait l'affichage de la carte interactive due au volume tres important de trains affiches simultanement.
 
-Solution apportee:
+Solutions apportees:
 - Integration de `leaflet.markercluster`.
 - Mise en place de plafonds de rendu afin d'ameliorer les performances et la lisibilite.
 - Travail complementaire sur les regles RGAA/WCAG et la lisibilite des interfaces.
@@ -679,7 +679,7 @@ Solution apportee:
 
 La principale difficulte concernait l'integration de la supervision et de certaines donnees CI/CD dans l'interface admin React.
 
-Solution apportee:
+Solutions apportees:
 - Mise en place d'une supervision locale des services Docker.
 - Liaison entre endpoints internes FastAPI et composants React admin.
 - Etude d'une future integration GitHub Actions API.
@@ -690,7 +690,7 @@ Les principales difficultes ont concerne:
 - la suppression des limitations historiques de certains endpoints,
 - et l'apprentissage de Playwright pour les tests E2E.
 
-Solution apportee:
+Solutions apportees:
 - Refactorisation des endpoints critiques.
 - Mise en place progressive des tests automatises.
 - Documentation technique dans `docs/E2E_tests.md`.
@@ -702,7 +702,7 @@ Les principales difficultes ont concerne:
 - l'industrialisation du monitoring,
 - et la persistance des dashboards Grafana.
 
-Solution apportee:
+Solutions apportees:
 - Reorganisation des conteneurs et volumes Docker.
 - Mise en place du provisioning Grafana.
 - Export JSON versionne des dashboards afin d'eviter leur perte apres redemarrage.
@@ -786,8 +786,13 @@ Le socle realise constitue une base technique robuste, evolutive et exploitable 
 ---
 
 ## 20. Annexes
+ 
+ ### 20.1 Lien vers le GitHub
 
-### 20.1 Fichiers de reference
+[MSPR_1_B3](https://github.com/Oggye/MSPR_1_B3)
+
+
+### 20.2 Fichiers de reference
 
 - API docs: `http://localhost:8000/api/docs`
 - CI/CD: `.github/workflows/ci-cd.yml`
@@ -806,11 +811,6 @@ Le socle realise constitue une base technique robuste, evolutive et exploitable 
   - Front E2E: `platform/front/app/tests/e2e/*`
 - Historique MSPR N1:
   - `archivre/mspr n1/docs/rapport_technique.md`
-
- 
- ### 20.2 Lien vers le GitHub
-
-[MSPR_1_B3](https://github.com/Oggye/MSPR_1_B3)
 
 
 ### 20.3 Commandes utiles
