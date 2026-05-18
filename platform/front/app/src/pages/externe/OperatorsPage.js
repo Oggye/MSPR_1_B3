@@ -348,7 +348,7 @@ export default function OperateurPage() {
                   color: 'white',
                   textAlign: 'center'
                 }}>
-                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🚆 TOTAL TRAINS</h4>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🚆 TOTAL TRAJETS</h4>
                   <p style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', fontWeight: 'bold' }}>
                     {formatNumber(operatorDetails?.total_trains)}
                   </p>
@@ -360,7 +360,7 @@ export default function OperateurPage() {
                   color: 'white',
                   textAlign: 'center'
                 }}>
-                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🌙 TRAINS DE NUIT</h4>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>🌙 TRAJETS DE NUIT</h4>
                   <p style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', fontWeight: 'bold' }}>
                     {formatNumber(operatorDetails?.night_trains)}
                   </p>
@@ -372,7 +372,7 @@ export default function OperateurPage() {
                   color: 'white',
                   textAlign: 'center'
                 }}>
-                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>☀️ TRAINS JOUR</h4>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', opacity: 0.9 }}>☀️ TRAJETS JOUR</h4>
                   <p style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', fontWeight: 'bold' }}>
                     {formatNumber(operatorDetails?.day_trains)}
                   </p>
