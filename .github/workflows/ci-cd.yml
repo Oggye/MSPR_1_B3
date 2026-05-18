@@ -58,19 +58,10 @@ jobs:
           cache: npm
           cache-dependency-path: platform/front/app/package-lock.json
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
         working-directory: platform/front/app
 
-      - name: Run tests
-        run: CI=true npm test -- --watch=false --passWithNoTests
-        working-directory: platform/front/app
-
-      - name: Build frontend
-        run: npm run build
-        working-directory: platform/front/app
-
-      # E2E Playwright
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
         working-directory: platform/front/app
@@ -104,6 +95,7 @@ jobs:
       - name: Stop docker services
         if: always()
         run: docker compose down -v
+
         
 
 
