@@ -1,6 +1,7 @@
 // src/pages/TrainMapPage.jsx
 import { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
 import L from 'leaflet';
 import {
   Chart as ChartJS,
@@ -15,6 +16,8 @@ import {
 import { Bar } from 'react-chartjs-2';
 import { getNightTrains, getCountries } from '../../services/api';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import './css/MapPage.css';
 
 // Enregistrement des composants Chart.js
@@ -64,6 +67,30 @@ function ChangeView({ center, zoom }) {
   map.setView(center, zoom);
   return null;
 }
+
+// Coordonnées centrales par pays (utilisées pour le clustering)
+const countryCoords = {
+  'FR': [46.603354, 1.888334],
+  'DE': [51.165691, 10.451526],
+  'IT': [41.87194, 12.56738],
+  'ES': [40.463667, -3.74922],
+  'GB': [55.378051, -3.435973],
+  'CH': [46.818188, 8.227512],
+  'AT': [47.516231, 14.550072],
+  'PL': [51.919438, 19.145136],
+  'UA': [48.379433, 31.16558],
+  'RO': [45.943161, 24.96676],
+  'NL': [52.132633, 5.291266],
+  'BE': [50.503887, 4.469936],
+  'SE': [60.128161, 18.643501],
+  'NO': [60.472024, 8.468946],
+  'DK': [56.26392, 9.501785],
+  'CZ': [49.817492, 15.472962],
+  'HU': [47.162494, 19.503304],
+  'SK': [48.669026, 19.699024],
+  'SI': [46.151241, 14.995463],
+  'HR': [45.1, 15.2]
+};
 
 const MapPage = () => {
   const [trains, setTrains] = useState([]);
@@ -360,7 +387,7 @@ const MapPage = () => {
         </div>
       </div>
 
-      {/* Carte Interactive */}
+      {/* Carte Interactive avec clustering */}
       <div className="map-container">
         <MapContainer 
           center={mapCenter} 
@@ -373,57 +400,31 @@ const MapPage = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
           
-          {filteredTrains.map((train, index) => {
-            // Simuler des coordonnées basées sur le pays
-            const countryCoords = {
-              'FR': [46.603354, 1.888334],
-              'DE': [51.165691, 10.451526],
-              'IT': [41.87194, 12.56738],
-              'ES': [40.463667, -3.74922],
-              'GB': [55.378051, -3.435973],
-              'CH': [46.818188, 8.227512],
-              'AT': [47.516231, 14.550072],
-              'PL': [51.919438, 19.145136],
-              'UA': [48.379433, 31.16558],
-              'RO': [45.943161, 24.96676],
-              'NL': [52.132633, 5.291266],
-              'BE': [50.503887, 4.469936],
-              'SE': [60.128161, 18.643501],
-              'NO': [60.472024, 8.468946],
-              'DK': [56.26392, 9.501785],
-              'CZ': [49.817492, 15.472962],
-              'HU': [47.162494, 19.503304],
-              'SK': [48.669026, 19.699024],
-              'SI': [46.151241, 14.995463],
-              'HR': [45.1, 15.2]
-            };
-            
-            const coords = countryCoords[train.country_code] || [48.8566, 2.3522];
-            // Ajouter un petit décalage pour éviter que les marqueurs ne se superposent
-            const offsetLat = (index % 10) * 0.5;
-            const offsetLng = Math.floor(index / 10) * 0.5;
-            
-            return (
-              <Marker 
-                key={train.fact_id}
-                position={[coords[0] + offsetLat, coords[1] + offsetLng]}
-                icon={train.is_night ? nightTrainIcon : dayTrainIcon}
-              >
-                <Popup>
-                  <div className="popup-content">
-                    <h3>{train.country_name}</h3>
-                    <p><strong>Opérateur :</strong> {train.operator_name}</p>
-                    <p><strong>Type :</strong> {train.is_night ? '🌙 Train de nuit' : '☀️ Train de jour'}</p>
-                    <p><strong>Année :</strong> {train.year}</p>
-                    {train.distance_km && <p><strong>Distance :</strong> {train.distance_km} km</p>}
-                    {train.duration_min && (
-                      <p><strong>Durée :</strong> {Math.floor(train.duration_min / 60)}h {train.duration_min % 60}m</p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+          <MarkerClusterGroup chunkedLoading>
+            {filteredTrains.map((train) => {
+              const coords = countryCoords[train.country_code] || [48.8566, 2.3522];
+              return (
+                <Marker 
+                  key={train.fact_id}
+                  position={coords}
+                  icon={train.is_night ? nightTrainIcon : dayTrainIcon}
+                >
+                  <Popup>
+                    <div className="popup-content">
+                      <h3>{train.country_name}</h3>
+                      <p><strong>Opérateur :</strong> {train.operator_name}</p>
+                      <p><strong>Type :</strong> {train.is_night ? '🌙 Train de nuit' : '☀️ Train de jour'}</p>
+                      <p><strong>Année :</strong> {train.year}</p>
+                      {train.distance_km && <p><strong>Distance :</strong> {train.distance_km} km</p>}
+                      {train.duration_min && (
+                        <p><strong>Durée :</strong> {Math.floor(train.duration_min / 60)}h {train.duration_min % 60}m</p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MarkerClusterGroup>
         </MapContainer>
         
         <div className="map-legend">
