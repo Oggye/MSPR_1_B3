@@ -444,12 +444,7 @@ Les tests sont executes automatiquement dans le pipeline CI/CD GitHub Actions.
 - Parcours utilisateur front externe et interne.
 - Endpoints internes `/api/internal/*` testes en E2E front.
 
-### 11.3 Couverture
-
-- `pytest-cov` est installe mais aucune publication de pourcentage de couverture n'est actuellement versionnee dans le depot.
-- Conclusion honnete: la strategie est complete en types de tests, mais l'indicateur numerique de couverture doit etre industrialise dans CI (artefact HTML/XML + seuil).
-
-### 11.4 Resultat global
+### 11.3 Resultat global
 
 - Le pipeline CI est concu pour bloquer build/push si les tests principaux echouent.
 - Les tests de qualite (lint/format) sont informatifs (`continue-on-error`) et peuvent etre renforces plus tard.
