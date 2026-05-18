@@ -123,6 +123,7 @@ project/
 ├── docs/
 ├── .github/workflows/
 └── docker-compose.yml
+```
 
 ### 4.2 Flux applicatifs
 
