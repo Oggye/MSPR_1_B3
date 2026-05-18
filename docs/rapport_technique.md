@@ -125,6 +125,8 @@ project/
 └── docker-compose.yml
 ```
 
+
+
 ### 4.2 Flux applicatifs
 
 ```mermaid
