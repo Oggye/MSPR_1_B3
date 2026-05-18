@@ -405,6 +405,7 @@ graph LR
   C --> E
   D --> E
   E --> F[docker-push GHCR]
+  F --> G[Deployment]
 ```
 
 ### 10.3 Point bloquant CI/CD sur interface admin
