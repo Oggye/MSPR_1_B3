@@ -23,6 +23,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';) afin d'avoir un 
 parle des protentiel proble de chacun des solution touver et des axe d'amelioration ainsi que les potentiel evolution futur avec l'ajout d'un systeme de prediction
 la documentation des emploints complete se trouve ici "http://localhost:8000/api/docs"
 l’architecture globale de la solution (schémas exigés)
+le point de difficulter de Nifissa a ete au niveau de l'implementation des different test au niveau du cicd surtout le 
 
 
 
