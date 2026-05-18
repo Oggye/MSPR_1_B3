@@ -22,6 +22,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:ui": "playwright test --ui",
+    "e2e:install": "playwright install --with-deps chromium",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -43,6 +47,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "@types/leaflet": "^1.9.21"
   }
 }

@@ -1,19 +1,21 @@
 # app/schemas/base.py
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
 
 class BaseSchema(BaseModel):
-    """Schéma de base avec configuration commune"""
-    class Config:
-        from_attributes = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    """Schema de base avec configuration commune."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: lambda v: v.isoformat()},
+    )
 
 
 class PaginatedResponse(BaseModel):
-    """Schéma pour les réponses paginées"""
+    """Schema pour les reponses paginees."""
+
     items: list
     total: int
     page: int
