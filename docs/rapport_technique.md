@@ -7,6 +7,10 @@
 - Promotion: B3
 - Date: 18 mai 2026
 - Document: Rapport technique de reference
+- Version du document: v1.0
+- Annee scolaire: 2025-2026
+- Statut: Version finale
+- Encadrant pedagogique: [Nom si connu]
 - Membres du groupe:
   - ABDILLAHI ABDI Mariam Marwo
   - SAMB Adja Nafissatou Lo
@@ -64,6 +68,20 @@ ObRail Europe est un observatoire de la mobilite ferroviaire europeenne. Le proj
 - Conformite RGPD (pas de donnees personnelles, tracabilite, minimisation).
 - Accessibilite (efforts RGAA/WCAG sur UI, navigation et lisibilite).
 
+### 3.3 Conformite aux exigences MSPR
+
+| Exigence du sujet | Implementation realisee |
+|---|---|
+| Architecture globale documentee | ✔ Schemas Mermaid et description complete |
+| Pipeline CI/CD | ✔ GitHub Actions |
+| Strategie de tests | ✔ Tests unitaires, integration, E2E |
+| Supervision et monitoring | ✔ Grafana, Prometheus, Loki, Promtail |
+| Installation et execution | ✔ Docker Compose documente |
+| Securite | ✔ Validation, isolation conteneurs, variables d'environnement |
+| RGPD | ✔ Minimisation des donnees et tracabilite |
+| Accessibilite | ✔ Efforts RGAA/WCAG |
+| Maintenance et rollback | ✔ Procedures documentees |
+
 ---
 
 ## 4. Architecture globale de la solution (schemas)
@@ -87,6 +105,24 @@ graph TD
   GH[GitHub Actions CI/CD] --> IMG[Images Docker]
   IMG --> RUN[Execution docker compose]
 ```
+
+### 4.1.1 Arborescence generale du projet
+
+```text
+project/
+├── platform/
+│   ├── server/
+│   └── front/
+├── etl/
+├── monitoring/
+│   ├── grafana/
+│   ├── prometheus/
+│   ├── loki/
+│   └── promtail/
+├── sql/
+├── docs/
+├── .github/workflows/
+└── docker-compose.yml
 
 ### 4.2 Flux applicatifs
 
@@ -119,12 +155,15 @@ graph LR
 
 ### 4.4 Principaux choix techniques (argumentes)
 
-- FastAPI: rapidite, OpenAPI automatique, bonne integration tests, instrumentation Prometheus facile.
-- React: separation composants, ecosysteme mature, compatibilite forte avec cartographie/graphes.
-- PostgreSQL: robustesse relationnelle, vues SQL utiles (`dashboard_metrics`, `operator_dashboard`).
-- Docker Compose: environnement unique pour tous les membres du groupe.
-- GitHub Actions: automatisation tests/build/push images.
-- Grafana stack: supervision temps reel et observabilite centralisee.
+| Technologie | Alternatives possibles | Justification du choix |
+|---|---|---|
+| FastAPI | Flask, Django | Documentation OpenAPI automatique, performances async, integration simple avec tests et monitoring |
+| React | Vue.js, Angular | Ecosysteme mature, modularite forte, integration simple avec bibliotheques graphiques |
+| PostgreSQL | MySQL, MariaDB | Robustesse relationnelle, vues SQL avancees, compatibilite analytique |
+| Docker Compose | Kubernetes | Solution adaptee a la taille du projet MSPR et plus simple a maintenir |
+| GitHub Actions | GitLab CI, Jenkins | Integration native GitHub et configuration rapide |
+| Grafana | Kibana | Simplicite de configuration et visualisation temps reel |
+| Playwright | Cypress | Compatibilite multi-navigateurs et automatisation moderne |
 
 ---
 
@@ -181,6 +220,16 @@ Principaux endpoints valides et utilises:
 - CORS configure pour `http://localhost:3000`.
 - Instrumentation Prometheus active via `prometheus-fastapi-instrumentator`.
 - Logique de supervision interne: API appelle Prometheus/Grafana, lit rapports JSON ETL, execute diagnostic/tests.
+
+### 5.4 Performance et optimisation
+
+Plusieurs mecanismes d'optimisation ont ete mis en place afin de garantir des performances acceptables sur des volumes importants de donnees:
+
+- Suppression de la limitation fixe de 500 trains afin de permettre une exploitation complete des donnees.
+- Mise en place de plafonds de rendu front (`MAX_TRAINS_TOTAL`, `MAX_TRAINS_PER_TYPE`) afin de limiter la surcharge navigateur.
+- Utilisation du clustering Leaflet (`leaflet.markercluster`) pour reduire la densite visuelle et le cout de rendu.
+- Utilisation de vues SQL (`dashboard_metrics`, `operator_dashboard`) afin d'eviter des calculs lourds repetes cote API.
+- Separation ETL/API afin d'eviter les traitements intensifs en temps reel.
 
 ---
 
@@ -373,6 +422,18 @@ Decision projet: fonctionnalite potentielle, abandon possible si indisponible da
 - ETL unitaires: `etl/test/test_transformations.py`
 - Front E2E Playwright: `platform/front/app/tests/e2e/*`
 
+### 11.1.1 Volume des tests
+
+| Type de test | Description |
+|---|---|
+| Tests unitaires backend | Validation logique metier et fonctions isolees |
+| Tests integration | Validation interactions API/Base de donnees |
+| Tests E2E API | Validation comportement complet endpoints |
+| Tests ETL | Verification transformations et qualite donnees |
+| Tests E2E front | Validation parcours utilisateur React |
+
+Les tests sont executes automatiquement dans le pipeline CI/CD GitHub Actions.
+
 ### 11.2 Exemples verifies
 
 - Validations endpoint pays/stats/train/operators.
@@ -399,6 +460,19 @@ Decision projet: fonctionnalite potentielle, abandon possible si indisponible da
 - Prometheus: scrape toutes les 5 secondes (`monitoring/prometheus/prometheus.yml`).
 - Grafana: datasource provisionnee automatiquement + dashboard charge depuis fichier JSON.
 - Loki + Promtail: centralisation des logs systeme.
+
+Le monitoring applicatif repose sur une architecture d'observabilite centralisee:
+
+- Prometheus collecte les metriques exposees par FastAPI via `/metrics`.
+- Grafana permet la visualisation temps reel des indicateurs critiques.
+- Loki centralise les logs applicatifs et systeme.
+- Promtail collecte automatiquement les logs des conteneurs Docker.
+
+Cette architecture permet:
+- le suivi des performances,
+- la detection d'erreurs,
+- l'analyse des logs,
+- et le diagnostic rapide des incidents.
 
 ### 12.2 Probleme rencontre et resolution
 
@@ -436,6 +510,16 @@ Solution: creation/configuration UI puis export JSON versionne (`monitoring/graf
 - Introduire gestion de secrets centralisee.
 - Ajouter authentification/autorisation (JWT + roles admin/public).
 - Introduire rate limiting et audit securite OWASP API.
+
+### 13.4 Bonnes pratiques appliquees
+
+Le projet suit plusieurs recommandations inspirees des bonnes pratiques OWASP:
+
+- Validation stricte des entrees utilisateur.
+- Isolation des services par conteneur Docker.
+- Limitation de l'exposition des services internes.
+- Separation claire des couches applicatives.
+- Limitation des donnees sensibles exposees.
 
 ---
 
@@ -571,6 +655,57 @@ Procedure type:
 - Affichage CI/CD dans front admin:
   - Solution transitoire: etat local Docker; evolution prevue via API GitHub.
 
+#### Difficultes rencontrees par SAMB Adja Nafissatou Lo
+
+La principale difficulte concernait l'integration des tests dans le pipeline CI/CD, notamment les tests E2E.  
+Le lancement automatique des services Docker et l'orchestration des dependances necessaires aux tests ont demande plusieurs ajustements du workflow GitHub Actions.
+
+Solution apportee:
+- Ajout d'etapes de demarrage automatique Docker Compose dans les jobs CI.
+- Stabilisation des temps d'attente et de disponibilite des services.
+- Separation des tests unitaires et E2E afin de simplifier le debug.
+
+#### Difficultes rencontrees par ABDILLAHI ABDI Mariam Marwo
+
+Le principal probleme concernait l'affichage de la carte interactive due au volume tres important de trains affiches simultanement.
+
+Solution apportee:
+- Integration de `leaflet.markercluster`.
+- Mise en place de plafonds de rendu afin d'ameliorer les performances et la lisibilite.
+- Travail complementaire sur les regles RGAA/WCAG et la lisibilite des interfaces.
+
+#### Difficultes rencontrees par TOURE Zeinab Anne Marie
+
+La principale difficulte concernait l'integration de la supervision et de certaines donnees CI/CD dans l'interface admin React.
+
+Solution apportee:
+- Mise en place d'une supervision locale des services Docker.
+- Liaison entre endpoints internes FastAPI et composants React admin.
+- Etude d'une future integration GitHub Actions API.
+
+#### Difficultes rencontrees par NKIBAN A ITCHIRI Orlane Emmanuelle Andrea
+
+Les principales difficultes ont concerne:
+- la suppression des limitations historiques de certains endpoints,
+- et l'apprentissage de Playwright pour les tests E2E.
+
+Solution apportee:
+- Refactorisation des endpoints critiques.
+- Mise en place progressive des tests automatises.
+- Documentation technique dans `docs/E2E_TESTS.md`.
+
+#### Difficultes rencontrees par NDIAYE Mansour Djamil
+
+Les principales difficultes ont concerne:
+- la restructuration Docker,
+- l'industrialisation du monitoring,
+- et la persistance des dashboards Grafana.
+
+Solution apportee:
+- Reorganisation des conteneurs et volumes Docker.
+- Mise en place du provisioning Grafana.
+- Export JSON versionne des dashboards afin d'eviter leur perte apres redemarrage.
+
 ### 17.3 Approche collective
 
 L'equipe a fait circuler les connaissances entre membres pour que chacun comprenne les sujets transverses (API, front, tests, infra), ce qui a renforce l'autonomie globale.
@@ -602,15 +737,50 @@ Ajout d'un systeme de prediction:
 
 Piste technique: modele de prevision temporelle (Prophet/XGBoost/LSTM selon maturite), expose via endpoints API dedies.
 
+### 18.4 Limites actuelles du projet
+
+Malgre l'industrialisation realisee, certaines limites techniques restent identifiees:
+
+- Absence d'authentification forte sur l'API publique.
+- Absence d'orchestration Kubernetes.
+- Couverture de tests non encore imposee par seuil bloquant.
+- Monitoring principalement local et non distribue.
+- Absence actuelle de systeme d'alerting automatise (mail, webhook).
+- Integration GitHub Actions incomplete dans l'interface admin.
+
+
+### 18.5 Perspectives MLOps et intelligence artificielle
+
+Le projet pourra evoluer vers une architecture orientee MLOps afin d'integrer des fonctionnalites predictives avancees.
+
+Pistes envisagees:
+- entrainement automatise de modeles de prediction,
+- monitoring des performances des modeles IA,
+- versionning des modeles,
+- pipeline de traitement automatise des donnees d'apprentissage,
+- endpoints FastAPI dedies aux predictions.
+
+Des modeles de series temporelles (Prophet, XGBoost, LSTM) pourront etre testes afin d'anticiper:
+- la demande passagers,
+- les emissions CO2,
+- les besoins d'infrastructures ferroviaires.
 ---
 
 ## 19. Conclusion
 
-Le projet MSPR ObRail a franchi une etape d'industrialisation reelle: architecture conteneurisee, API structuree, interfaces front completees, pipeline CI/CD, tests multi-niveaux, et observabilite active.
+Le projet MSPR ObRail Europe a permis de mettre en oeuvre une demarche d'industrialisation complete autour d'une plateforme de traitement et d'analyse de donnees ferroviaires europeennes.
 
-Les attentes centrales du sujet sont couvertes: architecture globale, choix techniques argumentes, CI/CD, tests, supervision, installation/execution, RGPD, securite, accessibilite et maintenance/rollback.
+Au-dela des fonctionnalites metier, le projet a integre des dimensions essentielles de l'ingenierie logicielle moderne:
+- conteneurisation,
+- CI/CD,
+- supervision,
+- tests automatises,
+- securite,
+- observabilite,
+- maintenabilite,
+- et preparation a l'evolution future vers des usages IA et predictifs.
 
-Le socle est exploitable, documente et evolutif, avec une trajectoire claire vers des fonctions avancees (prediction, securisation renforcee, reporting qualite automatise).
+Le socle realise constitue une base technique robuste, evolutive et exploitable dans un contexte proche des contraintes professionnelles reelles.
 
 ---
 
