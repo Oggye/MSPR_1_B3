@@ -10,7 +10,7 @@
 - Version du document: v1.0
 - Annee scolaire: 2025-2026
 - Statut: Version finale
-- Encadrant pedagogique: Dora Sabino
+- Encadrant pedagogique: *Dora Sabino*
 - Membres du groupe:
   - ABDILLAHI ABDI Mariam Marwo
   - SAMB Adja Nafissatou Lo
