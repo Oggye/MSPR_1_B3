@@ -622,7 +622,7 @@ Procedure type:
 
 ## 17. Organisation equipe, difficultes et resolutions
 
-### 17.1 Repartition des roles (selon vos informations)
+### 17.1 Repartition des rôles 
 
 - NDIAYE Mansour Djamil:
   - Reprise Docker/conteneurs et architecture du code.
@@ -634,15 +634,15 @@ Procedure type:
   - Corrections backend (dont limite de recuperation trains retiree).
   - Partie principale des tests E2E.
 - SAMB Adja Nafissatou Lo:
-  - Tests unitaires, integration et contribution CI/CD.
-  - Difficultes sur implementation et orchestration des tests en pipeline.
+  - Tests unitaires, integration et pipeline CI/CD.
+  - Gestion de l'implémentation et de l'orchestration des tests en pipeline.
 - ABDILLAHI ABDI Mariam Marwo:
   - Front externe client, liaison API, respect RGAA.
   - Interface interne orientee graphes/visualisation.
-  - Resolution probleme de densite carte via clustering Leaflet.
+  - Resolution problème de densite de la carte via clustering Leaflet.
 - TOURE Zeinab Anne Marie:
   - Interface admin/interne (avec appui Djamil sur certaines liaisons).
-  - Integration de composants de supervision et flux internes.
+  - Intégration de composants de supervision et flux internes.
 
 ### 17.2 Difficultes majeures et solutions
 
