@@ -2,11 +2,11 @@
  
 ## Vue d'ensemble
  
-| Catégorie | Fichiers | Tests | Durée | Résultat |
+| Catégorie | Fichiers | Tests  Résultat |
 |---|---|---|---|---|
-| Tests Unitaires | 6 | 23 | — | ✅ 23/23 |
-| Tests d'Intégration | 11 | 37 | 1.80s | ✅ 37/37 |
-| **Total** | **17** | **60** | | **✅ 60/60** |
+| Tests Unitaires | 6 | 23 | ✅ 23/23 |
+| Tests d'Intégration | 11 | 37 | ✅ 37/37 |
+| **Total** | **17** | **60** | **✅ 60/60** |
  
 > Environnement : Python 3.12.1 · pytest 7.4.3 · Windows
  
