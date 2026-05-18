@@ -10,7 +10,7 @@
 - Version du document: v1.0
 - Annee scolaire: 2025-2026
 - Statut: Version finale
-- Encadrant pedagogique: *Dora Sabino*
+- Encadrante pedagogique: *Dora Sabino*
 - Membres du groupe:
   - ABDILLAHI ABDI Mariam Marwo
   - SAMB Adja Nafissatou Lo
@@ -393,7 +393,9 @@ Jobs identifies:
   - Prettier
 - `docker-build` (si tests passent)
 - `docker-push` vers GHCR (sur push `main`)
+-  `deploy`
 
+  
 ### 10.2 Pipeline simplifie
 
 ```mermaid
@@ -691,7 +693,7 @@ Les principales difficultes ont concerne:
 Solution apportee:
 - Refactorisation des endpoints critiques.
 - Mise en place progressive des tests automatises.
-- Documentation technique dans `docs/E2E_TESTS.md`.
+- Documentation technique dans `docs/E2E_tests.md`.
 
 #### Difficultes rencontrees par NDIAYE Mansour Djamil
 
@@ -717,7 +719,7 @@ L'equipe a fait circuler les connaissances entre membres pour que chacun compren
 
 - Externaliser toutes les valeurs sensibles dans `.env`/secrets.
 - Ajouter mesure de coverage automatisee avec seuil bloquant.
-- Connecter veritable statut GitHub Actions dans l'interface admin.
+- Connecter un veritable statut GitHub Actions dans l'interface admin.
 
 ### 18.2 Evolutions techniques
 
@@ -805,7 +807,13 @@ Le socle realise constitue une base technique robuste, evolutive et exploitable 
 - Historique MSPR N1:
   - `archivre/mspr n1/docs/rapport_technique.md`
 
-### 20.2 Commandes utiles
+ 
+ ### 20.2 Lien vers le GitHub
+
+[MSPR_1_B3](https://github.com/Oggye/MSPR_1_B3)
+
+
+### 20.3 Commandes utiles
 
 ```bash
 # Demarrer
