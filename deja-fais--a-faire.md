@@ -4,9 +4,9 @@
 - **GTFS France** : SNCF - trains de jour 🇫🇷
 - **GTFS Suisse** : SBB/CFF - transports publics 🇨🇭  
 - **GTFS Allemagne** : Deutsche Bahn - trains allemands 🇩🇪
-- **Eurostat** : Statistiques trafic/passagers ferroviaires européens 📊
-- **Back-on-Track** : Trains de nuit en Europe 🌙
-- **Émissions CO2** : Données environnementales Eurostat 🌍
+- **Eurostat** : Statistiques trafic/passagers ferroviaires européens
+- **Back-on-Track** : Trains de nuit en Europe
+- **Émissions CO2** : Données environnementales Eurostat
 
 ## **PHASE 2 : TRANSFORMATION - DÉJÀ FAIT**
 ### **Nettoyage par source :**
@@ -16,7 +16,7 @@
 - **GTFS (FR/CH/DE)** : Agences, routes, arrêts, voyages
 
 ### **Enrichissement et structuration :**
-- **Modèle en étoile** créé pour data warehouse ⭐
+- **Modèle en étoile** créé pour data warehouse
 - **Tables dimensionnelles** : Pays, Années, Opérateurs
 - **Table de faits** : Trajets (trains de nuit)
 - **Métriques dashboard** : CO2/passager, trafic par pays
