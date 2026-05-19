@@ -1,6 +1,6 @@
 # Projet MSPR – ObRail Europe
 
-## 📌 Présentation
+## Présentation
 
 ObRail Europe est une plateforme d’analyse de la mobilité ferroviaire européenne développée dans le cadre de la MSPR B3.
 
@@ -14,7 +14,7 @@ docs/rapport_technique.md
 
 ---
 
-# 🚀 Démarrage rapide
+# Démarrage rapide
 
 ## 1. Prérequis
 
@@ -88,7 +88,7 @@ docker compose down
 
 ---
 
-# 🧱 Stack technique
+# Stack technique
 
 ## Backend
 
@@ -120,7 +120,7 @@ docker compose down
 
 ---
 
-# 📂 Structure principale
+# Structure principale
 
 ```txt
 MSPR_1_B3/
@@ -138,7 +138,7 @@ MSPR_1_B3/
 
 ---
 
-# 🧪 Tests
+# Tests
 
 ## Backend
 
@@ -158,7 +158,7 @@ npm run e2e
 
 ---
 
-# 📊 Monitoring
+# Monitoring
 
 Le projet intègre une stack complète de supervision :
 
@@ -175,7 +175,7 @@ monitoring/grafana/dashboards/
 
 ---
 
-# 📖 Documentation
+# Documentation
 
 Documentation technique complète :
 
@@ -199,7 +199,7 @@ Contient notamment :
 
 ---
 
-# 👥 Équipe
+# Équipe
 
 * ABDILLAHI ABDI Mariam Marwo
 * SAMB Adja Nafissatou Lo
@@ -212,7 +212,7 @@ Suivi projet :
 
 ---
 
-# ✅ Commandes utiles
+# Commandes utiles
 
 ```bash
 # Rebuild complet

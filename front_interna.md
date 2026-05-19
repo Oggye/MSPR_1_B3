@@ -49,132 +49,7 @@ services:
 ---
 
 # Étape 1 — Structure des dossiers
-
-Créer la structure suivante :
-
-```bash
-project/
-│
-├── platform/
-│   ├── front/
-│   └── server/
-│
-├── etl/
-│
-├── monitoring/
-│   ├── prometheus/
-│   │   └── prometheus.yml
-│   │
-│   ├── loki/
-│   │   └── local-config.yaml
-│   │
-│   └── promtail/
-│       └── config.yml
-│
-├── docker-compose.yml
-└── .github/
-    └── workflows/
-        └── ci-cd.yml
-```
-
----
-
-# Étape 2 — Docker Compose final
-
-## docker-compose.yml
-
-```yaml
-version: "3.9"
-
-services:
-
-  front:
-    build: ./platform/front
-    container_name: obrail_front
-    ports:
-      - "3000:80"
-    depends_on:
-      - api
-    restart: always
-
-  api:
-    build: ./platform/server
-    container_name: obrail_api
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: postgres:15
-    container_name: obrail_db
-    restart: always
-    env_file:
-      - .env
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
-
-  etl:
-    build:
-      context: ./etl
-      dockerfile: Dockerfile.etl
-    container_name: obrail_etl
-    depends_on:
-      - db
-    env_file:
-      - .env
-    volumes:
-      - ./etl:/app/etl
-      - ./data:/app/data
-    command: >
-      sh -c "python /app/etl/run_full_etl.py"
-    restart: "no"
-
-  prometheus:
-    image: prom/prometheus
-    container_name: obrail_prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-
-  grafana:
-    image: grafana/grafana
-    container_name: obrail_grafana
-    ports:
-      - "3001:3000"
-    depends_on:
-      - prometheus
-      - loki
-
-  loki:
-    image: grafana/loki:latest
-    container_name: obrail_loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./monitoring/loki/local-config.yaml:/etc/loki/local-config.yaml
-
-  promtail:
-    image: grafana/promtail:latest
-    container_name: obrail_promtail
-    volumes:
-      - /var/log:/var/log
-      - ./monitoring/promtail/config.yml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml
-    depends_on:
-      - loki
-
-volumes:
-  db_data:
-```
-
----
+rajouter les service Prometheus, Grafana, Loki et Promtail
 
 # Étape 3 — Monitoring avec Prometheus
 
@@ -204,18 +79,8 @@ pip install prometheus-fastapi-instrumentator
 
 # Modifier main.py
 
-```python
-from fastapi import FastAPI
-from prometheus_fastapi_instrumentator import Instrumentator
 
-app = FastAPI()
-
-Instrumentator().instrument(app).expose(app)
-```
-
----
-
-# Résultat
+# Résultat attendu
 
 Prometheus pourra récupérer :
 
@@ -229,17 +94,6 @@ http://api:8000/metrics
 
 ## monitoring/prometheus/prometheus.yml
 
-```yaml
-global:
-  scrape_interval: 5s
-
-scrape_configs:
-  - job_name: "fastapi"
-    static_configs:
-      - targets: ["api:8000"]
-```
-
----
 
 # Étape 5 — Logs centralisés avec Loki
 
@@ -260,47 +114,9 @@ Exemples :
 
 ## monitoring/loki/local-config.yaml
 
-```yaml
-auth_enabled: false
-
-server:
-  http_listen_port: 3100
-
-common:
-  path_prefix: /tmp/loki
-  storage:
-    filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
-```
-
----
-
 # Configuration Promtail
 
 ## monitoring/promtail/config.yml
-
-```yaml
-server:
-  http_listen_port: 9080
-
-clients:
-  - url: http://loki:3100/loki/api/v1/push
-
-positions:
-  filename: /tmp/positions.yaml
-
-scrape_configs:
-  - job_name: system
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: varlogs
-          __path__: /var/log/*log
-```
-
----
 
 # Étape 6 — Configuration Grafana
 
@@ -502,57 +318,9 @@ Créer des endpoints pour le front ingénieur.
 
 # health.py
 
-```python
-from fastapi import APIRouter
-
-router = APIRouter()
-
-@router.get('/health')
-def health_check():
-    return {
-        'status': 'ok',
-        'api': 'running'
-    }
-```
-
----
-
 # metrics.py
 
-```python
-from fastapi import APIRouter
-import psutil
-
-router = APIRouter()
-
-@router.get('/system')
-def system_metrics():
-    return {
-        'cpu': psutil.cpu_percent(),
-        'memory': psutil.virtual_memory().percent
-    }
-```
-
----
-
 # logs.py
-
-```python
-from fastapi import APIRouter
-
-router = APIRouter()
-
-@router.get('/logs')
-def get_logs():
-    return {
-        'logs': [
-            'API started',
-            'ETL executed'
-        ]
-    }
-```
-
----
 
 # Étape 10 — GitHub Actions CI/CD
 
@@ -565,80 +333,6 @@ Automatiser :
 * qualité
 * déploiement
 
----
-
-# .github/workflows/ci-cd.yml
-
-```yaml
-name: ObRail CI/CD
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-
-  backend-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          cd platform/server
-          pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          cd platform/server
-          pytest
-
-  frontend-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install frontend dependencies
-        run: |
-          cd platform/front
-          npm install
-
-      - name: Run frontend tests
-        run: |
-          cd platform/front
-          npm run test
-
-  docker-build:
-    needs:
-      - backend-tests
-      - frontend-tests
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build Docker images
-        run: docker compose build
-```
-
----
 
 # Étape 11 — Tests E2E
 
