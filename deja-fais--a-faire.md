@@ -1,6 +1,6 @@
 # **RÉSUMÉ DU PROJET ETL OBRAIL EUROPE**
 
-## ✅ **PHASE 1 : EXTRACTION - DÉJÀ FAIT**
+## **PHASE 1 : EXTRACTION - DÉJÀ FAIT**
 - **GTFS France** : SNCF - trains de jour 🇫🇷
 - **GTFS Suisse** : SBB/CFF - transports publics 🇨🇭  
 - **GTFS Allemagne** : Deutsche Bahn - trains allemands 🇩🇪
@@ -8,7 +8,7 @@
 - **Back-on-Track** : Trains de nuit en Europe 🌙
 - **Émissions CO2** : Données environnementales Eurostat 🌍
 
-## ✅ **PHASE 2 : TRANSFORMATION - DÉJÀ FAIT**
+## **PHASE 2 : TRANSFORMATION - DÉJÀ FAIT**
 ### **Nettoyage par source :**
 - **Back-on-Track** : Noms de villes, trains de nuit, opérateurs
 - **Eurostat** : Données pivotées, filtrage >2010, remplissage moyennes
@@ -27,7 +27,7 @@
 - **Rapports RGPD** : Traçabilité complète des transformations
 - **Documentation JSON** : Rapports qualité automatiques
 
-## ✅ **PHASE 3 : CHARGEMENT - DÉJÀ FAIT**
+## **PHASE 3 : CHARGEMENT - DÉJÀ FAIT**
 ### **Architecture de base de données :**
 - **Schéma en étoile** implémenté dans PostgreSQL (`sql/01_init.sql`)
 - **Tables dimensionnelles** : `dim_countries`, `dim_years`, `dim_operators`
@@ -50,7 +50,7 @@
 - **Dashboard intégré** : Visualisation dans `main_etl.py` (option 5)
 - **Gestion des types** : Conversion sécurisée des données avant insertion
 
-## 📁 **STRUCTURE DES DONNÉES ACTUELLE**
+## **STRUCTURE DES DONNÉES ACTUELLE**
 ```
 data/
 ├── raw/          # ← Données brutes extraites (6 sources)
@@ -66,7 +66,7 @@ data/
     └── rgpd_traceability_report.json # Conformité RGPD
 ```
 
-## 🚀 **PIPELINE FONCTIONNEL COMPLET**
+## **PIPELINE FONCTIONNEL COMPLET**
 - **Script principal** : `etl/main_etl.py` (menu interactif)
 - **Option 1** : Pipeline complet (extraction + transformation + chargement)
 - **Option 2** : Extraction seule
@@ -74,33 +74,33 @@ data/
 - **Option 4** : Chargement PostgreSQL seul
 - **Option 5** : État des données (monitoring BDD)
 
-## 🔄 **LOGICIEL ET TECHNOLOGIES UTILISÉES**
+## **LOGICIEL ET TECHNOLOGIES UTILISÉES**
 - **Python** : pandas, numpy, psycopg2, requests
 - **Base de données** : PostgreSQL avec schéma en étoile
 - **Formats** : CSV, JSON, APIs REST, SQL
 - **Architecture** : Modèle en étoile pour data warehouse
 
-## 🎯 **PROCHAINES ÉTAPES**
+## **PROCHAINES ÉTAPES**
 1. **API REST** pour exposer les données via FastAPI/Flask
 2. **Dashboard interactif** avec Streamlit ou Plotly Dash
 3. **Dockerisation complète** : conteneurs PostgreSQL + ETL + API
 4. **Automatisation** : Planification avec Airflow ou cron
 5. **Documentation technique** approfondie
 
-## 💡 **VALEUR AJOUTÉE DÉJÀ CRÉÉE**
-- ✅ **Centralisation** : 6 sources hétérogènes → 1 data warehouse PostgreSQL
-- ✅ **Qualité** : Nettoyage, validation, métriques qualité
-- ✅ **Analyse prête** : Données structurées pour requêtes analytiques
-- ✅ **Conformité** : RGPD, traçabilité, documentation
-- ✅ **Automatisation** : Pipeline ETL reproductible de bout en bout
-- ✅ **Performance** : Modèle en étoile optimisé pour requêtes
-- ✅ **Monitoring** : Vérification automatique de l'intégrité des données
+## **VALEUR AJOUTÉE DÉJÀ CRÉÉE**
+- **Centralisation** : 6 sources hétérogènes → 1 data warehouse PostgreSQL
+- **Qualité** : Nettoyage, validation, métriques qualité
+- **Analyse prête** : Données structurées pour requêtes analytiques
+- **Conformité** : RGPD, traçabilité, documentation
+- **Automatisation** : Pipeline ETL reproductible de bout en bout
+- **Performance** : Modèle en étoile optimisé pour requêtes
+- **Monitoring** : Vérification automatique de l'intégrité des données
 
-**État actuel** : ✅ **PIPELINE ETL COMPLET TERMINÉ** (Extraction + Transformation + Chargement PostgreSQL)
+**État actuel** : **PIPELINE ETL COMPLET TERMINÉ** (Extraction + Transformation + Chargement PostgreSQL)
 
 ---
 
-## 📊 **CAPACITÉS DISPONIBLES IMMÉDIATEMENT**
+## **CAPACITÉS DISPONIBLES IMMÉDIATEMENT**
 
 ### **Requêtes analytiques possibles :**
 ```sql
@@ -265,7 +265,7 @@ Partit client :
 # Tests :
 ## Tests Unitaires :
 
-📁 1. Structure mise en place
+1. Structure mise en place
 
 Fichiers de tests créés (3 modules principaux)
 - test_analysis.py
@@ -291,24 +291,24 @@ On utilise des mocks (MagicMock) pour simuler les données.
 
 Contrairement aux tests d’intégration :
 
-- ❌ pas de vraie base PostgreSQL
-- ❌ pas de FastAPI TestClient
-- ❌ pas d’appel HTTP
+- pas de vraie base PostgreSQL
+- pas de FastAPI TestClient
+- pas d’appel HTTP
 
-✔️ Outils utilisés :
+Outils utilisés :
 - pytest
 - unittest.mock (MagicMock)
 - SimpleNamespace (pour simuler des objets DB)
 - fonctions appelées directement depuis les routers
 
-✅Résultat final
+Résultat final
 - 11 tests unitaires créés et fonctionnels
 - 100% de succès (11/11 tests passent)
 
 
 
 ## Tests d'Intégration API + DB :
-  📁 Structure mise en place
+ Structure mise en place
 1. Fichiers de test créés (9 fichiers)
 - conftest.py - Configuration partagée (fixtures DB, client, données test)
 - test_countries.py - Tests pour /api/countries/* (5 tests)
@@ -327,14 +327,14 @@ Contrairement aux tests d’intégration :
 - Modèles importés : Tous les modèles SQLAlchemy nécessaires
 
 
-✅Résultat final
+Résultat final
 - 29 tests unitaires créés et fonctionnels
 - 100% de succès (29/29 tests passent)
 - Couverture : Tous les endpoints principaux testés
 - Isolation : Chaque test utilise une DB propre
 - Maintenabilité : Structure modulaire facile à étendre
 
-🛠 Méthodologie appliquée
+Méthodologie appliquée
 - Création des tests basée sur la documentation API
 - Exécution et identification des erreurs
 - Analyse des vraies réponses API pour corriger les attentes
