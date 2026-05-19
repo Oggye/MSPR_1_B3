@@ -30,7 +30,7 @@ test.describe('Parcours frontend interne admin', () => {
     await page.goto('/interne/HomePage');
     await page.waitForLoadState('networkidle');
     await expect(
-      page.getByText(/erreur|boom|500|impossible/i)
+      page.getByText(/Erreur API 500 sur \/api\/internal\/overview/i)
     ).toBeVisible();
   });
 });
