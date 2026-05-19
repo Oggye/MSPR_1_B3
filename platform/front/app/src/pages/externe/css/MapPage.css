@@ -43,12 +43,12 @@
     align-items: flex-end;
   }
   
-  .filter-group {
+  .filter-group-map {
     flex: 1;
     min-width: 150px;
   }
   
-  .filter-group label {
+  .filter-group-map label {
     display: block;
     margin-bottom: 5px;
     font-size: 13px;
@@ -140,7 +140,7 @@
     font-weight: bold;
   }
   
-  .stat-label {
+  .stat-label-map {
     font-size: 12px;
     opacity: 0.9;
   }
@@ -281,7 +281,7 @@
       flex-direction: column;
     }
     
-    .filter-group {
+    .filter-group-map {
       width: 100%;
     }
     

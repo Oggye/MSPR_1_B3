@@ -601,12 +601,7 @@ npm run e2e
 - Regeneration ETL planifiee et verification des rapports qualite.
 - Monitoring continu des erreurs/latences via Grafana.
 
-### 16.2 Correctifs
-
-- Branches de correction ciblees, PR, execution pipeline, merge main.
-- Verification post-correctif: endpoints critiques + smoke tests UI.
-
-### 16.3 Strategie rollback
+### 16.2 Strategie rollback
 
 - Rollback code: retour commit Git stable precedent.
 - Rollback images: redeploiement tag GHCR stable precedent.

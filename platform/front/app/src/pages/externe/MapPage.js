@@ -58,8 +58,8 @@ const dayTrainIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const MAX_TRAINS_TOTAL = 1000;
-const MAX_TRAINS_PER_TYPE = 500;
+const MAX_TRAINS_TOTAL = 5000;
+const MAX_TRAINS_PER_TYPE = 2500;
 
 // Composant pour recentrer la carte
 function ChangeView({ center, zoom }) {
@@ -306,7 +306,7 @@ const MapPage = () => {
       {/* Section Filtres */}
       <div className="filters-section">
         <div className="filters-container">
-          <div className="filter-group">
+          <div className="filter-group-map">
             <label>🚆 Type de train :</label>
             <select 
               value={filters.trainType}
@@ -319,7 +319,7 @@ const MapPage = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="filter-group-map">
             <label>🌍 Pays :</label>
             <select 
               value={filters.country}
@@ -335,7 +335,7 @@ const MapPage = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="filter-group-map">
             <label>📅 Année :</label>
             <select 
               value={filters.year}
@@ -360,28 +360,28 @@ const MapPage = () => {
             <span className="stat-icon">🚆</span>
             <div className="stat-info">
               <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">Trains trouvés</div>
+              <div className="stat-label-map">Trains trouvés</div>
             </div>
           </div>
           <div className="stat-card night">
             <span className="stat-icon">🌙</span>
             <div className="stat-info">
               <div className="stat-value">{stats.night}</div>
-              <div className="stat-label">Trains de nuit</div>
+              <div className="stat-label-map">Trains de nuit</div>
             </div>
           </div>
           <div className="stat-card day">
             <span className="stat-icon">☀️</span>
             <div className="stat-info">
               <div className="stat-value">{stats.day}</div>
-              <div className="stat-label">Trains de jour</div>
+              <div className="stat-label-map">Trains de jour</div>
             </div>
           </div>
           <div className="stat-card">
             <span className="stat-icon">🌍</span>
             <div className="stat-info">
               <div className="stat-value">{stats.countries}</div>
-              <div className="stat-label">Pays couverts</div>
+              <div className="stat-label-map">Pays couverts</div>
             </div>
           </div>
         </div>
