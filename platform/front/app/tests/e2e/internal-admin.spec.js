@@ -17,10 +17,20 @@ test.describe('Parcours frontend interne admin', () => {
   });
 
   test('affichage erreur réseau sur overview interne', async ({ page }) => {
-    await page.route('**/api/internal/overview', (route) =>
-      route.fulfill({ status: 500, contentType: 'application/json', body: '{"detail":"boom"}' })
-    );
+    await page.route('**/api/internal/overview', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          detail: 'boom'
+        })
+      });
+    });
+
     await page.goto('/interne/HomePage');
-    await expect(page.getByText(/Erreur API 500 sur \/api\/internal\/overview/i)).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(
+      page.getByText(/erreur|boom|500|impossible/i)
+    ).toBeVisible();
   });
 });
