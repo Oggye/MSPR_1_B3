@@ -48,3 +48,25 @@ export function streamInternalTests(onMessage, onError, onDone) {
   };
   return source;
 }
+
+export function streamInternalTestsCategory(category, onMessage, onError, onDone) {
+  const streamUrl = `${API_BASE_URL}/api/internal/tests/stream/${category}`;
+  const source = new EventSource(streamUrl);
+  source.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      onMessage?.(payload);
+      if (payload.kind === "done") {
+        source.close();
+        onDone?.(payload);
+      }
+    } catch (err) {
+      onError?.(err);
+    }
+  };
+  source.onerror = (err) => {
+    source.close();
+    onError?.(err);
+  };
+  return source;
+}

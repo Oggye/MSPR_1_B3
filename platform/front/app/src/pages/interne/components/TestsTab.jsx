@@ -6,14 +6,36 @@ const renderReportValue = (value) => {
   return String(value ?? "N/A");
 };
 
-export default function TestsTab({ data, actionState, onRunDiagnostic, onRunTests }) {
+const getLineClass = (line = "") => {
+  const upper = line.toUpperCase();
+  if (upper.includes("FAILED")) return "log-line failed";
+  if (upper.includes("PASSED")) return "log-line passed";
+  if (upper.includes("WARNING")) return "log-line warning";
+  if (upper.includes("ERROR")) return "log-line failed";
+  return "log-line";
+};
+
+const getStatusClass = (status) => {
+  if (status === "passed") return "pill ok";
+  if (status === "failed") return "pill danger";
+  if (status === "running") return "pill warning";
+  return "pill neutral";
+};
+
+const getStatusLabel = (status) => {
+  if (status === "passed") return "Termine (OK)";
+  if (status === "failed") return "Termine (KO)";
+  if (status === "running") return "En cours";
+  return "Idle";
+};
+
+export default function TestsTab({ data, actionState, testCategories, onRunDiagnostic, onRunTestsByCategory }) {
   const quality = data?.reports?.quality || {};
   const diagnostic = actionState?.diagnostic?.report || data?.reports?.diagnostic;
   const qualitySummary = quality.summary || {};
   const dataQuality = quality.traceability?.data_quality || {};
   const totals = data?.db_totals || {};
-  const streamLines = actionState?.tests?.stream || [];
-  const categories = ["Unit Tests", "Integration Tests", "Backend E2E", "Frontend E2E"];
+  const tests = actionState?.tests || {};
 
   return (
     <div className="tab-content">
@@ -91,33 +113,45 @@ export default function TestsTab({ data, actionState, onRunDiagnostic, onRunTest
         <div className="panel-heading">
           <div>
             <h2>Tests backend</h2>
-            <p>Execution detaillee en temps reel, categorie par categorie.</p>
+            <p>Execution detaillee en temps reel, par categorie independante.</p>
           </div>
-          <button type="button" className="secondary-button" onClick={onRunTests} disabled={actionState?.runningTests}>
-            {actionState?.runningTests ? "Tests en cours" : "Lancer les tests"}
-          </button>
         </div>
-        <div className="report-grid">
-          {categories.map((category) => (
-            <article className="report-item" key={category}>
-              <h3>{category}</h3>
-              <p>
-                <span>Lignes</span>
-                <strong>{streamLines.filter((line) => line.category === category).length}</strong>
-              </p>
-            </article>
-          ))}
+        <div className="tab-content">
+          {(testCategories || []).map((category) => {
+            const state = tests[category.key] || {};
+            return (
+              <article className="panel" key={category.key}>
+                <div className="panel-heading">
+                  <div>
+                    <h3>{category.label}</h3>
+                    <p>{state.count || 0} ligne(s) de log</p>
+                  </div>
+                  <div className="header-actions">
+                    <span className={getStatusClass(state.status)}>{getStatusLabel(state.status)}</span>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => onRunTestsByCategory(category.key)}
+                      disabled={state.running}
+                    >
+                      {state.running ? "Execution..." : "Lancer"}
+                    </button>
+                  </div>
+                </div>
+                {state.error && <pre className="console-output danger">{state.error}</pre>}
+                <div className="console-output">
+                  {(state.lines || []).length === 0 ? (
+                    <span className="muted">Aucun log pour cette categorie.</span>
+                  ) : (
+                    (state.lines || []).map((line, idx) => (
+                      <div key={`${category.key}-${idx}`} className={getLineClass(line)}>{line}</div>
+                    ))
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
-        {actionState?.tests?.stream_error && <pre className="console-output danger">{actionState.tests.stream_error}</pre>}
-        {actionState?.tests ? (
-          <pre className={actionState.tests.success ? "console-output" : "console-output danger"}>
-            {(streamLines.length > 0
-              ? streamLines.map((entry) => `[${entry.category}] ${entry.line}`).join("\n")
-              : actionState.tests.stdout) || actionState.tests.stderr || actionState.tests.error}
-          </pre>
-        ) : (
-          <p className="muted">Aucun lancement de tests depuis cette page.</p>
-        )}
       </section>
     </div>
   );

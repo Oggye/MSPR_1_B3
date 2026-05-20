@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+from threading import Lock
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
@@ -34,6 +35,8 @@ GRAFANA_URLS = [
     "http://localhost:3001",
 ]
 GITHUB_ACTIONS_API = "https://api.github.com/repos/Oggye/MSPR_1_B3/actions/runs?per_page=10"
+RUNNING_TESTS = set()
+RUNNING_TESTS_LOCK = Lock()
 
 
 def _now():
@@ -426,5 +429,79 @@ def stream_tests():
             status = "ok" if process.returncode == 0 else "failed"
             yield _sse_line("section_end", category, f"{category}: {status} (code {process.returncode})")
         yield _sse_line("done", "all", "Execution terminee")
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+TEST_JOBS = {
+    "unit": ("Unit Tests", lambda test_root, front_root: [sys.executable, "-m", "pytest", str(test_root / "unit"), "-vv", "-s", "-rA"], lambda test_root, front_root: str(test_root.parent)),
+    "integration": ("Integration Tests", lambda test_root, front_root: [sys.executable, "-m", "pytest", str(test_root / "integration"), "-vv", "-s", "-rA"], lambda test_root, front_root: str(test_root.parent)),
+    "backend-e2e": ("Backend E2E", lambda test_root, front_root: [sys.executable, "-m", "pytest", str(test_root / "E2E"), "-vv", "-s", "-rA"], lambda test_root, front_root: str(test_root.parent)),
+    "frontend-e2e": ("Frontend E2E", lambda test_root, front_root: ["npm", "run", "e2e"], lambda test_root, front_root: str(front_root)),
+}
+
+
+@router.get("/tests/stream/{category}")
+def stream_tests_category(category: str):
+    test_root = PROJECT_ROOT / "platform" / "server" / "test"
+    front_root = PROJECT_ROOT / "platform" / "front" / "app"
+    if not test_root.exists():
+        test_root = Path("/app/test")
+
+    selected = TEST_JOBS.get(category)
+    if not selected:
+        def invalid_stream():
+            yield _sse_line("error", "unknown", f"Categorie inconnue: {category}")
+            yield _sse_line("done", "unknown", "Execution terminee")
+        return StreamingResponse(invalid_stream(), media_type="text/event-stream")
+
+    display_name, cmd_builder, cwd_builder = selected
+    if category == "frontend-e2e" and not front_root.exists():
+        def missing_front_stream():
+            yield _sse_line("error", display_name, "Dossier frontend introuvable pour Frontend E2E.")
+            yield _sse_line("done", display_name, "Execution terminee")
+        return StreamingResponse(missing_front_stream(), media_type="text/event-stream")
+
+    command = cmd_builder(test_root, front_root)
+    command_cwd = cwd_builder(test_root, front_root)
+
+    def event_stream():
+        with RUNNING_TESTS_LOCK:
+            if category in RUNNING_TESTS:
+                yield _sse_line("error", display_name, f"{display_name} deja en cours.")
+                yield _sse_line("done", display_name, "Execution terminee")
+                return
+            RUNNING_TESTS.add(category)
+
+        try:
+            yield _sse_line("section_start", display_name, f"=== {display_name} ===")
+            try:
+                process = subprocess.Popen(
+                    command,
+                    cwd=command_cwd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                )
+            except FileNotFoundError as exc:
+                yield _sse_line("error", display_name, f"Commande indisponible: {exc}")
+                yield _sse_line("done", display_name, "Execution terminee")
+                return
+            except Exception as exc:
+                yield _sse_line("error", display_name, str(exc))
+                yield _sse_line("done", display_name, "Execution terminee")
+                return
+
+            for line in iter(process.stdout.readline, ""):
+                if line:
+                    yield _sse_line("log", display_name, line.rstrip("\n"))
+            process.wait()
+            status = "ok" if process.returncode == 0 else "failed"
+            yield _sse_line("section_end", display_name, f"{display_name}: {status} (code {process.returncode})")
+            yield _sse_line("done", display_name, "Execution terminee")
+        finally:
+            with RUNNING_TESTS_LOCK:
+                RUNNING_TESTS.discard(category)
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
