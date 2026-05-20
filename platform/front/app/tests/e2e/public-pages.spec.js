@@ -20,7 +20,9 @@ test.describe('Parcours frontend externe', () => {
     await openMobileMenuIfNeeded(page);
     await page.getByRole('link', { name: /Carte/i }).click();
     await expect(page).toHaveURL(/\/externe\/Map$/);
-    // Sélecteur plus tolérant pour le heading de la carte
+
+    // Attendre que la carte soit chargée avant de vérifier le titre
+    await expect(page.locator('.map-container')).toBeVisible();
     await expect(page.getByRole('heading', { name: /Carte.*Trains/i })).toBeVisible();
 
     await openMobileMenuIfNeeded(page);
@@ -39,13 +41,14 @@ test.describe('Parcours frontend externe', () => {
     await expect(page.getByRole('heading', { name: /Recherche d'itinéraires ferroviaires/i })).toBeVisible();
 
     await page.getByPlaceholder('Ecrire un operateur...').fill('this_operator_does_not_exist');
-    // Recherche par texte plutôt que par classe CSS
     await expect(page.getByText('Aucun trajet trouvé')).toBeVisible();
   });
 
   test('page map: filtres et reset', async ({ page }) => {
     await page.goto('/externe/Map');
-    // Sélecteur plus tolérant pour le heading de la carte
+
+    // Attendre que la carte soit chargée avant de vérifier le titre et les filtres
+    await expect(page.locator('.map-container')).toBeVisible();
     await expect(page.getByRole('heading', { name: /Carte.*Trains/i })).toBeVisible();
     await expect(page.locator('.filter-select')).toHaveCount(3);
 
