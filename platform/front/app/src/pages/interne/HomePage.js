@@ -68,6 +68,8 @@ export default function HomePage() {
               <option value={10000}>10 s</option>
               <option value={30000}>30 s</option>
               <option value={60000}>1 min</option>
+              <option value={300000}>5 mins</option>
+              <option value={600000}>10 mins</option>
             </select>
           </label>
           <button type="button" className="primary-button" onClick={refresh}>
