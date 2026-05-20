@@ -421,6 +421,22 @@ th {
   color: #fecaca;
 }
 
+.log-line {
+  color: #d1d5db;
+}
+
+.log-line.passed {
+  color: #86efac;
+}
+
+.log-line.failed {
+  color: #fca5a5;
+}
+
+.log-line.warning {
+  color: #fcd34d;
+}
+
 .report-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

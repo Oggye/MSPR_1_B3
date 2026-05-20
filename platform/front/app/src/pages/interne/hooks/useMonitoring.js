@@ -1,6 +1,25 @@
 import { useCallback, useEffect, useState } from "react";
 import { emptyOverview } from "../services/mockData";
-import { getInternalOverview, runInternalDiagnostic, runInternalTests, streamInternalTests } from "../services/api";
+import { getInternalOverview, runInternalDiagnostic, streamInternalTestsCategory } from "../services/api";
+
+const TEST_CATEGORIES = [
+  { key: "unit", label: "Unit Tests" },
+  { key: "integration", label: "Integration Tests" },
+  { key: "backend-e2e", label: "Backend E2E" },
+  { key: "frontend-e2e", label: "Frontend E2E" },
+];
+
+const initialTestsState = TEST_CATEGORIES.reduce((acc, item) => {
+  acc[item.key] = {
+    label: item.label,
+    running: false,
+    status: "idle",
+    lines: [],
+    count: 0,
+    error: "",
+  };
+  return acc;
+}, {});
 
 export function useMonitoring(refreshMs = 30000) {
   const [data, setData] = useState(null);
@@ -9,9 +28,8 @@ export function useMonitoring(refreshMs = 30000) {
   const [lastUpdated, setLastUpdated] = useState("");
   const [actionState, setActionState] = useState({
     runningDiagnostic: false,
-    runningTests: false,
     diagnostic: null,
-    tests: null,
+    tests: initialTestsState,
   });
 
   const refresh = useCallback(async () => {
@@ -44,64 +62,82 @@ export function useMonitoring(refreshMs = 30000) {
     }
   }, [refresh]);
 
-  const runTests = useCallback(async () => {
-    setActionState((current) => ({ ...current, runningTests: true }));
+  const runTestsByCategory = useCallback(async (category) => {
     let stream = null;
-    try {
-      setActionState((current) => ({
-        ...current,
-        tests: { success: true, stdout: "", stderr: "", stream: [], streamed: true },
-      }));
+    setActionState((current) => ({
+      ...current,
+      tests: {
+        ...current.tests,
+        [category]: {
+          ...(current.tests?.[category] || {}),
+          running: true,
+          status: "running",
+          lines: [],
+          count: 0,
+          error: "",
+        },
+      },
+    }));
 
-      stream = streamInternalTests(
-        (payload) => {
-          setActionState((current) => {
-            const previous = current.tests?.stream || [];
-            return {
+    try {
+      await new Promise((resolve) => {
+        stream = streamInternalTestsCategory(
+          category,
+          (payload) => {
+            setActionState((current) => {
+              const prev = current.tests?.[category] || {};
+              const nextLines = payload.kind === "log" ? [...(prev.lines || []), payload.line] : (prev.lines || []);
+              let nextStatus = prev.status || "running";
+              if (payload.kind === "section_end") {
+                nextStatus = payload.line.includes(": ok") ? "passed" : "failed";
+              }
+              return {
+                ...current,
+                tests: {
+                  ...current.tests,
+                  [category]: {
+                    ...prev,
+                    lines: nextLines,
+                    count: nextLines.length,
+                    status: nextStatus,
+                  },
+                },
+              };
+            });
+          },
+          (err) => {
+            setActionState((current) => ({
               ...current,
               tests: {
-                ...(current.tests || {}),
-                stream: [...previous, payload],
-                stdout: `${current.tests?.stdout || ""}${payload.line || ""}\n`,
+                ...current.tests,
+                [category]: {
+                  ...(current.tests?.[category] || {}),
+                  running: false,
+                  status: "failed",
+                  error: err?.message || "Erreur de streaming des tests.",
+                },
               },
-            };
-          });
-        },
-        () => {
-          setActionState((current) => ({
-            ...current,
-            tests: {
-              ...(current.tests || {}),
-              stream_error: "Flux temps reel indisponible, fallback sur execution standard.",
-            },
-          }));
-        },
-        () => {
-          setActionState((current) => ({ ...current, runningTests: false }));
-        }
-      );
-
-      const result = await runInternalTests();
-      setActionState((current) => ({
-        ...current,
-        runningTests: false,
-        tests: {
-          ...(current.tests || {}),
-          ...result,
-          stdout: current.tests?.stdout || result.stdout || "",
-          stream: current.tests?.stream || [],
-        },
-      }));
-    } catch (err) {
-      setActionState((current) => ({
-        ...current,
-        runningTests: false,
-        tests: { success: false, error: err.message },
-      }));
+            }));
+            resolve();
+          },
+          () => {
+            setActionState((current) => ({
+              ...current,
+              tests: {
+                ...current.tests,
+                [category]: {
+                  ...(current.tests?.[category] || {}),
+                  running: false,
+                  status: (current.tests?.[category]?.status === "failed") ? "failed" : (current.tests?.[category]?.status || "passed"),
+                },
+              },
+            }));
+            resolve();
+          }
+        );
+      });
     } finally {
-      if (stream) {
-        stream.close();
-      }
+      if (stream) stream.close();
     }
   }, []);
 
@@ -118,7 +154,8 @@ export function useMonitoring(refreshMs = 30000) {
     lastUpdated,
     refresh,
     runDiagnostic,
-    runTests,
+    runTestsByCategory,
     actionState,
+    testCategories: TEST_CATEGORIES,
   };
 }

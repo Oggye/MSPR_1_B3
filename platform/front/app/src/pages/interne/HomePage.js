@@ -26,8 +26,9 @@ export default function HomePage() {
     lastUpdated,
     refresh,
     runDiagnostic,
-    runTests,
+    runTestsByCategory,
     actionState,
+    testCategories,
   } = useMonitoring(refreshMs);
 
   const alerts = useMemo(() => {
@@ -111,8 +112,9 @@ export default function HomePage() {
             <TestsTab
               data={data}
               actionState={actionState}
+              testCategories={testCategories}
               onRunDiagnostic={runDiagnostic}
-              onRunTests={runTests}
+              onRunTestsByCategory={runTestsByCategory}
             />
           )}
           {activeTab === "pipelines" && <PipelinesTab data={data} />}
