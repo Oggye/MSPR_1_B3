@@ -2,7 +2,7 @@ import {
   getInternalOverview,
   runInternalDiagnostic,
   runInternalTests,
-} from './api';
+} from '../pages/interne/services/api_interne';
 
 beforeEach(() => {
   global.fetch = jest.fn(() =>

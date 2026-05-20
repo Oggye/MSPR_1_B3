@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { emptyOverview } from "../services/mockData";
-import { getInternalOverview, runInternalDiagnostic, streamInternalTestsCategory } from "../services/api";
+import { emptyOverview } from "../../../services/mockData";
+import { getInternalOverview, runInternalDiagnostic, streamInternalTestsCategory } from "../../../services/api_interne";
 
 const TEST_CATEGORIES = [
   { key: "unit", label: "Unit Tests" },
