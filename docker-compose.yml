@@ -33,6 +33,7 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./platform/server/test:/app/test
+      - ./platform/front/app:/app/frontend
     restart: always
 
   # Base de données PostgreSQL

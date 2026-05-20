@@ -447,6 +447,9 @@ def stream_tests_category(category: str):
     front_root = PROJECT_ROOT / "platform" / "front" / "app"
     if not test_root.exists():
         test_root = Path("/app/test")
+    
+    if not front_root.exists():
+        front_root = Path("/app/frontend")
 
     selected = TEST_JOBS.get(category)
     if not selected:
