@@ -1,4 +1,3 @@
-/* src/pages/TrainMapPage.css */
 .train-map-page {
     max-width: 1400px;
     margin: 0 auto;
@@ -183,9 +182,9 @@
   }
   
   .legend-marker.night-marker {
-    background: #12263a;
+    background: rgba(156, 39, 176, 0.7);
     border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #12263a;
+    box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.7);
   }
   
   .legend-marker.day-marker {

@@ -21,7 +21,8 @@ export default function LayoutExterne() {
     { path: "/externe/Trajets", label: "📋 Trajets", icon: "📋" },
     { path: "/externe/Map", label: "🗺️ Carte", icon: "🗺️" },
     { path: "/externe/Statistique", label: "📈 Statistiques", icon: "📈" },
-    { path: "/externe/Operateur", label: "🏢 Opérateurs", icon: "🏢" }
+    { path: "/externe/Operateur", label: "🏢 Opérateurs", icon: "🏢" },
+    { path: "/pages/HomePage", label: "Accueil"}
   ];
 
   const sidebarStyles = {

@@ -1,4 +1,3 @@
-// src/pages/TrainMapPage.jsx
 import { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
