@@ -4,7 +4,7 @@ const API_BASE_URL =
   process.env.E2E_API_URL || 'http://localhost:8000';
 
 /**
- * Effectue une requête avec retry automatique
+ * Effectue une requête avec retry automatique, sans afficher le contenu des réponses.
  */
 async function fetchWithRetry(request, url, options = {}) {
   const {
@@ -25,18 +25,14 @@ async function fetchWithRetry(request, url, options = {}) {
 
       const rawBody = await response.text();
 
-      console.log('='.repeat(80));
-      console.log(`ATTEMPT ${attempt}/${retries}`);
-      console.log(`METHOD: ${method}`);
-      console.log(`URL: ${url}`);
-      console.log(`STATUS: ${response.status()}`);
-      console.log(`BODY: ${rawBody}`);
-      console.log('='.repeat(80));
+      // On ne logge plus le corps de la réponse pour éviter la pollution
+      if (attempt > 1 || response.status() !== 200) {
+        console.log(`[${method}] ${url} -> status ${response.status()} (attempt ${attempt}/${retries})`);
+      }
 
       lastResponse = response;
       lastBody = rawBody;
 
-      // Succès
       if (response.status() === 200) {
         return {
           response,
@@ -44,26 +40,14 @@ async function fetchWithRetry(request, url, options = {}) {
         };
       }
 
-      // Attente avant retry
       if (attempt < retries) {
-        console.log(
-          `Retry dans ${delay}ms car status=${response.status()}`
-        );
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, delay)
-        );
+        console.log(`Retry dans ${delay}ms (status=${response.status()})`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     } catch (error) {
-      console.error(
-        `Erreur réseau tentative ${attempt}:`,
-        error
-      );
-
+      console.error(`Erreur réseau tentative ${attempt}:`, error.message);
       if (attempt < retries) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, delay)
-        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -73,7 +57,6 @@ async function fetchWithRetry(request, url, options = {}) {
       `Erreur API après ${retries} tentatives`,
       `URL: ${url}`,
       `STATUS: ${lastResponse?.status?.()}`,
-      `BODY: ${lastBody}`,
     ].join('\n')
   );
 }
@@ -106,17 +89,12 @@ test.describe(
           body = JSON.parse(rawBody);
         } catch (error) {
           console.error('JSON invalide:', rawBody);
-
           throw new Error(
             `Impossible de parser le JSON:\n${rawBody}`
           );
         }
 
-        console.log(
-          'OVERVIEW JSON FORMATÉ:\n',
-          JSON.stringify(body, null, 2)
-        );
-
+        // On ne logge plus le JSON formaté
         // Vérification structure globale
         expect(body).toBeTruthy();
 
@@ -165,14 +143,8 @@ test.describe(
           );
         }
 
-        console.log(
-          'DIAGNOSTIC JSON:\n',
-          JSON.stringify(body, null, 2)
-        );
-
         expect(body).toHaveProperty('ran_at');
         expect(body).toHaveProperty('success');
-
         expect(typeof body.success).toBe('boolean');
       }
     );
@@ -202,25 +174,20 @@ test.describe(
           );
         }
 
-        console.log(
-          'TESTS JSON:\n',
-          JSON.stringify(body, null, 2)
-        );
-
+        // On ne logge plus le JSON des tests
         expect(body).toHaveProperty('ran_at');
         expect(body).toHaveProperty('success');
-
         expect(typeof body.success).toBe('boolean');
 
-        // Logs complets pytest si présents
+        // Les logs pytest sont optionnels : on les garde mais on peut les commenter si besoin
         if (body.stdout) {
-          console.log('\nPYTEST STDOUT:\n');
-          console.log(body.stdout);
+          console.log('\nPYTEST STDOUT (tronqué si long) :\n');
+          console.log(body.stdout.substring(0, 500) + (body.stdout.length > 500 ? '…' : ''));
         }
 
         if (body.stderr) {
-          console.error('\nPYTEST STDERR:\n');
-          console.error(body.stderr);
+          console.error('\nPYTEST STDERR (tronqué) :\n');
+          console.error(body.stderr.substring(0, 500) + (body.stderr.length > 500 ? '…' : ''));
         }
       }
     );
