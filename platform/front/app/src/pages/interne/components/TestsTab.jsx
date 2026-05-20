@@ -11,6 +11,9 @@ export default function TestsTab({ data, actionState, onRunDiagnostic, onRunTest
   const diagnostic = actionState?.diagnostic?.report || data?.reports?.diagnostic;
   const qualitySummary = quality.summary || {};
   const dataQuality = quality.traceability?.data_quality || {};
+  const totals = data?.db_totals || {};
+  const streamLines = actionState?.tests?.stream || [];
+  const categories = ["Unit Tests", "Integration Tests", "Backend E2E", "Frontend E2E"];
 
   return (
     <div className="tab-content">
@@ -31,9 +34,9 @@ export default function TestsTab({ data, actionState, onRunDiagnostic, onRunTest
           <p>{dataQuality.unknown_countries || 0} pays inconnus.</p>
         </article>
         <article className="metric-card">
-          <span>Trains de nuit</span>
-          <strong>{dataQuality.night_train_records || 0}</strong>
-          <p>Enregistrements warehouse.</p>
+          <span>Total trains</span>
+          <strong>{totals.total_trains ?? 0}</strong>
+          <p>Nuit: {totals.total_night_trains ?? 0} | Jour: {totals.total_day_trains ?? 0}</p>
         </article>
       </section>
 
@@ -88,15 +91,29 @@ export default function TestsTab({ data, actionState, onRunDiagnostic, onRunTest
         <div className="panel-heading">
           <div>
             <h2>Tests backend</h2>
-            <p>Execution pytest via l'API interne si le dossier de tests est monte.</p>
+            <p>Execution detaillee en temps reel, categorie par categorie.</p>
           </div>
           <button type="button" className="secondary-button" onClick={onRunTests} disabled={actionState?.runningTests}>
             {actionState?.runningTests ? "Tests en cours" : "Lancer les tests"}
           </button>
         </div>
+        <div className="report-grid">
+          {categories.map((category) => (
+            <article className="report-item" key={category}>
+              <h3>{category}</h3>
+              <p>
+                <span>Lignes</span>
+                <strong>{streamLines.filter((line) => line.category === category).length}</strong>
+              </p>
+            </article>
+          ))}
+        </div>
+        {actionState?.tests?.stream_error && <pre className="console-output danger">{actionState.tests.stream_error}</pre>}
         {actionState?.tests ? (
           <pre className={actionState.tests.success ? "console-output" : "console-output danger"}>
-            {actionState.tests.stdout || actionState.tests.stderr || actionState.tests.error}
+            {(streamLines.length > 0
+              ? streamLines.map((entry) => `[${entry.category}] ${entry.line}`).join("\n")
+              : actionState.tests.stdout) || actionState.tests.stderr || actionState.tests.error}
           </pre>
         ) : (
           <p className="muted">Aucun lancement de tests depuis cette page.</p>

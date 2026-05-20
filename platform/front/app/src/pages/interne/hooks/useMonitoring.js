@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { emptyOverview } from "../services/mockData";
-import { getInternalOverview, runInternalDiagnostic, runInternalTests } from "../services/api";
+import { getInternalOverview, runInternalDiagnostic, runInternalTests, streamInternalTests } from "../services/api";
 
 export function useMonitoring(refreshMs = 30000) {
   const [data, setData] = useState(null);
@@ -46,15 +46,62 @@ export function useMonitoring(refreshMs = 30000) {
 
   const runTests = useCallback(async () => {
     setActionState((current) => ({ ...current, runningTests: true }));
+    let stream = null;
     try {
+      setActionState((current) => ({
+        ...current,
+        tests: { success: true, stdout: "", stderr: "", stream: [], streamed: true },
+      }));
+
+      stream = streamInternalTests(
+        (payload) => {
+          setActionState((current) => {
+            const previous = current.tests?.stream || [];
+            return {
+              ...current,
+              tests: {
+                ...(current.tests || {}),
+                stream: [...previous, payload],
+                stdout: `${current.tests?.stdout || ""}${payload.line || ""}\n`,
+              },
+            };
+          });
+        },
+        () => {
+          setActionState((current) => ({
+            ...current,
+            tests: {
+              ...(current.tests || {}),
+              stream_error: "Flux temps reel indisponible, fallback sur execution standard.",
+            },
+          }));
+        },
+        () => {
+          setActionState((current) => ({ ...current, runningTests: false }));
+        }
+      );
+
       const result = await runInternalTests();
-      setActionState((current) => ({ ...current, tests: result, runningTests: false }));
+      setActionState((current) => ({
+        ...current,
+        runningTests: false,
+        tests: {
+          ...(current.tests || {}),
+          ...result,
+          stdout: current.tests?.stdout || result.stdout || "",
+          stream: current.tests?.stream || [],
+        },
+      }));
     } catch (err) {
       setActionState((current) => ({
         ...current,
         runningTests: false,
         tests: { success: false, error: err.message },
       }));
+    } finally {
+      if (stream) {
+        stream.close();
+      }
     }
   }, []);
 

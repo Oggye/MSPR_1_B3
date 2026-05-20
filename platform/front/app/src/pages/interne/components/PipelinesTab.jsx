@@ -2,6 +2,8 @@ import React from "react";
 
 export default function PipelinesTab({ data }) {
   const dockerServices = data?.docker?.services || [];
+  const ci = data?.ci_cd || {};
+  const ciRuns = ci.runs || [];
   const apiService = dockerServices.find((service) => service.Service === "api");
   const frontService = dockerServices.find((service) => service.Service === "front");
 
@@ -13,7 +15,9 @@ export default function PipelinesTab({ data }) {
             <h2>Pipeline local</h2>
             <p>Vue simple basee sur les services construits et l'etat Docker Compose.</p>
           </div>
-          <span className="pill neutral">GitHub Actions configure</span>
+          <span className={ci.available ? "pill ok" : "pill warning"}>
+            {ci.available ? "GitHub Actions connecte" : "GitHub Actions indisponible"}
+          </span>
         </div>
 
         <div className="pipeline-steps">
@@ -41,11 +45,38 @@ export default function PipelinesTab({ data }) {
       </section>
 
       <section className="panel">
-        <h2>Etat de reference</h2>
-        <p className="text-block">
-          Le front affiche ici ce qui peut etre mesure localement. Pour l'historique complet GitHub Actions,
-          il faudrait connecter l'API GitHub ou exposer les resultats CI dans un artefact lisible par l'application.
-        </p>
+        <h2>GitHub Actions</h2>
+        {ciRuns.length > 0 ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Workflow</th>
+                  <th>Branche</th>
+                  <th>Status</th>
+                  <th>Conclusion</th>
+                  <th>Maj</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ciRuns.map((run) => (
+                  <tr key={`${run.name}-${run.updated_at}`}>
+                    <td>{run.url ? <a href={run.url} target="_blank" rel="noreferrer">{run.name}</a> : run.name}</td>
+                    <td>{run.branch || "N/A"}</td>
+                    <td>{run.status || "N/A"}</td>
+                    <td>{run.conclusion || "N/A"}</td>
+                    <td>{run.updated_at || "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-block">
+            {ci.message || "Connexion GitHub Actions non disponible."}
+            {ci.error ? ` Detail: ${ci.error}` : ""}
+          </p>
+        )}
       </section>
     </div>
   );

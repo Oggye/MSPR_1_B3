@@ -2,12 +2,18 @@ import json
 import os
 import subprocess
 import sys
+from shutil import which
 from datetime import datetime
 from pathlib import Path
 from urllib.error import URLError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
+from sqlalchemy import func
+
+from app.database import SessionLocal
+from app.models import FactsNightTrains
 
 router = APIRouter(prefix="/api/internal", tags=["internal"])
 
@@ -27,6 +33,7 @@ GRAFANA_URLS = [
     os.getenv("GRAFANA_URL", "http://grafana:3000"),
     "http://localhost:3001",
 ]
+GITHUB_ACTIONS_API = "https://api.github.com/repos/Oggye/MSPR_1_B3/actions/runs?per_page=10"
 
 
 def _now():
@@ -114,8 +121,30 @@ def _run_command(command, cwd=None, timeout=20):
         return {"available": False, "success": False, "error": str(exc), "ran_at": _now()}
 
 
+def _docker_compose_cmd():
+    if which("docker"):
+        check = _run_command(["docker", "compose", "version"], timeout=5)
+        if check.get("success"):
+            return ["docker", "compose"], "docker compose"
+    if which("docker-compose"):
+        check = _run_command(["docker-compose", "version"], timeout=5)
+        if check.get("success"):
+            return ["docker-compose"], "docker-compose"
+    return None, None
+
+
 def _docker_status():
-    command = ["docker", "compose", "ps", "--format", "json"]
+    base_cmd, detected = _docker_compose_cmd()
+    if not base_cmd:
+        return {
+            "available": False,
+            "success": False,
+            "error": "Docker Compose introuvable (ni `docker compose` ni `docker-compose`).",
+            "detected_command": None,
+            "services": [],
+            "ran_at": _now(),
+        }
+    command = [*base_cmd, "ps", "--format", "json"]
     result = _run_command(command, cwd=str(PROJECT_ROOT), timeout=8)
     services = []
     if result.get("success"):
@@ -124,8 +153,74 @@ def _docker_status():
                 services.append(json.loads(line))
             except json.JSONDecodeError:
                 pass
+    result["detected_command"] = detected
+    if not result.get("success") and not result.get("error"):
+        result["error"] = "Docker Compose detecte mais inaccessible depuis l'API."
     result["services"] = services
     return result
+
+
+def _safe_float(value):
+    try:
+        return float(value or 0)
+    except Exception:
+        return 0.0
+
+
+def _db_totals():
+    db = SessionLocal()
+    try:
+        total_trains = db.query(func.count(FactsNightTrains.fact_id)).scalar() or 0
+        total_night = db.query(func.count(FactsNightTrains.fact_id)).filter(FactsNightTrains.is_night.is_(True)).scalar() or 0
+        total_day = db.query(func.count(FactsNightTrains.fact_id)).filter(FactsNightTrains.is_night.is_(False)).scalar() or 0
+        return {
+            "total_trains": int(total_trains),
+            "total_night_trains": int(total_night),
+            "total_day_trains": int(total_day),
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+    finally:
+        db.close()
+
+
+def _github_actions_status():
+    token = os.getenv("GITHUB_TOKEN")
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+        headers["Accept"] = "application/vnd.github+json"
+
+    try:
+        request = urlopen(GITHUB_ACTIONS_API, timeout=4) if not headers else urlopen(Request(GITHUB_ACTIONS_API, headers=headers), timeout=4)
+        payload = json.loads(request.read().decode("utf-8"))
+        runs = payload.get("workflow_runs", [])
+        return {
+            "available": True,
+            "source": "github_api",
+            "runs": [
+                {
+                    "name": run.get("name"),
+                    "status": run.get("status"),
+                    "conclusion": run.get("conclusion"),
+                    "branch": run.get("head_branch"),
+                    "updated_at": run.get("updated_at"),
+                    "url": run.get("html_url"),
+                }
+                for run in runs[:10]
+            ],
+            "message": "Workflows recuperes depuis GitHub Actions.",
+        }
+    except Exception as exc:
+        return {
+            "available": False,
+            "source": "fallback",
+            "runs": [],
+            "message": "Connexion GitHub Actions indisponible depuis l'API interne.",
+            "error": str(exc),
+            "actions_url": "https://github.com/Oggye/MSPR_1_B3/actions",
+            "next_steps": "Fournir GITHUB_TOKEN (scope read:actions) et autoriser l'acces sortant reseau.",
+        }
 
 
 def _line_count(path):
@@ -228,6 +323,8 @@ def get_internal_overview():
             "dashboard_url": "http://localhost:3001/d/obrail-api-monitoring/obrail-api-monitoring",
         },
         "docker": _docker_status(),
+        "ci_cd": _github_actions_status(),
+        "db_totals": _db_totals(),
         "reports": reports,
     }
 
@@ -268,4 +365,66 @@ def run_tests():
             "error": "Dossier de tests introuvable depuis l'API",
             "ran_at": _now(),
         }
-    return _run_command([sys.executable, "-m", "pytest", str(test_dir), "-q"], cwd=str(test_dir.parent), timeout=120)
+    return _run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(test_dir),
+            "-vv",
+            "-s",
+            "-rA",
+        ],
+        cwd=str(test_dir.parent),
+        timeout=240,
+    )
+
+
+def _sse_line(kind, category, text):
+    payload = {"kind": kind, "category": category, "line": text, "time": _now()}
+    return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+
+@router.get("/tests/stream")
+def stream_tests():
+    test_root = PROJECT_ROOT / "platform" / "server" / "test"
+    front_root = PROJECT_ROOT / "platform" / "front" / "app"
+    if not test_root.exists():
+        test_root = Path("/app/test")
+
+    jobs = [
+        ("Unit Tests", [sys.executable, "-m", "pytest", str(test_root / "unit"), "-vv", "-s", "-rA"]),
+        ("Integration Tests", [sys.executable, "-m", "pytest", str(test_root / "integration"), "-vv", "-s", "-rA"]),
+        ("Backend E2E", [sys.executable, "-m", "pytest", str(test_root / "E2E"), "-vv", "-s", "-rA"]),
+    ]
+    if front_root.exists():
+        jobs.append(("Frontend E2E", ["npm", "run", "e2e"]))
+
+    def event_stream():
+        for category, cmd in jobs:
+            yield _sse_line("section_start", category, f"=== {category} ===")
+            try:
+                process = subprocess.Popen(
+                    cmd,
+                    cwd=str(front_root if category == "Frontend E2E" else test_root.parent),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                )
+            except FileNotFoundError as exc:
+                yield _sse_line("error", category, f"Commande indisponible: {exc}")
+                continue
+            except Exception as exc:
+                yield _sse_line("error", category, str(exc))
+                continue
+
+            for line in iter(process.stdout.readline, ""):
+                if line:
+                    yield _sse_line("log", category, line.rstrip("\n"))
+            process.wait()
+            status = "ok" if process.returncode == 0 else "failed"
+            yield _sse_line("section_end", category, f"{category}: {status} (code {process.returncode})")
+        yield _sse_line("done", "all", "Execution terminee")
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

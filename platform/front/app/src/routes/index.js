@@ -1,5 +1,5 @@
 // J'importe les outils de navigation de React Router
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 // IMPORT DES LAYOUTS
 import LayoutExterne from '../layouts/LayoutExterne';
@@ -29,17 +29,22 @@ export default function AppRoutes() {
 
         {/* ROUTES EXTERNES (avec LayoutExterne) */}
         <Route path="/externe" element={<LayoutExterne />}>
+            <Route index element={<ExterneHomePage />} />
             <Route path="HomePage" element={<ExterneHomePage />} />
             <Route path="Map" element={<MapPage />} />
             <Route path="Trajets" element={<TrainPage />} />
             <Route path="Statistique" element={<StatisticsPage />} />
             <Route path="Operateur" element={<OperatorsPage />} />
+            <Route path="*" element={<Navigate to="/externe" replace />} />
         </Route>
 
         {/* ROUTES INTERNES (avec LayoutInterne) */}
         <Route path="/interne" element={<LayoutInterne />}>
+            <Route index element={<InterneHomePage />} />
             <Route path="HomePage" element={<InterneHomePage />} />
+            <Route path="*" element={<Navigate to="/interne" replace />} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

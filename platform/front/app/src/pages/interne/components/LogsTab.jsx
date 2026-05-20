@@ -10,7 +10,7 @@ export default function LogsTab({ data }) {
         <div className="panel-heading">
           <div>
             <h2>Docker Compose</h2>
-            <p>Etat lu depuis la commande docker compose ps quand elle est accessible par l'API.</p>
+            <p>Etat lu depuis docker compose (ou docker-compose) quand accessible par l'API.</p>
           </div>
           <span className={docker.available ? "pill ok" : "pill warning"}>
             {docker.available ? "Accessible" : "Non accessible"}
@@ -43,7 +43,10 @@ export default function LogsTab({ data }) {
             </table>
           </div>
         ) : (
-          <pre className="console-output">{docker.error || docker.stderr || "Aucune information Docker disponible."}</pre>
+          <pre className="console-output">
+            {docker.error || docker.stderr || "Aucune information Docker disponible."}
+            {docker.detected_command ? `\nCommande detectee: ${docker.detected_command}` : ""}
+          </pre>
         )}
       </section>
 

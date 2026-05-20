@@ -8,9 +8,7 @@ const formatNumber = (value, decimals = 2) => {
 
 export default function DashboardTab({ data, lastUpdated }) {
   const metrics = data?.metrics || {};
-  const quality = data?.reports?.quality || {};
-  const summary = quality.summary || {};
-  const dataQuality = quality.traceability?.data_quality || {};
+  const totals = data?.db_totals || {};
   const dockerServices = data?.docker?.services || [];
   const runningServices = dockerServices.filter((service) =>
     String(service.State || service.Status || "").toLowerCase().includes("running")
@@ -62,9 +60,9 @@ export default function DashboardTab({ data, lastUpdated }) {
           <p>95% des requetes sont plus rapides que cette valeur.</p>
         </article>
         <article className="metric-card">
-          <span>Qualite donnees</span>
-          <strong>{summary.success ? "OK" : "A verifier"}</strong>
-          <p>{summary.total_sources_processed || 0} sources, {dataQuality.night_train_records || 0} trains de nuit.</p>
+          <span>Total trains (DB)</span>
+          <strong>{totals.total_trains ?? "N/A"}</strong>
+          <p>Nuit: {totals.total_night_trains ?? "N/A"} | Jour: {totals.total_day_trains ?? "N/A"}</p>
         </article>
       </section>
 

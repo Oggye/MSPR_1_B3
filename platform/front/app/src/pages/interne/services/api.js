@@ -26,3 +26,25 @@ export function runInternalDiagnostic() {
 export function runInternalTests() {
   return request("/api/internal/tests/run", { method: "POST" });
 }
+
+export function streamInternalTests(onMessage, onError, onDone) {
+  const streamUrl = `${API_BASE_URL}/api/internal/tests/stream`;
+  const source = new EventSource(streamUrl);
+  source.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      onMessage?.(payload);
+      if (payload.kind === "done") {
+        source.close();
+        onDone?.();
+      }
+    } catch (err) {
+      onError?.(err);
+    }
+  };
+  source.onerror = (err) => {
+    source.close();
+    onError?.(err);
+  };
+  return source;
+}
