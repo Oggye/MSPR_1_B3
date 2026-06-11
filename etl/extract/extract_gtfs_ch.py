@@ -9,8 +9,8 @@ import io
 from pathlib import Path
 
 GTFS_CH_URL = (
-    "https://data.opentransportdata.swiss/dataset/6cca1dfb-e53d-4da8-8d49-4797b3e768e3/"
-    "resource/d5d9aac1-8251-4dda-9537-ae97cbb810c6/download/gtfs_fp2025_20251211.zip"
+    "https://data.opentransportdata.swiss/dataset/3d2c18f9-9ef1-463f-a249-5c67604efd74/"
+    "resource/598f43d1-484b-4145-9564-ee1c0c32a3d0/download/gtfs_fp2026_20260610.zip"
 )
 
 RAW_DIR = Path("data/raw/gtfs_ch")
@@ -29,6 +29,8 @@ def extract_gtfs_ch():
 
     print("📥 Téléchargement du GTFS Suisse...")
     response = requests.get(GTFS_CH_URL, stream=True)
+    print(response.status_code)
+    print(response.text[:300])
     response.raise_for_status()
 
     print("📦 Ouverture de l’archive ZIP...")

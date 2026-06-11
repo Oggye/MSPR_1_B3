@@ -22,10 +22,23 @@ def extract_eurostat():
         response = requests.get(url)
         response.raise_for_status()
 
-        # Décompression
-        with gzip.open(io.BytesIO(response.content), 'rt', encoding='utf-8') as f:
-            df = pd.read_csv(f, sep="\t")
+        print("Status:", response.status_code)
+        print("Content-Type:", response.headers.get("content-type"))
+        print(response.text[:300])
 
+        # Décompression
+        content_type = response.headers.get("content-type", "")
+
+        if "gzip" in content_type or url.endswith("compressed=true"):
+            with gzip.open(io.BytesIO(response.content), "rt", encoding="utf-8") as f:
+                df = pd.read_csv(f, sep=",")
+                print(df.columns.tolist())
+                print(df.head(4).to_string())
+        else:
+            print("Réponse reçue :")
+            print(response.text[:500])
+            raise ValueError("Eurostat n'a pas renvoyé un fichier gzip valide.")
+        
         # Afficher les colonnes pour vérifier
         print(f"{name} colonnes disponibles :", df.columns.tolist())
 

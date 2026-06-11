@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import requests
 import time
-from io import BytesIO
+from io import BytesIO, StringIO
 import zipfile
 
 def download_eurostat_via_api():
@@ -24,9 +24,13 @@ def download_eurostat_via_api():
         
         # Lire les données CSV
         csv_content = response.content.decode('utf-8')
-        
+        print(csv_content[:1000])
         # Créer un DataFrame à partir du contenu CSV
-        df = pd.read_csv(BytesIO(csv_content.encode('utf-8')))
+        df = pd.read_csv(
+            StringIO(csv_content),
+            sep=",",
+            comment="#"
+        )
         
         print(f"Dataset chargé : {df.shape}")
         print(f"Colonnes : {df.columns.tolist()[:10]}...")  # Afficher les 10 premières colonnes
