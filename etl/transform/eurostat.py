@@ -24,7 +24,7 @@ def transform_eurostat(raw_dir: str, processed_dir: str) -> None:
     passengers_df = pd.read_csv(passengers_path)
     
     # Ce fichier a une structure pivotée - on le transpose
-    if 'freq,train,vehicle,mot_nrg,unit,geo\\TIME_PERIOD' in traffic_df.columns:
+    if 'freq,unit,vehicle,geo\\TIME_PERIOD' in passengers_df.columns:
         passengers_df = pd.melt(
             passengers_df,
             id_vars=['freq,unit,vehicle,geo\\TIME_PERIOD'],
