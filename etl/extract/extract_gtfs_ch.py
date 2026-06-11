@@ -45,6 +45,11 @@ def extract_gtfs_ch():
         print(" -", file.name)
 
     for file in RAW_DIR.glob("*.txt"):
-        file.rename(file.with_suffix(".csv"))
-        print("\nFichiers .txt convertis en .csv")
+        csv_file = file.with_suffix(".csv")
 
+        if csv_file.exists():
+            csv_file.unlink()
+
+        file.rename(csv_file)
+
+    print("\nFichiers .txt convertis en .csv")
