@@ -24,6 +24,28 @@ SPECIAL_COUNTRY_CODES = {'UNKNOWN', 'OTHER', 'MULTI', 'EU27'}
 INVALID_COUNTRY_NAMES = {'', 'UNKNOWN', 'NAN', 'NONE', 'NULL'}
 
 
+def deterministic_select(values, size, replace=False):
+    """Selection stable pour remplacer les tirages aleatoires."""
+    items = sorted({str(value) for value in values if pd.notna(value) and str(value).strip()})
+    if not items or size <= 0:
+        return []
+    if replace:
+        return [items[i % len(items)] for i in range(size)]
+    return items[:min(size, len(items))]
+
+
+def deterministic_operator(operator_df, country, fallback):
+    if operator_df is None or operator_df.empty or 'operator_name' not in operator_df.columns:
+        return fallback
+    country = str(country)
+    possible = operator_df[
+        operator_df['operator_name'].astype(str).str.contains(country, case=False, na=False)
+    ].sort_values('operator_name')
+    if possible.empty:
+        return fallback
+    return possible['operator_name'].iloc[0]
+
+
 def add_operator_names(operator_df, operator_names):
     """
     Ajoute des noms d'operateurs en evitant les doublons et les IDs manquants.
@@ -212,24 +234,23 @@ def generate_night_trains(night_trains, year_list, operator_df):
             # Sélectionner aléatoirement parmi les routes (avec remise si nécessaire)
             selected_routes = []
             if n_routes_year <= n_routes_2024:
-                selected_routes = list(np.random.choice(routes, size=n_routes_year, replace=False))
+                selected_routes = deterministic_select(routes, n_routes_year, replace=False)
             else:
                 # On répète les routes
                 full_repeats = n_routes_year // n_routes_2024
                 remainder = n_routes_year % n_routes_2024
                 selected_routes = routes * full_repeats
                 if remainder > 0:
-                    selected_routes.extend(np.random.choice(routes, size=remainder, replace=False).tolist())
+                    selected_routes.extend(deterministic_select(routes, remainder, replace=False))
 
             for route_name in selected_routes:
                 # Trouver un opérateur plausible
                 # On cherche dans operator_df un opérateur dont le nom contient le code pays (ou un mot clé)
-                possible_ops = operator_df[operator_df['operator_name'].str.contains(country, case=False, na=False)]
-                if not possible_ops.empty:
-                    op_name = possible_ops.sample(1)['operator_name'].iloc[0]
-                else:
-                    # Sinon on prend un opérateur générique
-                    op_name = f"National Railway of {country}"
+                op_name = deterministic_operator(
+                    operator_df,
+                    country,
+                    f"National Railway of {country}"
+                )
                 # Créer une ligne
                 new_row = {
                     'fact_id': next_fact_id,
@@ -253,36 +274,79 @@ def extract_day_trains_from_gtfs(processed_dir, operators_df):
     Retourne un DataFrame avec les colonnes : night_train, country_code, year, operators, is_night=False
     """
     day_trains = pd.DataFrame()
+    annual_targets = {
+        'fr': 220,
+        'de': 260,
+        'ch': 120,
+    }
+    year_multiplier = {
+        2010: 0.70, 2011: 0.73, 2012: 0.76, 2013: 0.79, 2014: 0.82,
+        2015: 0.86, 2016: 0.90, 2017: 0.94, 2018: 0.98, 2019: 1.00,
+        2020: 0.45, 2021: 0.62, 2022: 0.78, 2023: 0.92, 2024: 1.00
+    }
+
     for country in ['fr', 'ch', 'de']:
         routes_path = Path(processed_dir) / "gtfs" / country / "routes_processed.csv"
-        if not routes_path.exists():
+        trips_path = Path(processed_dir) / "gtfs" / country / "trips_processed.csv"
+        if not routes_path.exists() or not trips_path.exists():
             continue
+
         routes = pd.read_csv(routes_path)
-        # Conserver les routes qui ne sont pas des trains de nuit (selon la colonne is_night_train du GTFS)
+        routes.columns = [str(col).strip().lower() for col in routes.columns]
+
         if 'is_night_train' in routes.columns:
             routes = routes[~routes['is_night_train'].fillna(False)]
-        else:
-            routes = routes  # tous considérés comme jour par défaut
-        
-        # Récupérer les noms des routes
-        route_names = routes['route_long_name'].dropna().unique()
-        if len(route_names) == 0:
+
+        if routes.empty or 'route_id' not in routes.columns:
             continue
-        
-        # Pour chaque année de 2010 à 2024, générer des lignes (même tendance que pour les trains de nuit)
-        year_multiplier = {2010:0.3, 2011:0.35, 2012:0.4, 2013:0.45, 2014:0.5,
-                           2015:0.55, 2016:0.6, 2017:0.7, 2018:0.8, 2019:0.9,
-                           2020:0.5, 2021:0.6, 2022:0.8, 2023:0.95, 2024:1.0}
+
+        label_cols = [col for col in ['route_long_name', 'route_short_name', 'route_desc'] if col in routes.columns]
+        routes['route_label'] = ''
+        for col in label_cols:
+            value = routes[col].fillna('').astype(str).str.strip()
+            routes['route_label'] = routes['route_label'].mask(routes['route_label'].eq('') & value.ne(''), value)
+        routes['route_label'] = routes['route_label'].mask(
+            routes['route_label'].eq(''),
+            'Route ' + routes['route_id'].astype(str)
+        )
+
+        trip_cols = pd.read_csv(trips_path, nrows=0).columns.str.lower().tolist()
+        usecols = [col for col in ['route_id', 'trip_headsign'] if col in trip_cols]
+        if 'route_id' not in usecols:
+            continue
+        trips = pd.read_csv(trips_path, usecols=usecols, low_memory=False)
+        trips.columns = [str(col).strip().lower() for col in trips.columns]
+        trips = trips.merge(routes[['route_id', 'route_label']], on='route_id', how='inner')
+        if trips.empty:
+            continue
+
+        if 'trip_headsign' in trips.columns:
+            headsign = trips['trip_headsign'].fillna('').astype(str).str.strip()
+            trips['day_label'] = trips['route_label'].astype(str)
+            trips['day_label'] = trips['day_label'].where(headsign.eq(''), trips['route_label'].astype(str) + ' - ' + headsign)
+        else:
+            trips['day_label'] = trips['route_label'].astype(str)
+
+        route_names = (
+            trips.groupby('day_label')
+            .size()
+            .sort_values(ascending=False)
+            .index
+            .tolist()
+        )
+        if not route_names:
+            continue
+
+        base_target = annual_targets[country]
         for year, mult in year_multiplier.items():
-            nb_routes = max(1, int(round(len(route_names) * mult)))
-            selected = np.random.choice(route_names, size=nb_routes, replace=True)
+            nb_routes = max(1, int(round(base_target * mult)))
+            selected = deterministic_select(route_names, nb_routes, replace=True)
             for name in selected:
-                # Trouver un opérateur plausible (par exemple, celui du pays)
-                op_name = f"National Railway of {country.upper()}"
-                # Chercher dans operators_df
-                possible = operators_df[operators_df['operator_name'].str.contains(country.upper(), case=False, na=False)]
-                if not possible.empty:
-                    op_name = possible.sample(1)['operator_name'].iloc[0]
+                op_name = deterministic_operator(
+                    operators_df,
+                    country.upper(),
+                    f"National Railway of {country.upper()}"
+                )
                 day_trains = pd.concat([day_trains, pd.DataFrame([{
                     'night_train': name,
                     'country_code': country.upper(),
@@ -339,14 +403,14 @@ def generate_synthetic_day_trains(operators_df, year_list, eu_codes):
         for year in year_list:
             mult = year_multiplier.get(year, 1.0)
             nb_routes = max(1, int(round(len(routes) * mult)))
-            selected = np.random.choice(routes, size=nb_routes, replace=True)
+            selected = deterministic_select(routes, nb_routes, replace=True)
             for name in selected:
                 # Opérateur
-                possible = operators_df[operators_df['operator_name'].str.contains(country, case=False, na=False)]
-                if not possible.empty:
-                    op_name = possible.sample(1)['operator_name'].iloc[0]
-                else:
-                    op_name = f"National Railway of {country}"
+                op_name = deterministic_operator(
+                    operators_df,
+                    country,
+                    f"National Railway of {country}"
+                )
                 day_trains = pd.concat([day_trains, pd.DataFrame([{
                     'night_train': name,
                     'country_code': country,
@@ -549,7 +613,6 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     Enrichit les données transformées et les prépare pour le data warehouse
     """
     logger.info("🔗 Enrichissement et préparation pour le data warehouse...")
-    np.random.seed(RANDOM_SEED)
     
     # 1. Charger les données transformées
     # Back on Track - trains de nuit
@@ -988,9 +1051,7 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
             std_co2_per_pass = 0.02
         nan_mask = metrics['co2_per_passenger'].isna()
         if nan_mask.any():
-            random_values = np.random.normal(avg_co2_per_pass, std_co2_per_pass, nan_mask.sum())
-            random_values = np.abs(random_values)
-            metrics.loc[nan_mask, 'co2_per_passenger'] = random_values
+            metrics.loc[nan_mask, 'co2_per_passenger'] = abs(avg_co2_per_pass)
         
         # Ajouter les clés étrangères
         if not dim_countries.empty:
