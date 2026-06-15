@@ -57,8 +57,8 @@ const dayTrainIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const MAX_TRAINS_TOTAL = 1000;
-const MAX_TRAINS_PER_TYPE = 500;
+const MAX_TRAINS_TOTAL = 10000;
+const MAX_TRAINS_PER_TYPE = 5000;
 
 // Composant pour recentrer la carte
 function ChangeView({ center, zoom }) {

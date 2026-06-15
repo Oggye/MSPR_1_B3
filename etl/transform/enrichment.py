@@ -22,6 +22,259 @@ logger = logging.getLogger(__name__)
 RANDOM_SEED = 42
 SPECIAL_COUNTRY_CODES = {'UNKNOWN', 'OTHER', 'MULTI', 'EU27'}
 INVALID_COUNTRY_NAMES = {'', 'UNKNOWN', 'NAN', 'NONE', 'NULL'}
+COUNTRY_REFERENCE_FILE = Path(__file__).resolve().parent / "donnee_pays.csv"
+MISSING_SYNTHETIC_COUNTRIES = [
+    'AT', 'BE', 'BG', 'CZ', 'DK', 'EE', 'ES', 'FI', 'HR', 'HU', 'IE',
+    'IT', 'LT', 'LV', 'LU', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'
+]
+
+
+def _ratio_0_1(series):
+    """
+    Convertit un indicateur en ratio 0-1.
+    Le referentiel peut contenir soit des pourcentages (80), soit des indices
+    deja normalises (0.80). Cette protection garde la formule defendable sans
+    penaliser les colonnes deja exprimees sous forme d'indice.
+    """
+    values = pd.to_numeric(series, errors='coerce').fillna(0)
+    if values.max() > 1.5:
+        values = values / 100
+    return values.clip(lower=0)
+
+
+def _max_norm(series):
+    """Normalisation minime et deterministe par le maximum observe."""
+    values = pd.to_numeric(series, errors='coerce').fillna(0)
+    max_value = values.max()
+    if pd.isna(max_value) or max_value <= 0:
+        return values * 0
+    return (values / max_value).clip(lower=0)
+
+
+def load_country_reference_data(path=None):
+    """
+    Charge le referentiel pays utilise pour completer les zones manquantes.
+
+    Les controles effectues ici sont volontairement stricts : un doublon pays ou
+    une valeur numerique absente rendrait les calculs de repartition difficiles
+    a justifier devant un jury, donc l'enrichissement echoue explicitement.
+    """
+    ref_path = Path(path) if path is not None else COUNTRY_REFERENCE_FILE
+    country_ref = pd.read_csv(ref_path)
+    country_ref.columns = [str(col).strip() for col in country_ref.columns]
+
+    required_columns = [
+        'country_code', 'country_name', 'population_million',
+        'gdp_billion_eur', 'gdp_per_capita_eur', 'area_km2', 'pop_density',
+        'urbanization_pct', 'rail_network_km', 'high_speed_rail_km',
+        'electrification_pct', 'cars_per_1000', 'tourism_index',
+        'passengers_reference_million', 'rail_activity_index',
+        'night_train_index', 'co2_intensity_index'
+    ]
+    missing_columns = [col for col in required_columns if col not in country_ref.columns]
+    if missing_columns:
+        raise ValueError(f"Colonnes manquantes dans {ref_path}: {missing_columns}")
+
+    country_ref['country_code'] = country_ref['country_code'].astype(str).str.upper().str.strip()
+    country_ref['country_name'] = country_ref['country_name'].astype(str).str.strip()
+
+    duplicated = country_ref[country_ref.duplicated('country_code', keep=False)]['country_code'].tolist()
+    if duplicated:
+        raise ValueError(f"Doublons country_code dans {ref_path}: {sorted(set(duplicated))}")
+
+    numeric_columns = [col for col in required_columns if col not in ['country_code', 'country_name']]
+    for col in numeric_columns:
+        country_ref[col] = pd.to_numeric(country_ref[col], errors='coerce')
+
+    null_columns = country_ref[required_columns].isna().sum()
+    null_columns = null_columns[null_columns > 0]
+    if not null_columns.empty:
+        raise ValueError(f"Valeurs nulles dans {ref_path}: {null_columns.to_dict()}")
+
+    return country_ref[required_columns].copy()
+
+
+def compute_rail_score(country_ref):
+    """
+    Calcule le score ferroviaire europeen.
+
+    La formule combine la demande potentielle (population), l'offre physique
+    (reseau et grande vitesse), l'usage ferroviaire observe, l'attractivite
+    touristique et l'urbanisation. Chaque composante est normalisee pour eviter
+    qu'une unite brute domine artificiellement le score.
+    """
+    scored = country_ref.copy()
+    population_norm = _max_norm(scored['population_million'])
+    rail_network_norm = _max_norm(scored['rail_network_km'])
+    rail_activity_norm = (pd.to_numeric(scored['rail_activity_index'], errors='coerce').fillna(0) / 100).clip(lower=0)
+    tourism_norm = (pd.to_numeric(scored['tourism_index'], errors='coerce').fillna(0) / 100).clip(lower=0)
+    urbanization_norm = _ratio_0_1(scored['urbanization_pct'])
+    high_speed_norm = _max_norm(scored['high_speed_rail_km'])
+
+    scored['rail_score'] = (
+        0.25 * population_norm
+        + 0.25 * rail_network_norm
+        + 0.20 * rail_activity_norm
+        + 0.10 * tourism_norm
+        + 0.10 * urbanization_norm
+        + 0.10 * high_speed_norm
+    )
+    return scored
+
+
+def compute_mobility_index(country_ref):
+    """
+    Calcule l'indice de mobilite sur 100.
+
+    L'indice agrege l'intensite d'usage du rail, le tourisme, l'urbanisation,
+    l'electrification, le niveau de richesse et la grande vitesse. Le resultat
+    est renormalise sur 100 pour servir de multiplicateur lisible dans les
+    volumes de trains.
+    """
+    scored = country_ref.copy()
+    gdp_per_capita_norm = _max_norm(scored['gdp_per_capita_eur'])
+    high_speed_norm = _max_norm(scored['high_speed_rail_km'])
+    raw_index = (
+        0.30 * _ratio_0_1(scored['rail_activity_index'])
+        + 0.20 * _ratio_0_1(scored['tourism_index'])
+        + 0.15 * _ratio_0_1(scored['urbanization_pct'])
+        + 0.15 * _ratio_0_1(scored['electrification_pct'])
+        + 0.10 * gdp_per_capita_norm
+        + 0.10 * high_speed_norm
+    )
+    max_index = raw_index.max()
+    scored['mobility_index'] = np.where(max_index > 0, raw_index / max_index * 100, 0)
+    return scored
+
+
+def covid_factor(year):
+    """Facteur deterministe mesurant le choc Covid sur la mobilite ferroviaire."""
+    factors = {
+        2020: 0.60,
+        2021: 0.72,
+        2022: 0.88,
+        2023: 0.96,
+        2024: 1.00,
+    }
+    return factors.get(int(year), 1.00)
+
+
+def compute_night_train_ratio(night_train_index):
+    """
+    Convertit l'indice nuit pays en part realiste de trains de nuit.
+
+    night_train_index exprime une propension relative (Autriche/Suede fortes,
+    Espagne/Pays-Bas faibles), pas un ratio direct de l'offre ferroviaire. Pour
+    garder un reseau europeen majoritairement diurne, l'indice module une plage
+    8%-30%, centree autour de 20% pour les pays a forte tradition de trains de
+    nuit. Les donnees reelles Back On Track deja marquees nuit ne sont jamais
+    remplacees ; ce ratio ne sert qu'a promouvoir une partie des lignes
+    synthetiques en trains de nuit.
+    """
+    index = float(_ratio_0_1(pd.Series([night_train_index])).iloc[0])
+    return min(0.30, max(0.08, 0.08 + 0.22 * index))
+
+
+def prepare_country_reference(path=None):
+    country_ref = load_country_reference_data(path)
+    country_ref = compute_rail_score(country_ref)
+    country_ref = compute_mobility_index(country_ref)
+    return country_ref
+
+
+def build_green_factor_map(emissions, year_list):
+    """
+    Construit green_factor(country, year) = co2_2010 / co2_year.
+
+    Quand Eurostat CO2 fournit une tendance pays, elle prime sur toute tendance
+    fixe : si les emissions diminuent, le facteur augmente et represente un
+    contexte plus favorable au ferroviaire. Si un pays n'a pas de CO2 exploitable,
+    le facteur neutre 1.0 est conserve afin de ne pas inventer une trajectoire.
+    """
+    factors = {}
+    if emissions is None or emissions.empty or 'country_code' not in emissions.columns:
+        return factors
+
+    co2 = emissions.copy()
+    co2['year'] = pd.to_numeric(co2['year'], errors='coerce')
+    co2['co2_emissions'] = pd.to_numeric(co2['co2_emissions'], errors='coerce')
+    co2 = co2.dropna(subset=['country_code', 'year', 'co2_emissions'])
+    co2 = co2[co2['co2_emissions'] > 0]
+    if co2.empty:
+        return factors
+
+    yearly = co2.groupby(['country_code', 'year'])['co2_emissions'].mean().reset_index()
+    for country, group in yearly.groupby('country_code'):
+        by_year = dict(zip(group['year'].astype(int), group['co2_emissions']))
+        base = by_year.get(2010)
+        if base is None or base <= 0:
+            continue
+        for year in year_list:
+            value = by_year.get(int(year))
+            if value is not None and value > 0:
+                factors[(country, int(year))] = float(base / value)
+    return factors
+
+
+def green_factor_for(country, year, green_factors):
+    return float(green_factors.get((country, int(year)), 1.0))
+
+
+def build_country_year_train_targets(country_ref, emissions, year_list, countries, total_trains_per_year):
+    """
+    Repartit les volumes de trains par pays et par an.
+
+    train_volume_index = rail_score * mobility_index * green_factor.
+    Le facteur Covid reduit ensuite le volume annuel 2020-2023 pour refleter le
+    choc exogene applique aux passagers, au trafic et aux trains. Les parts sont
+    calculees par an, sans aleatoire, puis converties en entiers par arrondi
+    deterministe en attribuant les restes aux plus fortes fractions.
+    """
+    ref = country_ref[country_ref['country_code'].isin(countries)].copy()
+    ref = ref[(ref['rail_network_km'] > 0) & (ref['rail_score'] > 0)]
+    green_factors = build_green_factor_map(emissions, year_list)
+    targets = {}
+
+    for year in year_list:
+        annual = ref.copy()
+        annual['green_factor'] = annual['country_code'].apply(
+            lambda code: green_factor_for(code, year, green_factors)
+        )
+        annual['train_volume_index'] = (
+            annual['rail_score']
+            * annual['mobility_index']
+            * annual['green_factor']
+        )
+        total_index = annual['train_volume_index'].sum()
+        if total_index <= 0:
+            continue
+
+        annual_total = max(1, int(round(total_trains_per_year * covid_factor(year))))
+        annual['raw_target'] = annual['train_volume_index'] / total_index * annual_total
+        annual['target'] = np.floor(annual['raw_target']).astype(int)
+        remainder = annual_total - int(annual['target'].sum())
+        if remainder > 0:
+            annual['fraction'] = annual['raw_target'] - annual['target']
+            annual = annual.sort_values(['fraction', 'train_volume_index', 'country_code'], ascending=[False, False, True])
+            annual.loc[annual.head(remainder).index, 'target'] += 1
+
+        for _, row in annual.iterrows():
+            targets[(row['country_code'], int(year))] = int(row['target'])
+
+    return targets
+
+
+def mean_distance_from_reference(country_ref, country):
+    """
+    Distance ferroviaire moyenne = 8% du reseau national, bornee a 50-1200 km.
+    Cette approximation relie les metriques synthetiques a la taille reelle du
+    reseau au lieu d'utiliser une constante identique pour tous les pays.
+    """
+    row = country_ref[country_ref['country_code'] == country]
+    if row.empty:
+        return 50.0
+    distance = float(row['rail_network_km'].iloc[0]) * 0.08
+    return float(min(1200, max(50, distance)))
 
 
 def deterministic_select(values, size, replace=False):
@@ -268,7 +521,7 @@ def generate_night_trains(night_trains, year_list, operator_df):
     return augmented
 
 
-def extract_day_trains_from_gtfs(processed_dir, operators_df):
+def extract_day_trains_from_gtfs(processed_dir, operators_df, train_targets=None):
     """
     Extrait les trains de jour depuis les GTFS (FR, CH, DE) transformés.
     Retourne un DataFrame avec les colonnes : night_train, country_code, year, operators, is_night=False
@@ -337,9 +590,16 @@ def extract_day_trains_from_gtfs(processed_dir, operators_df):
         if not route_names:
             continue
 
+        years = sorted({year for _country, year in train_targets.keys()}) if train_targets else sorted(year_multiplier)
         base_target = annual_targets[country]
-        for year, mult in year_multiplier.items():
-            nb_routes = max(1, int(round(base_target * mult)))
+        for year in years:
+            if train_targets:
+                nb_routes = int(train_targets.get((country.upper(), int(year)), 0))
+            else:
+                mult = year_multiplier.get(year, 1.0)
+                nb_routes = max(1, int(round(base_target * mult)))
+            if nb_routes <= 0:
+                continue
             selected = deterministic_select(route_names, nb_routes, replace=True)
             for name in selected:
                 op_name = deterministic_operator(
@@ -358,7 +618,7 @@ def extract_day_trains_from_gtfs(processed_dir, operators_df):
     return day_trains
 
 
-def generate_synthetic_day_trains(operators_df, year_list, eu_codes):
+def generate_synthetic_day_trains(operators_df, year_list, eu_codes, train_targets=None):
     """
     Génère des trains de jour synthétiques pour les pays de l'UE non couverts par GTFS.
     Utilise des routes typiques.
@@ -394,15 +654,19 @@ def generate_synthetic_day_trains(operators_df, year_list, eu_codes):
         'GB': ['London - Manchester', 'London - Edinburgh'],
     }
     day_trains = pd.DataFrame()
-    year_multiplier = {y: 1.0 for y in year_list}  # on peut utiliser la même tendance que nuit
-    # ou mieux, utiliser la tendance de la fonction précédente
+    year_multiplier = {y: 1.0 for y in year_list}
     for country in eu_codes:
         routes = typical_day_routes.get(country, [])
         if not routes:
             continue
         for year in year_list:
-            mult = year_multiplier.get(year, 1.0)
-            nb_routes = max(1, int(round(len(routes) * mult)))
+            if train_targets:
+                nb_routes = int(train_targets.get((country, int(year)), 0))
+            else:
+                mult = year_multiplier.get(year, 1.0)
+                nb_routes = max(1, int(round(len(routes) * mult)))
+            if nb_routes <= 0:
+                continue
             selected = deterministic_select(routes, nb_routes, replace=True)
             for name in selected:
                 # Opérateur
@@ -421,7 +685,7 @@ def generate_synthetic_day_trains(operators_df, year_list, eu_codes):
     return day_trains
 
 
-def generate_country_stats(passengers, emissions, year_list):
+def generate_country_stats_legacy(passengers, emissions, year_list):
     """
     Génère des données de passagers et émissions pour les pays manquants.
     """
@@ -547,6 +811,132 @@ def generate_country_stats(passengers, emissions, year_list):
 
 
 # -----------------------------------------------------------------------------
+# Enrichissement pays par referentiel statistique
+# -----------------------------------------------------------------------------
+
+def validate_enrichment_consistency(passengers, emissions, year_list, country_ref):
+    """
+    Controle les invariants metier de l'enrichissement synthetique.
+    Ces assertions detectent les erreurs de formule avant la creation des faits.
+    """
+    checks = []
+    if not passengers.empty:
+        checks.append(('passagers negatifs', (pd.to_numeric(passengers['passengers'], errors='coerce') < 0).any()))
+    if not emissions.empty:
+        checks.append(('CO2 negatif', (pd.to_numeric(emissions['co2_emissions'], errors='coerce') < 0).any()))
+
+    ratio_columns = ['urbanization_pct', 'electrification_pct', 'tourism_index', 'night_train_index']
+    for col in ratio_columns:
+        if col in country_ref.columns:
+            values = _ratio_0_1(country_ref[col])
+            checks.append((f'ratio {col} superieur a 100%', (values > 1).any()))
+
+    missing_coverage = []
+    required_countries = set(MISSING_SYNTHETIC_COUNTRIES)
+    if not passengers.empty:
+        available = passengers.copy()
+        available['year'] = pd.to_numeric(available['year'], errors='coerce').astype('Int64')
+        for country in required_countries:
+            years = set(available.loc[available['country_code'] == country, 'year'].dropna().astype(int))
+            if not set(year_list).issubset(years):
+                missing_coverage.append(country)
+    checks.append(('pays sans donnees 2010-2024', bool(missing_coverage)))
+
+    failed = [label for label, failed_check in checks if failed_check]
+    if failed:
+        raise ValueError(f"Controle de coherence enrichissement echoue: {failed}")
+
+
+def generate_country_stats(passengers, emissions, year_list, country_ref=None):
+    """
+    Complete passagers et emissions avec des calculs pays deterministes.
+
+    Les observations existantes sont conservees. Les lignes synthetiques ne sont
+    ajoutees que pour les couples pays/annee absents, afin de combler les zones
+    non couvertes par Eurostat sans remplacer la donnee reelle.
+    """
+    if passengers.empty or emissions.empty:
+        return passengers, emissions
+
+    if country_ref is None:
+        country_ref = prepare_country_reference()
+
+    passengers_aug = passengers.copy()
+    emissions_aug = emissions.copy()
+    passengers_aug['year'] = pd.to_numeric(passengers_aug['year'], errors='coerce')
+    emissions_aug['year'] = pd.to_numeric(emissions_aug['year'], errors='coerce')
+    passengers_aug['passengers'] = pd.to_numeric(passengers_aug['passengers'], errors='coerce')
+    emissions_aug['co2_emissions'] = pd.to_numeric(emissions_aug['co2_emissions'], errors='coerce')
+    passengers_aug['passengers'] = passengers_aug['passengers'].clip(lower=0)
+    emissions_aug['co2_emissions'] = emissions_aug['co2_emissions'].clip(lower=0)
+
+    green_factors = build_green_factor_map(emissions_aug, year_list)
+    ref = country_ref.copy()
+
+    # Formule passagers :
+    # population * activite ferroviaire * attractivite touristique *
+    # moindre dependance automobile. Le terme automobile est borne pour garantir
+    # une valeur positive meme dans les pays tres motorises.
+    ref['passengers_estimated'] = (
+        ref['population_million']
+        * _ratio_0_1(ref['rail_activity_index'])
+        * (1 + _ratio_0_1(ref['tourism_index']))
+        * (1 - (ref['cars_per_1000'] / 2000).clip(lower=0, upper=0.95))
+    )
+
+    estimated_mean = ref['passengers_estimated'].replace(0, np.nan).mean()
+    reference_mean = ref['passengers_reference_million'].replace(0, np.nan).mean()
+    calibration = reference_mean / estimated_mean if pd.notna(estimated_mean) and estimated_mean > 0 else 1.0
+    ref['passengers_final'] = ref['passengers_estimated'] * calibration
+
+    # CO2 ferroviaire :
+    # passagers calibres * distance moyenne issue du reseau * intensite CO2.
+    # Une normalisation globale ramene l'ordre de grandeur vers Eurostat.
+    ref['distance_mean_km'] = ref['country_code'].apply(lambda code: mean_distance_from_reference(ref, code))
+    ref['rail_co2_estimated'] = (
+        ref['passengers_final']
+        * ref['distance_mean_km']
+        * ref['co2_intensity_index']
+    )
+    observed_co2_mean = emissions_aug['co2_emissions'].replace(0, np.nan).mean()
+    estimated_co2_mean = ref['rail_co2_estimated'].replace(0, np.nan).mean()
+    co2_scale = observed_co2_mean / estimated_co2_mean if pd.notna(estimated_co2_mean) and estimated_co2_mean > 0 else 1.0
+
+    countries_to_complete = sorted(set(MISSING_SYNTHETIC_COUNTRIES) | set(ref['country_code']))
+    for _, row in ref[ref['country_code'].isin(countries_to_complete)].iterrows():
+        country = row['country_code']
+        for year in year_list:
+            pass_exists = ((passengers_aug['country_code'] == country) & (passengers_aug['year'] == year)).any()
+            emiss_exists = ((emissions_aug['country_code'] == country) & (emissions_aug['year'] == year)).any()
+            if pass_exists and emiss_exists:
+                continue
+
+            green = green_factor_for(country, year, green_factors)
+            annual_passengers = max(0, float(row['passengers_final']) * green * covid_factor(year))
+            annual_emissions = max(0, float(row['rail_co2_estimated']) * co2_scale / max(green, 0.01))
+
+            if not pass_exists:
+                passengers_aug = pd.concat([passengers_aug, pd.DataFrame([{
+                    'country_code': country,
+                    'year': year,
+                    'passengers': annual_passengers,
+                    'country_name': row['country_name']
+                }])], ignore_index=True)
+
+            if not emiss_exists:
+                emissions_aug = pd.concat([emissions_aug, pd.DataFrame([{
+                    'country_code': country,
+                    'year': year,
+                    'co2_emissions': annual_emissions,
+                    'country_name': row['country_name']
+                }])], ignore_index=True)
+
+    validate_enrichment_consistency(passengers_aug, emissions_aug, year_list, ref)
+    logger.info(f"Statistiques pays generees par referentiel : passagers +{len(passengers_aug)-len(passengers)}, emissions +{len(emissions_aug)-len(emissions)}")
+    return passengers_aug, emissions_aug
+
+
+# -----------------------------------------------------------------------------
 # Fonctions existantes (clean_and_standardize_country_codes, enrich_and_prepare...)
 # -----------------------------------------------------------------------------
 
@@ -667,6 +1057,15 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     logger.info("🧩 Enrichissement des données manquantes...")
     
     years_list = list(range(2010, 2025))  # 2010 à 2024 inclus
+    country_ref = prepare_country_reference()
+    train_target_countries = sorted(set(MISSING_SYNTHETIC_COUNTRIES) | {'FR', 'DE', 'CH'})
+    train_targets = build_country_year_train_targets(
+        country_ref,
+        emissions,
+        years_list,
+        train_target_countries,
+        total_trains_per_year=950
+    )
     
     # --- Opérateurs ---
     # Construire un DataFrame de base des opérateurs à partir des trains de nuit existants
@@ -704,8 +1103,9 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     # Liste des codes pays UE (utilisée aussi dans generate_synthetic_day_trains)
     eu_codes = ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']
     
-    day_trains_gtfs = extract_day_trains_from_gtfs(processed_dir, operators_df)
-    day_trains_synth = generate_synthetic_day_trains(operators_df, years_list, eu_codes)
+    day_trains_gtfs = extract_day_trains_from_gtfs(processed_dir, operators_df, train_targets)
+    synthetic_codes = [code for code in MISSING_SYNTHETIC_COUNTRIES if code not in {'FR', 'DE', 'CH'}]
+    day_trains_synth = generate_synthetic_day_trains(operators_df, years_list, synthetic_codes, train_targets)
 
     # Ajouter une colonne route_id pour les trains de jour (si absente)
     for df in [day_trains_gtfs, day_trains_synth]:
@@ -757,6 +1157,33 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     else:
         all_trains['distance_km'] = 0.0
 
+    # Les distances non resolues par les stops GTFS sont completees par une
+    # moyenne pays deterministe : 8% du reseau national, bornee a 50-1200 km.
+    # Cela evite les distances nulles pour les pays enrichis sans constante UE.
+    if not all_trains.empty and 'country_code' in all_trains.columns:
+        all_trains['distance_km'] = pd.to_numeric(all_trains['distance_km'], errors='coerce').fillna(0.0)
+        unresolved_distance = all_trains['distance_km'] <= 0
+        if unresolved_distance.any():
+            all_trains.loc[unresolved_distance, 'distance_km'] = all_trains.loc[
+                unresolved_distance, 'country_code'
+            ].apply(lambda code: mean_distance_from_reference(country_ref, code)).astype(float)
+
+        # Attribution nuit/jour non uniforme : night_train_index pilote le
+        # ratio attendu par pays. Les trains reels deja marques nuit restent
+        # nuit, puis les lignes synthetiques completent le quota deterministe.
+        night_ratio = dict(zip(
+            country_ref['country_code'],
+            country_ref['night_train_index'].apply(compute_night_train_ratio)
+        ))
+        all_trains['is_night'] = all_trains['is_night'].fillna(False).astype(bool)
+        for (country, year), group in all_trains.groupby(['country_code', 'year']):
+            ratio = float(night_ratio.get(country, 0))
+            target_night = int(round(len(group) * ratio))
+            current_night = int(all_trains.loc[group.index, 'is_night'].sum())
+            if target_night > current_night:
+                candidates = group[~group['is_night']].sort_values(['route_id', 'night_train']).head(target_night - current_night)
+                all_trains.loc[candidates.index, 'is_night'] = True
+
     # --- Calcul des durées ---
     all_trains = compute_night_train_durations(all_trains)
 
@@ -771,7 +1198,7 @@ def enrich_and_prepare_for_warehouse(processed_dir: str, warehouse_dir: str) -> 
     
     # --- Statistiques pays ---
     if not passengers.empty and not emissions.empty:
-        passengers, emissions = generate_country_stats(passengers, emissions, years_list)
+        passengers, emissions = generate_country_stats(passengers, emissions, years_list, country_ref)
     
     # 4. Créer les DIMENSIONS (doit être fait avant les faits)
     
