@@ -9,6 +9,8 @@ data/raw/
 data/processed/
 data/warehouse/
 data/audit/
+data/ml/
+data
 note_perso
 .pytest_cache       
 pytest-cache-files-b5ut3kbf
