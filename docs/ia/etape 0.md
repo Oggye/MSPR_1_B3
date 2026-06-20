@@ -91,3 +91,10 @@ Exemples :
 | ÖBB NJ 468 + NJ 469 | 1522 km  | 16 h  | Non      |
 
 Le dataset obtenu est désormais prêt pour l'analyse exploratoire et l'entraînement des modèles de Machine Learning.
+
+
+Extrait dataset :
+| fact_id | route_id | night_train          | country_id | year_id | operator_id | is_night | distance_km | duration_min | country_code | country_name | operator_name | duration_hours | avg_speed_kmh | distance_per_hour | long_night_route | distance_category | duration_category | night_bonus | candidate_substitution |
+|---------|----------|----------------------|------------|---------|-------------|----------|-------------|--------------|--------------|--------------|---------------|----------------|---------------|-------------------|------------------|-------------------|-------------------|-------------|------------------------|
+| 1       | 1        | ÖBB NJ 468 + NJ 469  | 4          | 15      | 1           | True     | 1522.37     | 961.50       | BE           | Belgium      | ÖBB           | 16.02          | 95.0          | 95.0              | 1                | long              | slow              | 1           | 0                      |
+| 2       | 2        | ÖBB NJ 408 + NJ 409  | 9          | 15      | 1           | True     | 668.15      | 421.99       | DE           | Germany      | ÖBB           | 7.03           | 95.0          | 95.0              | 0                | medium            | medium            | 1           | 1                      |

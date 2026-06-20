@@ -1,54 +1,24 @@
+# ia\src\ml\feature_engineering.py
+
 import numpy as np
 
 
 def add_features(df):
-    """
-    Création des variables métiers pour le modèle
-    de substitution avion -> train.
 
-    Entrée :
-        df : DataFrame contenant au minimum :
-            - distance_km
-            - duration_min
-            - is_night
+    df = df.copy()
 
-    Sortie :
-        DataFrame enrichi de nouvelles features.
-    """
-
-    # ==================================================
-    # Durée en heures
-    # ==================================================
     df["duration_hours"] = df["duration_min"] / 60
 
-    # Éviter les divisions par zéro
     safe_duration = df["duration_hours"].replace(0, np.nan)
 
-    # ==================================================
-    # Vitesse moyenne (km/h)
-    # ==================================================
     df["avg_speed_kmh"] = (
         df["distance_km"] / safe_duration
     )
 
-    # ==================================================
-    # Distance parcourue par heure
-    # ==================================================
-    df["distance_per_hour"] = (
-        df["distance_km"] / safe_duration
-    )
-
-    # ==================================================
-    # Long trajet de nuit
-    # ==================================================
     df["long_night_route"] = (
-        (
-            df["is_night"] == 1
-        )
+        (df["is_night"] == 1)
         &
-        (
-            df["distance_km"] > 800
-        )
+        (df["distance_km"] > 800)
     ).astype(int)
 
     # ==================================================

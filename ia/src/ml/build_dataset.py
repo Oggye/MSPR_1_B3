@@ -1,3 +1,5 @@
+# ia\src\ml\build_dataset.py
+
 import pandas as pd
 
 from config import *
@@ -37,6 +39,12 @@ def main():
         OUTPUT_DATASET,
         index=False
     )
+
+    print(df.info())
+    print(df.isna().sum())
+
+    duplicates = df.duplicated().sum()
+    print(f"Doublons : {duplicates}")
 
     print()
     print("Dataset IA créé")

@@ -1,23 +1,27 @@
+# ia\src\ml\business_rules.py
+
+DAY_MAX_DISTANCE = 1200
+DAY_MAX_DURATION = 480
+
+NIGHT_MAX_DISTANCE = 1500
+NIGHT_MAX_DURATION = 720
+
+
 def build_target(row):
-    """
-    1 = ligne potentiellement substituable
-    0 = non substituable
-    """
 
     distance = row["distance_km"]
     duration = row["duration_min"]
-    is_night = row["is_night"]
 
     if (
-        distance <= 1200
-        and duration <= 480
+        distance <= DAY_MAX_DISTANCE
+        and duration <= DAY_MAX_DURATION
     ):
         return 1
 
     if (
-        is_night == 1
-        and distance <= 1500
-        and duration <= 720
+        row["is_night"]
+        and distance <= NIGHT_MAX_DISTANCE
+        and duration <= NIGHT_MAX_DURATION
     ):
         return 1
 
