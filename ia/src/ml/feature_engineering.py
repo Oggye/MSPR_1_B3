@@ -58,13 +58,6 @@ def add_features(df):
     )
 
     # ==================================================
-    # Ratio nuit / jour exploitable
-    # ==================================================
-    df["night_bonus"] = (
-        df["is_night"] == 1
-    ).astype(int)
-
-    # ==================================================
     # Nettoyage des éventuelles valeurs infinies
     # ==================================================
     df.replace(

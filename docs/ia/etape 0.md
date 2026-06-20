@@ -98,3 +98,13 @@ Extrait dataset :
 |---------|----------|----------------------|------------|---------|-------------|----------|-------------|--------------|--------------|--------------|---------------|----------------|---------------|-------------------|------------------|-------------------|-------------------|-------------|------------------------|
 | 1       | 1        | ÖBB NJ 468 + NJ 469  | 4          | 15      | 1           | True     | 1522.37     | 961.50       | BE           | Belgium      | ÖBB           | 16.02          | 95.0          | 95.0              | 1                | long              | slow              | 1           | 0                      |
 | 2       | 2        | ÖBB NJ 408 + NJ 409  | 9          | 15      | 1           | True     | 668.15      | 421.99       | DE           | Germany      | ÖBB           | 7.03           | 95.0          | 95.0              | 0                | medium            | medium            | 1           | 1                      |
+
+
+| Variable               | Type         | Description        | Utilisée pour ML |
+| ---------------------- | ------------ | ------------------ | ---------------- |
+| distance_km            | Numérique    | Distance du trajet | Oui              |
+| duration_min           | Numérique    | Durée du trajet    | Oui              |
+| is_night               | Binaire      | Train de nuit      | Oui              |
+| country_name           | Catégorielle | Pays concerné      | Oui              |
+| operator_name          | Catégorielle | Opérateur          | Oui              |
+| candidate_substitution | Cible        | Variable à prédire | Non              |
