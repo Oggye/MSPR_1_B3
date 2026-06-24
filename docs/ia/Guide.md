@@ -613,7 +613,7 @@ ia/
 │       ├── train_random_forest.py ✅
 │       ├── train_ridge.py      ✅
 │       ├── train_xgboost.py    ✅
-│       └── optimize_xgboost.py ❌
+│       └── optimize_xgboost.py ✅
 ├── models/                     ✅ (produit au run)
 └── reports/                    ✅ (produit au run)
 data/ml/                        ✅
@@ -621,16 +621,16 @@ api/main.py                     ❌
 predict.py                      ❌
 tests/test_predict.py           ❌
 notebooks/
-├── 01_eda.ipynb                ❌
-├── 02_evaluation.ipynb         ❌
+├── 01_eda.ipynb                ✅
+├── 02_evaluation.ipynb         ✅
 └── 03_explicabilite.ipynb      ❌
 docs/
-├── incident_data_leakage.md    ❌ ⭐
-├── variables.md                ❌
+├── incident_data_leakage.md    ✅ ⭐
+├── variables.md                ✅
 ├── benchmark_cloud.md          ❌
-├── rapport_evaluation.md       ❌
+├── rapport_evaluation.md       ✅
 ├── veille.md                   ❌
 └── retraining.md               ❌
 .github/workflows/ci.yml        ❌
-requirements.txt                ❌
+requirements.txt                ✅
 ```
