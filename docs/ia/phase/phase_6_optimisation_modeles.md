@@ -118,8 +118,7 @@ Cette commande entraîne les versions optimisées des modèles XGBoost et Ridge,
 
 ### Préparation de la Phase 7
 
-Une première version du rapport d'évaluation final a été rédigée dans le fichier :
+Un rapport d'évaluation final a été rédigée dans le fichier :
 
-`docs/ia/phase/re.md`
+`docs/ia/phase/rapport_evaluation.md`
 
-Ce document constitue une base de travail pour la Phase 7 et devra être relu, complété et validé avant la rédaction de la version définitive du rapport de sélection des modèles.
