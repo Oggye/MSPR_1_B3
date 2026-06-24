@@ -150,7 +150,7 @@ python -m pip install -r ia/src/requirements.txt
 
 Si le notebook utilise Anaconda, installer les dépendances dans l'environnement Anaconda.
 
-```
+
 
 ### Générer les figures
 
