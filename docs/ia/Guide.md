@@ -617,17 +617,17 @@ ia/
 ├── models/                     ✅ (produit au run)
 └── reports/                    ✅ (produit au run)
 data/ml/                        ✅
-api/main.py                     ❌
-predict.py                      ❌
+api/main.py                     ✅
+predict.py                      ✅
 tests/test_predict.py           ❌
 notebooks/
 ├── 01_eda.ipynb                ✅
 ├── 02_evaluation.ipynb         ✅
-└── 03_explicabilite.ipynb      ❌
+└── 03_explicabilite.ipynb      ✅
 docs/
 ├── incident_data_leakage.md    ✅ ⭐
 ├── variables.md                ✅
-├── benchmark_cloud.md          ❌
+├── benchmark_cloud.md          ❌(à mettre à jour)
 ├── rapport_evaluation.md       ✅
 ├── veille.md                   ❌
 └── retraining.md               ❌
