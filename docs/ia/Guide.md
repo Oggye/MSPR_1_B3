@@ -59,7 +59,7 @@ data/ml/classification_dataset.csv
 
 ---
 
-## PHASE 2 — ANALYSE EXPLORATOIRE À faire
+## PHASE 2 — ANALYSE EXPLORATOIRE ✅ Fait
 
 Peut être faite en parallèle avec la veille.
 
@@ -296,7 +296,7 @@ docs/rapport_evaluation.md
 
 ---
 
-## PHASE 8 — EXPLICABILITÉ IA À faire ✅ Fait
+## PHASE 8 — EXPLICABILITÉ IA ✅ Fait
 
 Créer `notebooks/03_explicabilite.ipynb`
 
@@ -332,7 +332,7 @@ docs/fig_shap_reg.png
 
 ---
 
-## PHASE 9 — BENCHMARK CLOUD ✅ Fait
+## PHASE 9 — BENCHMARK CLOUD ✅ À Mettre à jour
 
 Peut être réalisé par une autre personne.
 
