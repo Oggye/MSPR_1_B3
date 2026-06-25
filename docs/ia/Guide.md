@@ -220,7 +220,7 @@ docs/fig_actual_vs_predicted.png
 
 ---
 
-## PHASE 6 — OPTIMISATION À faire
+## PHASE 6 — OPTIMISATION ✅ Fait
 
 Peut être faite en parallèle.
 
@@ -259,7 +259,7 @@ ia/models/xgboost_reg_optimized.joblib
 
 ---
 
-## PHASE 7 — SÉLECTION DU MODÈLE FINAL À faire
+## PHASE 7 — SÉLECTION DU MODÈLE FINAL ✅ Fait
 
 Produire les tableaux de sélection dans `docs/rapport_evaluation.md`.
 
@@ -296,7 +296,7 @@ docs/rapport_evaluation.md
 
 ---
 
-## PHASE 8 — EXPLICABILITÉ IA À faire
+## PHASE 8 — EXPLICABILITÉ IA À faire ✅ Fait
 
 Créer `notebooks/03_explicabilite.ipynb`
 
@@ -332,7 +332,7 @@ docs/fig_shap_reg.png
 
 ---
 
-## PHASE 9 — BENCHMARK CLOUD À faire (parallèle)
+## PHASE 9 — BENCHMARK CLOUD ✅ Fait
 
 Peut être réalisé par une autre personne.
 
@@ -368,7 +368,7 @@ docs/benchmark_cloud.md
 
 ---
 
-## PHASE 10 — SAUVEGARDE & SCRIPT PREDICT À faire
+## PHASE 10 — SAUVEGARDE & SCRIPT PREDICT ✅ Fait
 
 La sauvegarde est déjà faite via `save_model_and_metrics()`.
 
@@ -405,7 +405,7 @@ ia/models/model_metadata.json   (date, features, split strategy)
 
 ---
 
-## PHASE 11 — API FASTAPI À faire
+## PHASE 11 — API FASTAPI ✅ Fait
 
 Créer `api/main.py`
 
