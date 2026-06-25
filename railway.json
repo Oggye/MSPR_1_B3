@@ -1,0 +1,10 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "pip install -r ia/src/requirements-api.txt"
+  },
+  "deploy": {
+    "startCommand": "uvicorn ia.src.ml.api:app --host 0.0.0.0 --port $PORT",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
