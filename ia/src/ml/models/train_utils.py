@@ -16,7 +16,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
     mean_absolute_error, mean_squared_error, r2_score
 )
-from ..config import (
+from ia.src.ml.config import (
     REGRESSION_DATASET_PATH, CLASSIF_DATASET_PATH,
     PREPROCESSOR_REG_PATH, PREPROCESSOR_CLF_PATH,
     MODELS_DIR

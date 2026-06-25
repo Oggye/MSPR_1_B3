@@ -15,7 +15,7 @@
 
 import pandas as pd
 import numpy as np
-from config import (
+from .config import (
     STATS_FILE, COUNTRIES_FILE, YEARS_FILE,
     REGRESSION_DATASET_PATH, CLASSIF_DATASET_PATH
 )
