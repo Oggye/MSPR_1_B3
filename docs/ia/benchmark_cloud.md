@@ -1,4 +1,4 @@
-# BENCHMARK DES SERVICES D’INTELLIGENCE ARTIFICIELLE (a revoir, il est incomplet ct letape 3 avant)
+# BENCHMARK DES SERVICES D’INTELLIGENCE ARTIFICIELLE 
 
 **Projet ObRail Europe – Prédiction de substitution avion/train**
 
