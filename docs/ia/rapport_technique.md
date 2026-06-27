@@ -359,39 +359,6 @@ La base PostgreSQL est initialisée via les scripts SQL déposés dans le réper
 
 ## 7. Pipeline de données
 
-```mermaid
-flowchart TD
-    A["Sources hétérogènes\nEurostat / ADEME / GTFS / Back-on-Track"] --> B
-
-    subgraph ETL["Pipeline ETL"]
-        B["Collecte\nCSV, API, HTML scraping"] --> C
-        C["Nettoyage\nDoublons, valeurs manquantes,\nincohérences de format"] --> D
-        D["Transformation\nHarmonisation des unités,\nstandards transfrontaliers"] --> E
-        E["Chargement\nPostgreSQL warehouse"]
-    end
-
-    E --> F
-
-    subgraph ML["Pipeline ML"]
-        F["Extraction\nbuild_dataset.py\nJointure facts + dims"] --> G
-        G["Feature Engineering\nVariables lag temporelles\npax_lag1, pax_lag2, co2_lag1"] --> H
-        H["Preprocessing\ntrain_utils.py\nStandardScaler + OHE"] --> I
-        I["Split 80/20\nstratify=y classification\nrandom_state=42"] --> J
-        J["Entraînement\nrun_training.py\n7 modèles candidats"] --> K
-        K["Optimisation\nRandomizedSearchCV\nGridSearchCV cv=5"] --> L
-        L["Sélection\nXGBoost clf + Ridge reg"] --> M
-        M["Sauvegarde\n.joblib + .json\nia/models/"]
-    end
-
-    M --> N
-
-    subgraph SERVING["Exposition"]
-        N["predict.py\nCache LRU"] --> O
-        O["API FastAPI\n/predict/classification\n/predict/regression"] --> P
-        P["Frontend React"]
-    end
-```
-
 La chaîne Docker impose une séquence stricte garantissant que l'API ne démarre jamais sans modèles disponibles :
 
 ```
@@ -980,7 +947,7 @@ Les seules exigences non satisfaites — tests unitaires complets et pipeline CI
 | Rapport technique final | Ce document | `docs/rapport_technique.md` | ✓ |
 | Résoudre les incidents techniques | Data leakage documenté et résolu | `docs/incident_data_leakage.md` | ✓ |
 | Tests unitaires automatisés | Structure définie, tests à compléter | `tests/test_predict.py` | Partiel |
-| CI/CD | Non implémenté | `.github/workflows/ci.yml` absent | ✗ |
+| CI/CD | CI implémenté | `.github/workflows/ci.yml`  | ✓ |
 
 ---
 
