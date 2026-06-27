@@ -461,7 +461,7 @@ GET /metrics endpoint
 
 ---
 
-## PHASE 13 — TESTS À faire
+## PHASE 13 — TESTS ✅
 
 Créer `tests/test_predict.py`
 
@@ -485,7 +485,7 @@ tests/test_predict.py
 
 ---
 
-## PHASE 14 — CI/CD À faire (parallèle)
+## PHASE 14 — CI/CD ✅
 
 Créer `.github/workflows/ci.yml`
 
@@ -504,7 +504,7 @@ Livrables
 
 ---
 
-## PHASE 15 — DOC RÉENTRAÎNEMENT À faire
+## PHASE 15 — DOC RÉENTRAÎNEMENT ✅
 
 Créer `docs/retraining.md`
 
@@ -531,7 +531,7 @@ docs/retraining.md
 
 ---
 
-## PHASE 16 — VEILLE TECHNIQUE À faire (dès J1, continu)
+## PHASE 16 — VEILLE TECHNIQUE ✅
 
 Créer `docs/veille.md`
 
@@ -561,7 +561,7 @@ docs/veille.md
 
 ---
 
-## PHASE 17 — RAPPORT & SOUTENANCE À faire
+## PHASE 17 — RAPPORT & SOUTENANCE ✅
 
 Structure rapport
 ```
@@ -619,7 +619,7 @@ ia/
 data/ml/                        ✅
 api/main.py                     ✅
 predict.py                      ✅
-tests/test_predict.py           ❌
+tests/test_predict.py           ✅
 notebooks/
 ├── 01_eda.ipynb                ✅
 ├── 02_evaluation.ipynb         ✅
@@ -627,10 +627,10 @@ notebooks/
 docs/
 ├── incident_data_leakage.md    ✅ ⭐
 ├── variables.md                ✅
-├── benchmark_cloud.md          ❌(à mettre à jour)
+├── benchmark_cloud.md          ✅
 ├── rapport_evaluation.md       ✅
-├── veille.md                   ❌
-└── retraining.md               ❌
-.github/workflows/ci.yml        ❌
+├── veille.md                   ✅
+└── retraining.md               ✅
+.github/workflows/ci-cd.yml     ✅
 requirements.txt                ✅
 ```
