@@ -158,50 +158,7 @@ graph TB
     API --> MONITORING
 ```
 
-### 3.2 Architecture logicielle
-
-```mermaid
-graph LR
-    subgraph ML["Couche Machine Learning"]
-        P["predict.py"]
-        CLF["xgboost_optimized_clf.joblib"]
-        REG["ridge_reg.joblib"]
-        PCLF["preprocessor_classification.joblib"]
-        PREG["preprocessor_regression.joblib"]
-    end
-
-    subgraph ROUTER["Couche API - FastAPI"]
-        R1["router predict.py"]
-        R2["PredictionInput - Pydantic"]
-        R3["ClassificationResponse"]
-        R4["RegressionResponse"]
-        R5["/api/predict/classification"]
-        R6["/api/predict/regression"]
-    end
-
-    subgraph SEC["Sécurité & Validation"]
-        V1["Validation Pydantic - 422"]
-        V2["HTTPException - 500 / 503"]
-        V3["Logging structuré"]
-        V4["Vérification pays connus"]
-    end
-
-    R2 --> V1
-    R5 --> R2
-    R6 --> R2
-    R2 --> P
-    P --> CLF
-    P --> REG
-    P --> PCLF
-    P --> PREG
-    R5 --> R3
-    R6 --> R4
-    R1 --> V2
-    R1 --> V3
-    R1 --> V4
-```
-
-### 3.3 Flux de prédiction
+### 3.2 Flux de prédiction
 
 ```mermaid
 sequenceDiagram
