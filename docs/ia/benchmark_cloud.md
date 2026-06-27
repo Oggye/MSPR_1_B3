@@ -69,7 +69,7 @@ Chaque service est évalué selon la grille suivante :
 **Points clés :**
 - AutoML pour données tabulaires supporte classification binaire et régression.
 - Comprend Vertex AI Pipelines, Vector Search et l’accès aux modèles Gemini.
-- **Coût :** facturation par composant (compute, entraînement, inférence). Tarifs : environ 3,46 $/heure pour AutoML images, 80-90 $/heure pour H100 8-GPU. Des remises automatiques et engagements existent.
+- **Coût :** facturation par composant (compute, entraînement, inférence). Tarifs : environ 3,46 $/heure (pour AutoML images) et 80-90 $/heure (pour H100 8-GPU). Des remises automatiques et engagements existent.
 - **Risque :** facturation complexe (jusqu’à 15 services distincts) pouvant générer des surprises (certaines équipes ont rapporté des factures de 400 $ à plus de 20 000 $ en un mois).
 - **Explicabilité :** outils d’analyse, mais moins mis en avant que SageMaker.
 - **Intégration :** native avec BigQuery, Cloud Storage, Dataflow ; API unifiée.
