@@ -1,4 +1,5 @@
-# app/routers/predict.py
+# Fichier: platform/server/app/routers/predict.py
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import sys

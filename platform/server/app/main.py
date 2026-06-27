@@ -1,4 +1,5 @@
-#app/main.py
+# Fichier: platform/server/app/main.py
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import countries, night_trains, dashboard, analysis, operators, metadata, statistics, internal, predict

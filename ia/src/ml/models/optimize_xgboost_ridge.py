@@ -1,4 +1,5 @@
-# Importer les bibliothèques
+# Fichier: ia/src/ml/models/optimize_xgboost_ridge.py
+
 import pandas as pd
 import json
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
