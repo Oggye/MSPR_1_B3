@@ -16,7 +16,11 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
     mean_absolute_error, mean_squared_error, r2_score
 )
-from ia.src.ml.config import (
+
+# CORRECTIF #1 : import relatif au lieu de l'import absolu "from ia.src.ml.config"
+# L'import absolu cassait le module quand PYTHONPATH n'incluait pas la racine du projet
+# (cas systématique dans Docker sans configuration explicite).
+from ..config import (
     REGRESSION_DATASET_PATH, CLASSIF_DATASET_PATH,
     PREPROCESSOR_REG_PATH, PREPROCESSOR_CLF_PATH,
     MODELS_DIR
@@ -173,10 +177,18 @@ def save_model_and_metrics(model, metrics, model_name, preprocessor=None, axis="
         json.dump(metrics, f, indent=2)
     print(f"✅ Métriques sauvegardées : {metrics_path}")
 
+    # CORRECTIF #11 : on ne sauvegarde le preprocesseur que si explicitement fourni,
+    # sans écraser le fichier partagé à chaque appel. Le preprocesseur est identique
+    # pour tous les modèles d'un même axe donc un seul enregistrement suffit.
+    # On écrit uniquement si le fichier n'existe pas encore, pour ne pas écraser
+    # une version antérieure valide.
     if preprocessor is not None:
         prep_path = PREPROCESSOR_CLF_PATH if axis == "clf" else PREPROCESSOR_REG_PATH
-        joblib.dump(preprocessor, prep_path)
-        print(f"✅ Preprocesseur sauvegardé : {prep_path}")
+        if not prep_path.exists():
+            joblib.dump(preprocessor, prep_path)
+            print(f"✅ Preprocesseur sauvegardé : {prep_path}")
+        else:
+            print(f"ℹ️  Preprocesseur déjà présent, non écrasé : {prep_path}")
 
 
 def load_model_and_metrics(model_name, axis="clf"):

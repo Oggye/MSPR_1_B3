@@ -1,5 +1,128 @@
+# docker-compose.yml
+#
+# Chaîne de démarrage :
+#   db (healthy) → etl (no restart) → ia (no restart) → api → front
+#
+# Correctifs appliqués (voir audit) :
+#   #5+#8 : volume ./ia monté dans api
+#   #4    : PYTHONPATH=/app dans api et ia
+#   #6    : depends_on ETL réduit à db uniquement
+#   #7    : healthcheck PostgreSQL sur db
+#   #12   : credentials via .env (non versionné)
+#   NOUVEAU : service ia dédié à l'entraînement ML
+
 services:
-  # Application React
+
+  # ----------------------------------------------------------------
+  # Base de données PostgreSQL
+  # ----------------------------------------------------------------
+  db:
+    image: postgres:15
+    container_name: obrail_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ----------------------------------------------------------------
+  # ETL — Chargement du warehouse depuis les sources
+  # Démarre après que db soit healthy. Ne redémarre pas.
+  # ----------------------------------------------------------------
+  etl:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile.etl
+    container_name: obrail_etl
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./etl:/app/etl
+      - ./data:/app/data
+    command: >
+      sh -c "echo 'Démarrage de l ETL...' &&
+            python /app/etl/run_full_etl.py"
+    restart: "no"
+
+  # ----------------------------------------------------------------
+  # IA — Entraînement ML
+  # Démarre après l'ETL (le warehouse doit être produit dans ./data).
+  # Écrit les .joblib dans ./ia/models/ et ./data/ml/.
+  # Ne redémarre pas (pipeline one-shot).
+  # ----------------------------------------------------------------
+  ia:
+    build:
+      context: .
+      dockerfile: ia/Dockerfile
+    container_name: obrail_ia
+    depends_on:
+      etl:
+        condition: service_completed_successfully
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./ia:/app/ia
+      - ./data:/app/data
+    restart: "no"
+
+  # ----------------------------------------------------------------
+  # API REST FastAPI
+  # Démarre après ia (les .joblib doivent exister dans ./ia/models/).
+  # ----------------------------------------------------------------
+  api:
+    build: ./platform/server
+    container_name: obrail_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - PROMETHEUS_URL=http://prometheus:9090
+      - GRAFANA_URL=http://grafana:3000
+      - PYTHONPATH=/app
+    depends_on:
+      db:
+        condition: service_healthy
+      ia:
+        condition: service_completed_successfully
+      prometheus:
+        condition: service_started
+      grafana:
+        condition: service_started
+    volumes:
+      - ./etl:/app/etl
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./platform/server/test:/app/test
+      - ./platform/front/app:/app/frontend
+      - ./ia:/app/ia
+    restart: always
+
+  # ----------------------------------------------------------------
+  # Frontend React
+  # ----------------------------------------------------------------
   front:
     build: ./platform/front
     container_name: obrail_front
@@ -9,78 +132,16 @@ services:
       - api
     restart: always
 
-  # API REST FastAPI
-  api:
-    build: ./platform/server
-    container_name: obrail_api
-    ports:
-      - "8000:8000"
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=obrail
-      - DB_USER=obrail_user
-      - DB_PASSWORD=1234
-      - JWT_SECRET=supersecretkey
-      - PROMETHEUS_URL=http://prometheus:9090
-      - GRAFANA_URL=http://grafana:3000
-    depends_on:
-      - db
-      - prometheus
-      - grafana
-    volumes:
-      - ./etl:/app/etl
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./platform/server/test:/app/test
-      - ./platform/front/app:/app/frontend
-    restart: always
-
-  # Base de données PostgreSQL
-  db:
-    image: postgres:15
-    container_name: obrail_db
-    restart: always
-    environment:
-      POSTGRES_USER: obrail_user
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: obrail
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
-
-  etl:
-    build:
-      context: ./etl           # contexte = dossier etl
-      dockerfile: Dockerfile.etl
-    container_name: obrail_etl
-    depends_on:
-      - db
-      - api
-      - front
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=obrail
-      - DB_USER=obrail_user
-      - DB_PASSWORD=1234
-    volumes:
-      - ./etl:/app/etl        
-      - ./data:/app/data       
-    command: >
-      sh -c "echo 'Démarrage de l ETL...' &&
-            python /app/etl/run_full_etl.py"
-    restart: "no"
-
+  # ----------------------------------------------------------------
+  # Monitoring
+  # ----------------------------------------------------------------
   prometheus:
-      image: prom/prometheus
-      container_name: obrail_prometheus
-      ports:
-        - "9090:9090"
-      volumes:
-        - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    image: prom/prometheus
+    container_name: obrail_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   grafana:
     image: grafana/grafana
@@ -96,9 +157,7 @@ services:
       - loki
     volumes:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
-
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-
     restart: always
 
   loki:
