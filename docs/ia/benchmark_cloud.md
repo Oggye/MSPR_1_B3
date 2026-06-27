@@ -1,5 +1,4 @@
 # BENCHMARK DES SERVICES D’INTELLIGENCE ARTIFICIELLE 
-
 **Projet ObRail Europe – Prédiction de substitution avion/train**
 
 ---
@@ -10,10 +9,10 @@ Dans le cadre du projet de développement d’un modèle prédictif pour ObRail 
 
 Le projet consiste en un problème de classification binaire visant à identifier automatiquement les liaisons ferroviaires candidates à la substitution de l'avion par le train sur les trajets intra-européens. Le jeu de données issu du processus ETL d'ObRail comprend 546 enregistrements et des variables tabulaires telles que la distance, la durée, le type de train, le pays, l'opérateur et les émissions CO₂. Quatre services ont été sélectionnés pour cette analyse :
 
-- Amazon SageMaker (AWS)
-- Azure Machine Learning (Microsoft)
-- Google Vertex AI (GCP)
-- HuggingFace AutoTrain
+- **Amazon SageMaker (AWS)**
+- **Azure Machine Learning (Microsoft)**
+- **Google Vertex AI (GCP)**
+- **HuggingFace AutoTrain**
 
 L’évaluation porte sur six critères : capacités techniques, coûts, contraintes, explicabilité, facilité d’intégration et pertinence pour les données ferroviaires.
 
@@ -44,11 +43,11 @@ Chaque service est évalué selon la grille suivante :
 - Support natif de la classification binaire sur CSV et Parquet.
 - Génération de notebooks explicatifs pour chaque modèle, offrant une transparence totale; ce qui répond aux exigences de reproductibilité et de documentation du cahier des charges.
 - Intégration complète avec SageMaker Pipelines, Model Registry et Feature Store pour une approche MLOps.
-- Coût : majoration de 15 à 40 % sur les instances EC2. Tarification à la demande. Pour ce projet, les coûts d’entraînement restent modérés (quelques heures sur instances standard). Des Savings Plans peuvent réduire la facture jusqu’à 64 %.
-- Explicabilité : notebooks générés, visualisation des features, classement des modèles, intégration SHAP possible.
-- Intégration : SDK Boto3, interface Studio web, déploiement en un clic vers endpoints managés.
-- Pertinence : très élevée – support natif de la classification tabulaire et transparence documentée.
-- Limite pour ce projet : SageMaker Autopilot recommande un minimum de 500 à 1 000 lignes pour obtenir des résultats fiables. Avec 546 enregistrements, le service est techniquement utilisable mais fonctionnera en limite basse, sans garantie de qualité comparable à un entraînement sur données plus volumineuses.
+- **Coût :** majoration de 15 à 40 % sur les instances EC2. Tarification à la demande. Pour ce projet, les coûts d’entraînement restent modérés (quelques heures sur instances standard). Des Savings Plans peuvent réduire la facture jusqu’à 64 %.
+- **Explicabilité :** notebooks générés, visualisation des features, classement des modèles, intégration SHAP possible.
+- **Intégration :** SDK Boto3, interface Studio web, déploiement en un clic vers endpoints managés.
+- **Pertinence :** très élevée – support natif de la classification tabulaire et transparence documentée.
+- **Limite pour ce projet :** SageMaker Autopilot recommande un minimum de 500 à 1 000 lignes pour obtenir des résultats fiables. Avec 546 enregistrements, le service est techniquement utilisable mais fonctionnera en limite basse, sans garantie de qualité comparable à un entraînement sur données plus volumineuses.
 
 ### 3.2 Azure Machine Learning (Microsoft)
 
@@ -56,12 +55,12 @@ Chaque service est évalué selon la grille suivante :
 
 **Points clés :**
 - AutoML (v1) supporte classification, régression et forecasting sur données tabulaires.
-- Attention : le SDK v1 est déprécié depuis mars 2025, fin de support en juin 2026; migration vers SDK v2 obligatoire.
-- Coût : principalement les ressources de calcul ; la plateforme elle-même est gratuite. Coûts supplémentaires pour le stockage et les services attachés. Instances GPU H100 environ 98 $/heure.
-- Explicabilité : rapports d’évaluation et visualisations, mais moins complets que SageMaker.
-- Intégration : excellente avec l’écosystème Microsoft (Active Directory, Power BI, Visual Studio Code).
-- Pertinence : adapté, mais la dépréciation du SDK v1 est un risque.
-- Limite pour ce projet : Azure ML AutoML recommande officiellement un minimum de 1 000 lignes pour la classification. Notre dataset de 546 lignes est en dessous de ce seuil, ce qui peut conduire à des modèles peu fiables ou à des erreurs lors de la validation croisée automatique.
+- **Attention :** le SDK v1 est déprécié depuis mars 2025, fin de support en juin 2026; migration vers SDK v2 obligatoire.
+- **Coût :** principalement les ressources de calcul ; la plateforme elle-même est gratuite. Coûts supplémentaires pour le stockage et les services attachés. Instances GPU H100 environ 98 $/heure.
+- **Explicabilité :** rapports d’évaluation et visualisations, mais moins complets que SageMaker.
+- **Intégration :** excellente avec l’écosystème Microsoft (Active Directory, Power BI, Visual Studio Code).
+- **Pertinence :** adapté, mais la dépréciation du SDK v1 est un risque.
+- **Limite pour ce projet :** Azure ML AutoML recommande officiellement un minimum de 1 000 lignes pour la classification. Notre dataset de 546 lignes est en dessous de ce seuil, ce qui peut conduire à des modèles peu fiables ou à des erreurs lors de la validation croisée automatique.
 
 ### 3.3 Google Vertex AI (GCP)
 
@@ -70,12 +69,12 @@ Chaque service est évalué selon la grille suivante :
 **Points clés :**
 - AutoML pour données tabulaires supporte classification binaire et régression.
 - Comprend Vertex AI Pipelines, Vector Search et l’accès aux modèles Gemini.
-- Coût : facturation par composant (compute, entraînement, inférence). Tarifs : environ 3,46 $/heure pour AutoML images, 80-90 $/heure pour H100 8-GPU. Des remises automatiques et engagements existent.
-- Risque : facturation complexe (jusqu’à 15 services distincts) pouvant générer des surprises (certaines équipes ont rapporté des factures de 400 $ à plus de 20 000 $ en un mois).
-- Explicabilité : outils d’analyse, mais moins mis en avant que SageMaker.
-- Intégration : native avec BigQuery, Cloud Storage, Dataflow ; API unifiée.
-- Pertinence : bon, mais la complexité tarifaire est un frein pour un projet académique.
-- Limite pour ce projet : Vertex AI AutoML Tables exige un minimum de 1 000 lignes pour l'entraînement. Avec 546 enregistrements, le service refusera d'entraîner un modèle ou produira des résultats non exploitables. La complexité tarifaire est également un frein pour un projet académique.
+- **Coût :** facturation par composant (compute, entraînement, inférence). Tarifs : environ 3,46 $/heure pour AutoML images, 80-90 $/heure pour H100 8-GPU. Des remises automatiques et engagements existent.
+- **Risque :** facturation complexe (jusqu’à 15 services distincts) pouvant générer des surprises (certaines équipes ont rapporté des factures de 400 $ à plus de 20 000 $ en un mois).
+- **Explicabilité :** outils d’analyse, mais moins mis en avant que SageMaker.
+- **Intégration :** native avec BigQuery, Cloud Storage, Dataflow ; API unifiée.
+- **Pertinence :** bon, mais la complexité tarifaire est un frein pour un projet académique.
+- **Limite pour ce projet :** Vertex AI AutoML Tables exige un minimum de 1 000 lignes pour l'entraînement. Avec 546 enregistrements, le service refusera d'entraîner un modèle ou produira des résultats non exploitables. La complexité tarifaire est également un frein pour un projet académique.
 
 ### 3.4 HuggingFace AutoTrain
 
@@ -84,10 +83,10 @@ Chaque service est évalué selon la grille suivante :
 **Points clés :**
 - Support de la classification et régression tabulaires.
 - Gratuit jusqu’à 10 modèles par mois ; plans payants de 0,10 à 1 $ par modèle. En local, totalement gratuit.
-- Contraintes : moins flexible que les clouds généralistes, moins adapté aux très grands volumes, dépendance à l’écosystème Hugging Face.
-- Explicabilité : model cards et intégration au Hub, mais moins poussée.
-- Intégration : API simple, interface no-code, intégration avec Transformers et Datasets.
-- Pertinence pour ce projet : contrairement aux trois services précédents, HuggingFace AutoTrain ne pose pas de seuil minimum strict sur le volume de données, ce qui le rend compatible avec notre dataset de 546 lignes. Il constitue la seule solution AutoML cloud envisageable pour une phase de prototypage.
+- **Contraintes :** moins flexible que les clouds généralistes, moins adapté aux très grands volumes, dépendance à l’écosystème Hugging Face.
+- **Explicabilité :** model cards et intégration au Hub, mais moins poussée.
+- **Intégration :** API simple, interface no-code, intégration avec Transformers et Datasets.
+- **Pertinence pour ce projet :** contrairement aux trois services précédents, HuggingFace AutoTrain ne pose pas de seuil minimum strict sur le volume de données, ce qui le rend compatible avec notre dataset de 546 lignes. Il constitue la seule solution AutoML cloud envisageable pour une phase de prototypage.
 ---
 
 ## 4. SYNTHÈSE COMPARATIVE
