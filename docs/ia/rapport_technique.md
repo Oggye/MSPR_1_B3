@@ -311,8 +311,6 @@ La comparaison des services cloud (section 16) a confirmé que la solution inter
 
 ---
 
-## 6. Base de données
-
 ### 6.1 Schéma relationnel
 
 ```mermaid
@@ -350,31 +348,55 @@ erDiagram
         string train_type
     }
 
+    PASSENGERS_PROCESSED {
+        int id PK
+        int country_id FK
+        int year_id FK
+        float passengers_value
+        string unit
+    }
+
+    CO2_EMISSIONS_PROCESSED {
+        int id PK
+        int country_id FK
+        int year_id FK
+        float emissions_value
+        string source
+    }
+
     DIM_COUNTRIES ||--o{ FACTS_COUNTRY_STATS : "couvre"
     DIM_YEARS ||--o{ FACTS_COUNTRY_STATS : "correspond à"
     DIM_COUNTRIES ||--o{ FACTS_NIGHT_TRAINS : "opère dans"
+    DIM_COUNTRIES ||--o{ PASSENGERS_PROCESSED : "concerne"
+    DIM_YEARS ||--o{ PASSENGERS_PROCESSED : "correspond à"
+    DIM_COUNTRIES ||--o{ CO2_EMISSIONS_PROCESSED : "concerne"
+    DIM_YEARS ||--o{ CO2_EMISSIONS_PROCESSED : "correspond à"
 ```
 
-### 6.2 Volumétrie et usage ML
+### 6.2 Description des tables principales
 
-| Table | Lignes | Usage |
-|-------|--------|-------|
-| `facts_country_stats` | 630 | **Source principale ML** (42 pays × 15 ans) |
+**`dim_countries`** : table de dimension contenant le référentiel des pays européens. Utilisée comme clé de jointure dans toutes les tables de faits. Contient 48 entrées.
+
+**`dim_years`** : table de dimension contenant les années couvertes (2010–2024). Permet une jointure propre sans redondance de la valeur entière dans chaque table de faits.
+
+**`facts_country_stats`** : table de faits principale pour le Machine Learning. Contient 630 enregistrements (42 pays × 15 ans). Agrège la fréquentation ferroviaire et les indicateurs carbone par pays et par année.
+
+**`facts_night_trains`** : table de faits contenant 15 538 trajets ferroviaires avec leurs caractéristiques (distance, durée, opérateur, type de train). Utilisée pour l'analyse des dessertes mais écartée comme source ML principale (voir section 18).
+
+### 6.3 Volumétrie
+
+| Table | Lignes | Usage ML |
+|-------|--------|----------|
+| `facts_country_stats` | 630 | Source principale (dataset ML) |
 | `facts_night_trains` | 15 538 | Analyse descriptive uniquement |
 | `passengers_processed` | 1 605 | Enrichissement contextuel |
 | `co2_emissions_processed` | 106 032 | Enrichissement contextuel |
 | `dim_countries` | 48 | Jointure |
 | `dim_years` | 16 | Jointure |
 
-La base est initialisée via les scripts SQL de `sql/`, avec un healthcheck Docker garantissant sa disponibilité avant démarrage de l'ETL :
+### 6.4 Initialisation de la base
 
-```yaml
-healthcheck:
-  test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-  interval: 5s
-  timeout: 5s
-  retries: 10
-```
+La base PostgreSQL est initialisée via les scripts SQL déposés dans le répertoire `sql/`, exécutés automatiquement par l'image PostgreSQL au premier démarrage via le mécanisme `docker-entrypoint-initdb.d`. Un healthcheck vérifie la disponibilité de la base avant le démarrage de l'ETL :
 
 ---
 
