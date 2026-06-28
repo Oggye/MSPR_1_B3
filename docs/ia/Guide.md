@@ -430,7 +430,7 @@ api/main.py
 
 ---
 
-## PHASE 12 — MONITORING À faire
+## PHASE 12 — MONITORING ✅ Fait
 
 Ajouter dans `api/main.py`
 

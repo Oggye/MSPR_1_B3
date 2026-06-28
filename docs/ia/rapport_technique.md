@@ -1,6 +1,13 @@
-# Rapport Technique — Projet ObRail Europe
+# Ancian Rapport Technique — Projet ObRail Europe (ne correspon pas a mes attente)
 ## Développement d'un modèle prédictif d'intelligence artificielle pour l'analyse ferroviaire européenne
 ### MSPR — Bloc E6.2 / E6.4 — RNCP36581
+
+**Membres :**
+ - ABDILLAHI ABDI Mariam Marwo (etape 6 - 7 - 16 - 17)
+ - SAMB Adja Nafissatou Lo (etape 8 - 9 - 14 - 17)
+ - NKIBAN A ITCHIRI Orlane Emmanuelle Andrea (etape 10 - 11 - 17)
+ - TOURE Zeinab Anne Marie (etape 2 - 3 - 4 - 17)
+ - NDIAYE Mansour Djamil (etape 0 - 1 - 5 - 12 - 13 - 15 - 17)
 
 ---
 
