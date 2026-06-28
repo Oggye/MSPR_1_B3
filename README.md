@@ -20,7 +20,7 @@ ObRail Europe est un observatoire indépendant spécialisé dans l'analyse des f
 | [`docs/ia/benchmark_cloud.md`](docs/ia/benchmark_cloud.md) | Comparaison SageMaker / Azure ML / Vertex AI / HuggingFace |
 | [`docs/ia/veille.md`](docs/ia/veille.md) | Veille algorithmique, réglementaire et sécurité (sources 2026) |
 | [`docs/ia/retraining.md`](docs/ia/phase/retraining.md) | Procédure de réentraînement des modèles |
-| [`docs/ia/incident_data_leakage.md`](docs/ia/incident_data_leakage.md) | Chronologie et résolution de l'incident data leakage |
+| [`docs/ia/incident_data_leakage.md`](docs/ia/rapport%20de%20réorientation.md) | Chronologie et résolution de l'incident data leakage |
 
 ---
 
