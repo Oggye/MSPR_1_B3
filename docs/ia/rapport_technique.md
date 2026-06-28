@@ -1,281 +1,147 @@
-# Ancian Rapport Technique — Projet ObRail Europe (ne correspon pas a mes attente)
-## Développement d'un modèle prédictif d'intelligence artificielle pour l'analyse ferroviaire européenne
+# Rapport Technique — Projet ObRail Europe
+## Développement d'un pipeline d'intelligence artificielle pour l'analyse ferroviaire européenne
 ### MSPR — Bloc E6.2 / E6.4 — RNCP36581
 
-**Membres :**
- - ABDILLAHI ABDI Mariam Marwo (etape 6 - 7 - 16 - 17)
- - SAMB Adja Nafissatou Lo (etape 8 - 9 - 14 - 17)
- - NKIBAN A ITCHIRI Orlane Emmanuelle Andrea (etape 10 - 11 - 17)
- - TOURE Zeinab Anne Marie (etape 2 - 3 - 4 - 17)
- - NDIAYE Mansour Djamil (etape 0 - 1 - 5 - 12 - 13 - 15 - 17)
+| | |
+|---|---|
+| **Équipe** | ABDILLAHI ABDI Mariam Marwo · SAMB Adja Nafissatou Lo · NKIBAN A ITCHIRI Orlane Emmanuelle Andrea · TOURE Zeinab Anne Marie · NDIAYE Mansour Djamil |
+| **Programme** | Développeur en Intelligence Artificielle et Data Science |
+| **Certification** | RNCP36581 |
+| **Dépôt GitHub** | https://github.com/Oggye/MSPR_1_B3 |
+| **Documentation détaillée** | https://github.com/Oggye/MSPR_1_B3/tree/main/docs/ia |
 
 ---
 
-**Document rédigé à destination du jury de certification**
-**Programme : Développeur en Intelligence Artificielle et Data Science**
-**Certification : RNCP36581**
+## Résumé exécutif
+
+ObRail Europe, observatoire indépendant spécialisé dans l'analyse des flux ferroviaires européens, ne disposait d'aucun outil prédictif permettant d'anticiper l'évolution de la fréquentation ferroviaire ni d'identifier automatiquement les réseaux en fragilisation. Ce projet répond à ce besoin par le développement d'un pipeline ML complet : deux modèles complémentaires (un classifieur de détection de déclin et un régresseur de prévision de volume), exposés via une API REST FastAPI, déployés dans une infrastructure Docker et supervisés par une stack Prometheus/Grafana/Loki.
+
+Le projet a traversé un incident critique de data leakage, résolu après trois tentatives documentées. Cet incident constitue le fil conducteur méthodologique du rapport et la démonstration la plus forte de la compétence "Résoudre les incidents techniques" du référentiel RNCP.
+
+**Résultats finaux :**
+
+| Axe | Modèle | F1 / R² | ROC-AUC / MAE |
+|-----|--------|---------|---------------|
+| Classification | XGBoost optimisé | F1 = **0,667** | ROC-AUC = **0,826** |
+| Régression | Ridge baseline | R² = **0,9962** | MAE = **4 339 k passagers** |
 
 ---
 
 ## Table des matières
 
-1. [Présentation du projet](#1-présentation-du-projet)
-2. [Analyse du cahier des charges](#2-analyse-du-cahier-des-charges)
-3. [Architecture générale](#3-architecture-générale)
-4. [Structure du projet](#4-structure-du-projet)
-5. [Stack technique](#5-stack-technique)
-6. [Base de données](#6-base-de-données)
-7. [Pipeline de données](#7-pipeline-de-données)
-8. [Préparation des données](#8-préparation-des-données)
-9. [Machine Learning — Classification](#9-machine-learning--classification)
-10. [Machine Learning — Régression](#10-machine-learning--régression)
-11. [API REST](#11-api-rest)
-12. [Frontend](#12-frontend)
-13. [Docker et déploiement](#13-docker-et-déploiement)
-14. [Monitoring](#14-monitoring)
-15. [Sécurité et conformité RGPD](#15-sécurité-et-conformité-rgpd)
-16. [Benchmark des services IA](#16-benchmark-des-services-ia)
-17. [Veille technologique](#17-veille-technologique)
-18. [Résolution d'incidents — Data Leakage](#18-résolution-dincidents--data-leakage)
-19. [Résultats et performances](#19-résultats-et-performances)
-20. [Perspectives d'amélioration](#20-perspectives-damélioration)
-21. [Conclusion](#21-conclusion)
-22. [Matrice de conformité au cahier des charges](#22-matrice-de-conformité-au-cahier-des-charges)
-23. [Matrice de compétences RNCP36581](#23-matrice-de-compétences-rncp36581)
+1. Introduction et contexte
+2. Architecture générale
+3. Données, entrepôt et feature engineering
+4. Modélisation ML — Classification
+5. Modélisation ML — Régression
+6. Explicabilité (SHAP)
+7. API REST, Frontend et déploiement
+8. Monitoring et observabilité
+9. Conformité RGPD et AI Act
+10. Incident Data Leakage — Chronologie complète
+11. Benchmark des services IA
+12. Veille technologique
+13. Résultats, analyse critique et limites
+14. Perspectives d'amélioration
+15. Conclusion
+16. Matrice de conformité au cahier des charges
+17. Matrice de compétences RNCP36581
 
 ---
 
-## 1. Présentation du projet
+## 1. Introduction et contexte
 
-### 1.1 Contexte et problématique
+### 1.1 ObRail Europe et sa mission
 
-ObRail Europe est un observatoire indépendant fondé en 2018, spécialisé dans l'analyse des flux ferroviaires européens et la promotion du transport bas-carbone. Il travaille en partenariat avec les institutions européennes (Commission, Parlement), des ONG (Transport & Environnement, Back-on-Track) et les principaux opérateurs ferroviaires (SNCF, ÖBB, DB, Trenitalia), dans le cadre du Green Deal et du programme TEN-T.
+ObRail Europe est un observatoire fondé en 2018, dont la mission est d'analyser les flux ferroviaires à l'échelle européenne et de produire des études comparatives destinées aux décideurs politiques et aux opérateurs. L'organisation travaille en partenariat avec les institutions européennes (Commission, Parlement), des ONG environnementales (Transport & Environnement, Back-on-Track) et les principaux opérateurs ferroviaires (SNCF, DB, ÖBB, Trenitalia). Elle s'inscrit dans les stratégies européennes du Green Deal et du programme TEN-T (Trans-European Transport Network).
 
-L'organisation ne dispose pas d'outils permettant d'anticiper les tendances de fréquentation ni d'identifier automatiquement les réseaux en fragilisation. Les décisions s'appuient sur des analyses rétrospectives, sans capacité prédictive. À cela s'ajoute une hétérogénéité structurelle des sources de données (formats multiples, référentiels distincts par pays, problèmes de complétude) qui complique toute comparaison homogène.
+Jusqu'à ce projet, les décisions d'ObRail s'appuyaient exclusivement sur des analyses rétrospectives. L'absence d'outils prédictifs constituait une lacune stratégique : impossible d'anticiper les baisses de fréquentation, impossible d'orienter proactivement les interventions vers les réseaux fragiles.
 
-### 1.2 Objectifs
+### 1.2 Problématique technique
 
-- Anticiper la demande ferroviaire en prédisant le volume de passagers à horizon un an.
-- Détecter les pays dont le réseau est en déclin pour orienter les interventions stratégiques.
-- Exposer ces prédictions via une API REST intégrée dans une application web consommable par les équipes internes, les institutions partenaires et les opérateurs.
+Deux obstacles structurels compliquaient tout projet de modélisation. D'abord, l'hétérogénéité des sources de données : Eurostat, ADEME, opérateurs nationaux publient leurs statistiques dans des formats différents, avec des référentiels de pays distincts et des niveaux de complétude variables. Ensuite, l'absence de standardisation transfrontalière, qui empêche toute comparaison homogène entre pays européens sans une phase d'harmonisation rigoureuse.
+
+La réponse architecturale adoptée est celle d'un pipeline ML intégré : extraction et harmonisation dans un entrepôt PostgreSQL, entraînement et sélection de modèles, exposition via API REST, visualisation dans un frontend React, supervision par une stack d'observabilité complète.
 
 ### 1.3 Utilisateurs cibles et périmètre
 
-| Profil | Besoins |
-|--------|---------|
-| Équipe Data Science interne | Entraînement, optimisation continue, monitoring des modèles |
-| Institutions et décideurs européens | Exploitation des prédictions pour orienter TEN-T et Green Deal |
-| ONG environnementales | Communication sur la mobilité durable |
+| Profil | Besoin principal |
+|--------|-----------------|
+| Équipe Data Science interne | Entraînement continu, monitoring des modèles, procédure de réentraînement |
+| Institutions et décideurs européens | Prédictions pour orienter les politiques TEN-T et Green Deal |
+| ONG environnementales | Arguments quantifiés sur la mobilité durable |
 | Opérateurs ferroviaires | Planification des capacités, identification des lignes à risque |
 
-Le projet couvre : construction d'un entrepôt de données ETL (Eurostat, ADEME, Back-on-Track) — deux modèles ML (classifieur déclin + régression fréquentation) — API REST FastAPI — frontend React — infrastructure Docker — monitoring Prometheus/Grafana/Loki.
-
 ---
 
-## 2. Analyse du cahier des charges
+## 2. Architecture générale
 
-### 2.1 Exigences fonctionnelles
-
-| Besoin | Objet | Réalisation | Livrables |
-|--------|-------|-------------|-----------|
-| 1 | Analyse exploratoire et préparation des données | `build_dataset.py`, `train_utils.py`, `01_eda.ipynb` | Pipeline preprocessing, EDA |
-| 2 | Environnement d'apprentissage | Docker, `requirements.txt` | Conteneur reproductible |
-| 3 | Développement de modèles candidats | 4 classifieurs + 3 régresseurs entraînés et comparés | Tableaux comparatifs `ia/reports/` |
-| 4 | Entraînement, optimisation, validation | `optimize_xgboost_ridge.py`, RandomizedSearchCV/GridSearchCV | `docs/rapport_evaluation.md` |
-| 5 | API d'exposition | FastAPI, 4 routes, Swagger automatique | `/predict/classification`, `/predict/regression` |
-| 6 | Benchmark des services IA | 4 services comparés selon 6 critères | `docs/benchmark_cloud.md` |
-| 7 | Sauvegarde et reproductibilité | Modèles `.joblib`, `predict.py` CLI | `ia/models/`, `docs/retraining.md` |
-| 8 | Veille et communication projet | 3 axes, sources 2026 | `docs/veille.md` |
-| 9 | Rapport technique final | Ce document | `docs/rapport_technique.md` |
-
-### 2.2 Contraintes techniques
-
-| Contrainte | Réponse du projet |
-|------------|------------------|
-| Reproductibilité | `random_state=42` sur tous les modèles, pipelines joblib |
-| Préparation des données | StandardScaler + OHE, fit uniquement sur le train, stratify classification |
-| Workflow standard | 17 phases documentées (exploration → sélection → API) |
-| Format API | Modèles `.joblib`, rechargés via cache LRU |
-| Pipeline de prédiction | `predict.py` opérationnel en CLI et comme module Python |
-
-### 2.3 Contraintes réglementaires
-
-Le projet respecte les quatre principes RGPD : **finalité** (prédiction ferroviaire uniquement), **minimisation** (6 variables + pays, aucune donnée superflue), **sécurité** (données locales, non versionnées, non envoyées vers le cloud), **transparence** (SHAP, importance des variables, documentation de chaque décision). Aucune donnée personnelle n'est traitée (données agrégées par pays et année). Selon l'AI Act (UE 2024/1689), les modèles relèvent de la catégorie à risque limité et ne sont concernés par aucune pratique interdite (article 5).
-
----
-
-## 3. Architecture générale
-
-### 3.1 Vue d'ensemble
+### 2.1 Vue d'ensemble du système
 
 ```mermaid
 graph TB
     subgraph Sources["Sources de données"]
         E1["Eurostat CSV"]
         E2["ADEME"]
-        E3["Back-on-Track"]
-        E4["GTFS / Open Data"]
     end
-
-    subgraph ETL["ETL Container"]
-        T1["run_full_etl.py"]
-        T2["Nettoyage / Harmonisation"]
-        T3["Chargement warehouse"]
+    subgraph ETL["Conteneur ETL"]
+        T1["run_full_etl.py\nNettoyage · Harmonisation · Chargement"]
     end
-
-    subgraph DB["PostgreSQL Container"]
+    subgraph DB["PostgreSQL :5432"]
         D1[("facts_country_stats")]
         D2[("facts_night_trains")]
-        D3[("dim_countries")]
-        D4[("dim_years")]
+        D3[("dim_countries · dim_years")]
     end
-
-    subgraph IA["IA Container"]
+    subgraph IA["Conteneur IA"]
         M1["build_dataset.py"]
         M2["run_training.py"]
         M3["optimize_xgboost_ridge.py"]
         M4["Modèles .joblib"]
     end
-
-    subgraph API["API Container - FastAPI"]
+    subgraph API["Conteneur FastAPI :8000"]
         A1["/predict/classification"]
         A2["/predict/regression"]
-        A3["/health"]
-        A4["predict.py - cache LRU"]
+        A3["/health · /api/docs"]
     end
-
-    subgraph FRONT["Frontend Container - React"]
-        F1["Interface utilisateur"]
-        F2["Formulaire de prédiction"]
-        F3["Affichage des résultats"]
+    subgraph FRONT["Conteneur React/Nginx :3000"]
+        F1["Interface utilisateur\nFormulaire · Résultats enrichis"]
     end
-
-    subgraph MONITORING["Monitoring Stack"]
+    subgraph MON["Stack Monitoring"]
         P1["Prometheus :9090"]
         P2["Grafana :3001"]
         P3["Loki + Promtail"]
     end
 
-    Sources --> ETL
-    ETL --> DB
-    DB --> IA
-    IA --> M4
-    M4 --> API
-    API --> FRONT
-    API --> MONITORING
+    Sources --> ETL --> DB --> IA --> M4 --> API --> FRONT
+    API --> MON
 ```
 
-### 3.2 Flux de prédiction
+La séquence de démarrage est strictement ordonnée : `db (healthy) → etl (completed) → ia (completed) → api → front`. Chaque service attend le signal de santé du précédent avant de s'initialiser. Une seule commande (`docker compose up --build`) déploie l'intégralité du système.
 
-```mermaid
-sequenceDiagram
-    participant Client as Client HTTP
-    participant API as FastAPI Router
-    participant VAL as Validation Pydantic
-    participant PRED as predict.py
-    participant CACHE as LRU Cache
-    participant MODEL as Modèle .joblib
+### 2.2 Stack technique justifiée
 
-    Client->>API: POST /api/predict/classification (JSON)
-    API->>VAL: Validation PredictionInput
-    alt Données invalides
-        VAL-->>Client: HTTP 422 - Détail des erreurs
-    end
-    VAL->>API: Données validées
-    API->>PRED: predict(axis, **data)
-    PRED->>CACHE: _load_artifacts_cached(model_path, prep_path)
-    alt Premier appel
-        CACHE->>MODEL: joblib.load()
-        MODEL-->>CACHE: model, preprocessor
-    end
-    CACHE-->>PRED: model, preprocessor (depuis mémoire)
-    PRED->>PRED: preprocessor.transform(input_df)
-    PRED->>MODEL: model.predict(X)
-    MODEL-->>PRED: prédiction brute
-    PRED-->>API: dict {prediction, label, probability}
-    API->>API: Enrichissement (risque, confiance, recommandations)
-    API-->>Client: HTTP 200 - ClassificationResponse
-```
+| Technologie | Version | Rôle | Justification du choix |
+|-------------|---------|------|------------------------|
+| Python | 3.11 | Langage principal | Standard de facto en Data Science |
+| FastAPI | Récente | API REST | Performances asynchrones, validation Pydantic intégrée, Swagger automatique |
+| Pydantic V2 | V2 | Validation des entrées | Schémas typés, messages d'erreur standardisés, protection contre les injections |
+| React | 18 | Frontend | Flexibilité, large écosystème, consommation simple de l'API |
+| PostgreSQL | 15 | Entrepôt de données | SGBD relationnel mature, adapté aux requêtes analytiques multi-pays/multi-années |
+| XGBoost | 2.x | Classification | Référence sur données tabulaires, gestion native du déséquilibre via `scale_pos_weight` |
+| Scikit-learn | 1.3+ | Ridge, preprocessing, pipelines | Bibliothèque ML Python de référence, interopérabilité totale avec XGBoost |
+| Joblib | 1.2+ | Sérialisation des modèles | Recommandé par Scikit-learn pour les objets volumineux, plus rapide que pickle |
+| SHAP | Récente | Explicabilité | Standard industrie pour l'interprétation des modèles sur données tabulaires |
+| Prometheus / Grafana / Loki | Récentes | Monitoring et logs | Stack open source de référence pour l'observabilité MLOps |
+| Docker / Compose V2 | V2 | Conteneurisation | Reproductibilité totale, isolation des dépendances, déploiement en une commande |
 
 ---
 
-## 4. Structure du projet
+## 3. Données, entrepôt et feature engineering
 
-```
-obrail-europe/
-├── docker-compose.yml
-├── .env                              # Non versionné
-├── etl/
-│   ├── Dockerfile.etl
-│   └── run_full_etl.py
-├── ia/
-│   ├── Dockerfile
-│   ├── src/ml/
-│   │   ├── config.py
-│   │   ├── build_dataset.py
-│   │   ├── run_pipeline.py
-│   │   ├── run_training.py
-│   │   ├── evaluate_model.py
-│   │   ├── predict.py
-│   │   ├── models/
-│   │   │   ├── train_utils.py
-│   │   │   ├── train_logistic.py
-│   │   │   ├── train_random_forest.py
-│   │   │   ├── train_xgboost.py
-│   │   │   ├── train_mlp.py
-│   │   │   ├── train_ridge.py
-│   │   │   └── optimize_xgboost_ridge.py
-│   │   └── notebooks/
-│   │       ├── 01_eda.ipynb
-│   │       ├── 02_evaluation.ipynb
-│   │       └── 03_explicabilite.ipynb
-│   ├── models/                       # Artefacts .joblib, .json
-│   └── reports/                      # Rapports comparatifs .csv
-├── data/
-│   ├── warehouse/                    # CSV ETL harmonisés
-│   └── ml/                           # Datasets ML et preprocesseurs
-├── platform/
-│   ├── server/                       # API FastAPI principale
-│   └── front/                        # Frontend React
-├── sql/                              # Init PostgreSQL
-├── monitoring/                       # Prometheus, Grafana, Loki, Promtail
-├── docs/
-│   ├── rapport_evaluation.md
-│   ├── incident_data_leakage.md
-│   ├── benchmark_cloud.md
-│   ├── retraining.md
-│   └── veille.md
-└── tests/
-    └── test_predict.py
-```
+### 3.1 Sources et schéma relationnel
 
-**Répertoires clés :** `ia/` contient l'intégralité de la chaîne ML et est monté dans le conteneur API pour l'accès aux modèles. `data/` est le volume partagé entre ETL, IA et API. `platform/server/` héberge le router enrichi apportant les réponses métier (niveau de risque, recommandations, drivers).
+Les données sont issues d'**Eurostat** (statistiques officielles de fréquentation ferroviaire par pays, 2010–2024) et d'**ADEME** (facteurs d'émissions CO₂ par mode de transport). L'ETL les harmonise dans un entrepôt structuré selon un schéma en étoile.
 
----
-
-## 5. Stack technique
-
-| Technologie | Version | Rôle | Justification |
-|-------------|---------|------|---------------|
-| Python | 3.11 | Langage principal | Standard de facto en data science |
-| FastAPI | Récente | API REST | Performances asynchrones, Swagger automatique, validation Pydantic intégrée |
-| Pydantic | V2 | Validation des données | Schémas typés, messages d'erreur standardisés |
-| React | 18 | Frontend | Flexibilité, large écosystème |
-| Docker / Compose | V2 | Conteneurisation et orchestration | Reproductibilité totale, isolation des dépendances |
-| PostgreSQL | 15 | Base de données | SGBD relationnel mature, adapté aux requêtes analytiques |
-| SQLAlchemy | Récente | ORM | Abstraction de la base, requêtes en Python |
-| XGBoost | 2.x | Modèle de classification | Référence sur données tabulaires, gestion du déséquilibre via `scale_pos_weight` |
-| Scikit-learn | 1.3+ | Preprocessing, Ridge, pipelines | Bibliothèque de référence ML Python |
-| Pandas / NumPy | 1.5+ / 1.24+ | Manipulation et calcul numérique | Standards de facto |
-| Joblib | 1.2+ | Sérialisation des modèles | Recommandé par Scikit-learn pour les objets volumineux |
-| SHAP | Récente | Explicabilité | Standard industrie pour l'interprétation des modèles |
-| Prometheus / Grafana / Loki | Récentes | Monitoring et logs | Stack open source de référence pour l'observabilité |
-
-La comparaison des services cloud (section 16) a confirmé que la solution interne était la seule option compatible avec la volumétrie du dataset (546 observations), la conformité RGPD et les exigences d'explicabilité du cahier des charges.
-
----
-
-### 6.1 Schéma relationnel
 
 ```mermaid
 erDiagram
@@ -337,7 +203,7 @@ erDiagram
     DIM_YEARS ||--o{ CO2_EMISSIONS_PROCESSED : "correspond à"
 ```
 
-### 6.2 Description des tables principales
+### 3.2 Description des tables principales
 
 **`dim_countries`** : table de dimension contenant le référentiel des pays européens. Utilisée comme clé de jointure dans toutes les tables de faits. Contient 48 entrées.
 
@@ -347,7 +213,7 @@ erDiagram
 
 **`facts_night_trains`** : table de faits contenant 15 538 trajets ferroviaires avec leurs caractéristiques (distance, durée, opérateur, type de train). Utilisée pour l'analyse des dessertes mais écartée comme source ML principale (voir section 18).
 
-### 6.3 Volumétrie
+### 3.3 Volumétrie
 
 | Table | Lignes | Usage ML |
 |-------|--------|----------|
@@ -358,633 +224,423 @@ erDiagram
 | `dim_countries` | 48 | Jointure |
 | `dim_years` | 16 | Jointure |
 
-### 6.4 Initialisation de la base
 
-La base PostgreSQL est initialisée via les scripts SQL déposés dans le répertoire `sql/`, exécutés automatiquement par l'image PostgreSQL au premier démarrage via le mécanisme `docker-entrypoint-initdb.d`. Un healthcheck vérifie la disponibilité de la base avant le démarrage de l'ETL :
+La table `facts_country_stats` est le cœur du dispositif ML : elle présente une vraie variation temporelle continue (fréquentation et émissions CO₂ réelles sur 15 années), sans redondance structurelle entre variables. C'est la seule table du warehouse qui permet de construire une cible ML sans risque de leakage.
 
----
+### 3.4 Feature engineering — Variables lag temporelles
 
-## 7. Pipeline de données
+Le principe fondamental des séries temporelles est respecté : la valeur à prédire (année N) est expliquée exclusivement par des observations passées (N-1, N-2), jamais par elle-même. Trois variables lag sont calculées **par groupe de pays**, après tri chronologique, pour éviter tout débordement inter-pays :
 
-La chaîne Docker impose une séquence stricte garantissant que l'API ne démarre jamais sans modèles disponibles :
+| Variable | Description | Rôle ML |
+|----------|-------------|---------|
+| `passengers_lag1` | Fréquentation de l'année N-1 | Signal principal de tendance récente |
+| `passengers_lag2` | Fréquentation de l'année N-2 | Contexte historique permettant de détecter les tendances durables |
+| `co2_lag1` | Efficacité carbone de l'année N-1 | Évolution de la performance environnementale |
 
-```
-db (healthy) → etl (completed) → ia (completed) → api (started) → front
-```
+Les 84 observations des années 2010–2011, dont les lags sont incomplets, sont écartées. Le dataset exploitable final compte **546 observations** (42 pays × 13 années).
 
----
+### 3.5 Construction des variables cibles
 
-## 8. Préparation des données
+**Cible de classification — `en_declin` (0/1) :** un pays est classé en déclin si sa fréquentation de l'année N est inférieure à celle de l'année N-2. Le recul de deux ans filtre les fluctuations ponctuelles pour ne retenir que les tendances baissières durables. Cette cible ne dépend d'aucune feature d'entraînement.
 
-### 8.1 Construction du dataset
+**Cible de régression — `passengers` (année N) :** la valeur absolue de fréquentation, distribuée de manière très asymétrique (de 0 à 1 080 000 k passagers, médiane à 14 178 k), reflétant la disparité structurelle entre les petits et grands réseaux européens.
 
-Le dataset ML est issu de la jointure des trois tables principales, triée chronologiquement par pays pour garantir la cohérence des décalages temporels :
+### 3.6 Pipeline de preprocessing
 
-```python
-df = (facts_country_stats
-      .merge(dim_countries, on='country_id', how='left')
-      .merge(dim_years,     on='year_id',    how='left'))
-df = df.sort_values(['country_id', 'year']).reset_index(drop=True)
-```
+| Transformation | Appliquée à | Justification |
+|---------------|-------------|---------------|
+| `StandardScaler` | 6 features numériques | Centre et réduit chaque variable. Indispensable pour Ridge, Logistic Regression et MLP, sensibles à l'échelle |
+| `OneHotEncoder` | `country_name` | 41 colonnes binaires. `handle_unknown="ignore"` protège l'API contre des pays absents de l'entraînement |
 
-### 8.2 Feature engineering — Variables lag
+Le preprocesseur est ajusté exclusivement sur le jeu d'entraînement (`fit_transform`), puis appliqué au jeu de test (`transform`). Cette discipline est la garantie fondamentale contre le leakage de preprocessing. Résultat final : **47 features** par observation.
 
-```python
-df['passengers_lag1'] = df.groupby('country_id')['passengers'].shift(1)
-df['passengers_lag2'] = df.groupby('country_id')['passengers'].shift(2)
-df['co2_lag1']        = df.groupby('country_id')['co2_emissions'].shift(1)
-```
-
-Les calculs sont effectués par groupe de pays pour éviter tout débordement entre pays distincts. Ces variables capturent la dynamique temporelle sans accéder à la valeur cible de l'année N, garantissant l'absence de leakage.
-
-### 8.3 Variable cible classification
-
-```python
-df['en_declin'] = (df['passengers'] < df['passengers_lag2']).astype(int)
-```
-
-Un pays est classé "en déclin" si sa fréquentation de l'année N est inférieure à celle de N-2, ce qui détecte une tendance baissière durable plutôt qu'une simple fluctuation annuelle.
-
-### 8.4 Variables du modèle
-
-| Variable | Type | Source | Rôle |
-|----------|------|--------|------|
-| `year` | int | `dim_years` | Tendance structurelle |
-| `co2_emissions` | float | `facts_country_stats` | Émissions CO₂ (année N) |
-| `co2_per_passenger` | float | `facts_country_stats` | Efficacité carbone (N) |
-| `co2_lag1` | float | Calculé | Efficacité carbone (N-1) |
-| `passengers_lag1` | float | Calculé | Fréquentation (N-1) — signal principal |
-| `passengers_lag2` | float | Calculé | Fréquentation (N-2) — contexte historique |
-| `country_name` | str | `dim_countries` | Contexte national (encodé OHE) |
-| `passengers` | float | `facts_country_stats` | **Cible régression** |
-| `en_declin` | int (0/1) | Calculé | **Cible classification** |
-
-### 8.5 Pipeline de preprocessing
-
-```python
-ColumnTransformer(
-    transformers=[
-        ("num", StandardScaler(), NUMERIC_FEATURES),
-        ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-                CATEGORICAL_FEATURES),
-    ],
-    remainder="drop"
-)
-```
-
-**StandardScaler** centre et réduit les variables numériques (indispensable pour Ridge, Logistic Regression et MLP, sensibles à l'échelle). **OneHotEncoder** transforme `country_name` en 41 colonnes binaires ; l'option `handle_unknown="ignore"` protège l'API contre des pays inconnus en production. Le preprocesseur est ajusté uniquement sur le train (`fit_transform`), puis appliqué au test (`transform`), garantissant l'absence de fuite d'information.
-
-### 8.6 Split et distribution
-
-| Paramètre | Classification | Régression | Justification |
-|-----------|---------------|------------|---------------|
-| `test_size` | 0.20 | 0.20 | Standard pour 546 observations |
-| `random_state` | 42 | 42 | Reproductibilité garantie |
-| `stratify` | `y` | Non | Préserve le ratio 61,9/38,1 % dans les deux ensembles |
-
-**Résultat :** 436 observations en entraînement, 110 en test, 47 features après OHE. Les 84 observations des années 2010-2011 (lag insuffisant) sont supprimées par `dropna`.
-
-**Distribution cible classification :**
-
-| Classe | Effectif | Proportion |
-|--------|----------|------------|
-| 0 — En croissance | 338 | 61,9 % |
-| 1 — En déclin | 208 | 38,1 % |
-
-Le déséquilibre (61,9/38,1 %) est traité par `class_weight="balanced"` (Scikit-learn) et `scale_pos_weight` (XGBoost), et justifie le choix du F1-Score comme métrique principale.
+**Split :** 80 % entraînement / 20 % test, `random_state=42` pour la reproductibilité, `stratify=y` en classification (préservation du ratio 61,9 % / 38,1 %). Résultat : 436 observations en entraînement, 110 en test.
 
 ---
 
-## 9. Machine Learning — Classification
+## 4. Modélisation ML — Classification
 
-### 9.1 Problème métier
+### 4.1 Problème métier
 
-Détecter automatiquement les pays européens dont le réseau ferroviaire est en déclin de fréquentation, pour orienter les alertes vers les institutions européennes, prioriser les interventions des opérateurs et alimenter les politiques TEN-T.
+Identifier automatiquement les pays européens dont le réseau ferroviaire présente une tendance baissière, pour orienter les alertes institutionnelles, prioriser les interventions des opérateurs et alimenter les politiques TEN-T en données prédictives.
 
-### 9.2 Modèles candidats testés
+### 4.2 Quatre modèles candidats
 
-- **Logistic Regression** (`max_iter=1000, class_weight="balanced"`) — baseline linéaire interprétable via ses coefficients.
-- **Random Forest** (`n_estimators=100, class_weight="balanced"`) — robuste aux valeurs aberrantes, importance des features native.
-- **XGBoost** (`scale_pos_weight=n_neg/n_pos`) — gradient boosting, référence sur données tabulaires.
-- **MLP** (`hidden_layer_sizes=(64,32), early_stopping=True, validation_fraction=0.15`) — permet la comparaison deep learning vs boosting sur ce volume de données.
+Le cahier des charges impose de tester plusieurs familles algorithmiques. Quatre architectures sont comparées, couvrant le spectre complet : linéaire, ensembliste, boosting et réseau de neurones.
 
-### 9.3 Optimisation XGBoost
+**Logistic Regression** (`class_weight="balanced"`) : modèle linéaire de référence. Sa simplicité permet d'établir un plancher de performance et de vérifier qu'une partie du signal est linéairement séparable.
 
-```python
-RandomizedSearchCV(
-    estimator=xgb.XGBClassifier(),
-    param_distributions={
-        "n_estimators":     [50, 100, 200, 300],
-        "max_depth":        [2, 3, 4, 5],
-        "learning_rate":    [0.01, 0.05, 0.1, 0.2],
-        "subsample":        [0.7, 0.8, 1.0],
-        "scale_pos_weight": [1, 1.5, 2],
-    },
-    n_iter=30, scoring="f1", cv=5, random_state=42
-)
-```
+**Random Forest** (`n_estimators=100, class_weight="balanced"`) : méthode ensembliste robuste aux valeurs aberrantes, peu sensible aux hyperparamètres, fournissant une importance des features native.
 
-Paramètres retenus : `n_estimators=300, max_depth=4, learning_rate=0.05, subsample=0.8, scale_pos_weight=1.5`.
+**XGBoost** (`scale_pos_weight=n_neg/n_pos ≈ 1,625`) : gradient boosting, référence reconnue sur les données tabulaires. `scale_pos_weight` joue le même rôle que `class_weight` en compensant le déséquilibre des classes.
 
-### 9.4 Résultats comparatifs
+**MLP** (`hidden_layer_sizes=(64,32), early_stopping=True`) : réseau de neurones à deux couches cachées, inclus pour comparer le deep learning et le boosting sur ce volume de données.
 
-| Modèle | Accuracy | Precision | Recall | F1 | ROC-AUC |
-|--------|:--------:|:---------:|:------:|:--:|:-------:|
-| Logistic Regression | 0.645 | 0.538 | 0.500 | 0.519 | 0.693 |
-| Random Forest | 0.691 | 0.625 | 0.476 | 0.541 | 0.815 |
-| XGBoost (base) | 0.709 | 0.625 | 0.595 | 0.610 | 0.796 |
-| MLP | 0.564 | 0.125 | 0.024 | 0.040 | 0.341 |
-| **XGBoost (optimisé)** | **0.764** | **0.722** | **0.619** | **0.667** | **0.826** |
+### 4.3 Résultats comparatifs
 
-**Gain de l'optimisation :** F1 +9,3 % — Accuracy +7,8 % — Precision +15,5 % — ROC-AUC +3,8 %.
+| Modèle | Accuracy | Precision | Recall | F1 ⭐ | ROC-AUC |
+|--------|:--------:|:---------:|:------:|:------:|:--------:|
+| Logistic Regression | 0,645 | 0,538 | 0,500 | 0,519 | 0,693 |
+| Random Forest | 0,691 | 0,625 | 0,476 | 0,541 | **0,815** |
+| XGBoost (base) | 0,709 | 0,625 | 0,595 | 0,610 | 0,796 |
+| MLP | 0,564 | 0,125 | 0,024 | 0,040 | 0,341 |
+| **XGBoost (optimisé)** | **0,764** | **0,722** | **0,619** | **0,667** | **0,826** |
 
-### 9.5 Justification des métriques et du modèle
+**Pourquoi le F1-Score comme critère principal ?** Un modèle prédisant systématiquement "en croissance" obtiendrait 61,9 % d'accuracy sans aucune utilité métier. Le F1-Score, moyenne harmonique de la précision et du rappel, pénalise équitablement deux types d'erreurs aux conséquences métier distinctes : les fausses alarmes (mobilisation inutile de ressources d'intervention) et les déclins non détectés (alertes manquées sur des réseaux fragiles).
 
-**F1-Score :** un modèle prédisant systématiquement "en croissance" obtiendrait 61,9 % d'accuracy sans aucune utilité métier. Le F1-Score, moyenne harmonique de la précision et du rappel, pénalise équitablement les fausses alarmes (mobilisation inutile de ressources) et les déclins non détectés (alertes manquées). **ROC-AUC** (0.826) mesure la capacité discriminante indépendamment du seuil de décision — 82,6 % des paires (pays en déclin, pays en croissance) sont correctement ordonnées.
+### 4.4 Analyse des résultats
 
-**Pourquoi XGBoost et non le MLP ?** Avec 436 lignes d'entraînement, le réseau de neurones prédit quasi-systématiquement la classe majoritaire (F1 = 0.040). Ce résultat illustre une limite connue des architectures deep learning sur les petits datasets tabulaires, et confirme la supériorité des méthodes ensemblistes dans ce contexte. C'est une information scientifique valide, pas un échec de configuration.
+- **Logistic Regression** confirme qu'une partie du signal est linéairement séparable. Sa performance honorable (F1 = 0,519) justifie le recours à des architectures plus complexes mais ne les rend pas obligatoires a priori.
+- **Random Forest** présente le meilleur ROC-AUC de base (0,815), indiquant une excellente capacité discriminante globale, mais un recall trop faible — 52 % des pays en déclin ne sont pas détectés, ce qui est rédhibitoire pour l'usage métier.
+- **MLP** échoue complètement : F1 = 0,040. Avec 436 observations d'entraînement, le réseau prédit quasi-systématiquement la classe majoritaire. Ce résultat n'est pas un échec de configuration — c'est un résultat scientifiquement valide illustrant une limite connue des architectures deep learning sur les petits datasets tabulaires. Il justifie le choix du boosting et constitue une information documentaire à forte valeur pédagogique.
+- **XGBoost optimisé** est sélectionné sur l'ensemble des critères après optimisation par `RandomizedSearchCV` (30 itérations, cv=5, scoring="f1"). Paramètres retenus : `n_estimators=300, max_depth=4, learning_rate=0.05, subsample=0.8, scale_pos_weight=1.5`.
 
-### 9.6 Explicabilité (SHAP + importance XGBoost)
+### 4.5 Gain de l'optimisation
+
+| Métrique | Avant | Après | Gain |
+|----------|:-----:|:-----:|:----:|
+| F1-Score | 0,610 | **0,667** | **+9,3 %** |
+| Accuracy | 0,709 | **0,764** | +7,8 % |
+| Precision | 0,625 | **0,722** | +15,5 % |
+| ROC-AUC | 0,796 | **0,826** | +3,8 % |
+
+---
+
+## 5. Modélisation ML — Régression
+
+### 5.1 Problème métier
+
+Prévoir le volume de passagers ferroviaires d'un pays européen pour une année donnée, afin de soutenir la planification des capacités des opérateurs, l'évaluation de l'impact environnemental futur et l'alimentation des tableaux de bord institutionnels.
+
+### 5.2 Résultats comparatifs
+
+| Modèle | MAE | RMSE | R² ⭐ |
+|--------|:---:|:----:|:------:|
+| **Ridge (baseline)** | **4 339** | **9 074** | **0,9962** |
+| Ridge (optimisé) | 4 674 | 11 370 | 0,9940 |
+| Random Forest | 4 966 | 26 039 | 0,9684 |
+| XGBoost (optimisé) | 5 576 | 28 508 | 0,9621 |
+| XGBoost (baseline) | 5 215 | 29 428 | 0,9596 |
+
+**Pourquoi le R² comme critère principal ?** La variable `passengers` varie de 0 à 1 080 000 k selon les pays — un RMSE de 9 074 pour la France et un RMSE de 9 074 pour le Luxembourg n'ont pas la même signification. Le R², indépendant de l'échelle, permet une comparaison homogène entre tous les modèles. Le MAE (4 339 k passagers) complète l'analyse en fournissant une erreur concrète en unité métier.
+
+### 5.3 Pourquoi Ridge domine XGBoost — Analyse structurelle
+
+Le résultat peut sembler contre-intuitif : Ridge, modèle linéaire, surpasse XGBoost sur toutes les métriques. L'explication est structurelle. La fréquentation ferroviaire présente une inertie très forte d'une année à l'autre : un pays avec 100 000 k passagers en N-1 en aura vraisemblablement un nombre proche en N. Cette relation est fondamentalement linéaire pour la quasi-totalité des pays européens. Ridge capture précisément cette dynamique grâce à sa régularisation L2, sans surparamétrage.
+
+XGBoost et Random Forest souffrent d'une limitation inhérente aux méthodes ensemblistes à base d'arbres : ils ne peuvent pas extrapoler au-delà des valeurs vues à l'entraînement. Pour les grands pays (Allemagne, France, Italie) dont les volumes sont extrêmes dans la distribution d'entraînement, cette contrainte génère des erreurs d'extrapolation importantes — c'est ce que traduit un RMSE trois fois supérieur à celui de Ridge.
+
+**Sur le R² de 0,9962 :** ce résultat élevé peut susciter un questionnement sur un éventuel leakage. La clarification s'impose : `passengers_lag1` est naturellement très corrélé à `passengers` (forte autocorrélation temporelle des séries ferroviaires). Ce n'est pas un leakage — la valeur cible de l'année N n'est jamais utilisée comme feature — c'est une propriété intrinsèque des séries temporelles stables.
+
+**Sur le modèle optimisé dégradé :** la `GridSearchCV` a sélectionné `alpha=0.1`, qui minimise l'erreur en validation croisée sur le jeu d'entraînement mais se révèle moins robuste sur le jeu de test. Ce phénomène illustre la différence entre optimisation de la validation croisée et généralisation en production. Le modèle baseline (alpha=1.0) est conservé comme modèle final.
+
+---
+
+## 6. Explicabilité (SHAP)
+
+L'explicabilité n'est pas un luxe académique : c'est une exigence du cahier des charges (transparence RGPD, justification des décisions auprès des institutions partenaires) et un critère de validité scientifique. SHAP (SHapley Additive exPlanations) est utilisé pour les deux modèles finaux.
+
+### 6.1 Classification — XGBoost optimisé
 
 | Rang | Variable | Influence | Interprétation métier |
-|------|----------|-----------|----------------------|
-| 1 | `passengers_lag1` | Forte | Signal principal de déclin |
-| 2 | `passengers_lag2` | Forte | Tendance structurelle sur deux ans |
-| 3 | `co2_per_passenger` | Modérée | Compétitivité environnementale du réseau |
-| 4 | `year` | Modérée | Tendance temporelle globale |
+|------|----------|:----------:|----------------------|
+| 1 | `passengers_lag1` | Très forte | Signal principal : un pays dont la fréquentation baisse depuis un an est statistiquement plus à risque |
+| 2 | `passengers_lag2` | Forte | Tendance structurelle sur deux ans, distingue les baisses durables des fluctuations ponctuelles |
+| 3 | `co2_per_passenger` | Modérée | Compétitivité environnementale : un réseau inefficace en termes carbone est un signal de fragilité |
+| 4 | `year` | Modérée | Tendance temporelle globale post-COVID |
 
-Cette hiérarchie est cohérente avec la logique métier : un pays dont la fréquentation est en baisse depuis deux ans est structurellement plus à risque qu'un pays connaissant une légère inflexion ponctuelle.
+### 6.2 Régression — Ridge baseline
 
----
-
-## 10. Machine Learning — Régression
-
-### 10.1 Problème métier
-
-Prévoir le volume de passagers ferroviaires d'un pays européen pour une année donnée, afin de soutenir la planification des capacités, l'évaluation de l'impact environnemental futur et l'alimentation des tableaux de bord institutionnels.
-
-### 10.2 Modèles candidats et optimisation
-
-- **Ridge** (`alpha=1.0`) — baseline linéaire régularisée (pénalité L2), interprétable via ses coefficients.
-- **Random Forest Regressor** (`n_estimators=100`) — non-linéaire, robuste aux valeurs aberrantes.
-- **XGBoost Regressor** (`n_estimators=100, learning_rate=0.1, max_depth=4`) — gradient boosting, attendu comme référence sur données tabulaires.
-
-L'optimisation Ridge (`GridSearchCV`, 9 valeurs d'alpha, cv=5) retient `alpha=0.1`, mais dégrade légèrement les performances sur le jeu de test (R²=0.9940 vs 0.9962). La version baseline est donc conservée comme modèle final.
-
-### 10.3 Résultats comparatifs
-
-| Modèle | MAE | RMSE | R² |
-|--------|:---:|:----:|:--:|
-| **Ridge (baseline)** | **4 339** | **9 074** | **0.9962** |
-| Ridge (optimisé) | 4 674 | 11 370 | 0.9940 |
-| Random Forest | 4 966 | 26 039 | 0.9684 |
-| XGBoost (optimisé) | 5 576 | 28 508 | 0.9621 |
-| XGBoost (baseline) | 5 215 | 29 428 | 0.9596 |
-
-### 10.4 Justification du choix de Ridge
-
-Ridge domine sur tous les critères, ce qui peut sembler contre-intuitif face à XGBoost. L'explication est structurelle : la fréquentation ferroviaire d'une année à l'autre est quasi-linéaire. La relation entre `passengers_lag1`, `passengers_lag2` et `passengers` est fondamentalement linéaire pour la grande majorité des pays européens.
-
-XGBoost et Random Forest souffrent d'une limitation inhérente aux arbres de décision : ils moyennent des prédictions qui ne peuvent pas extrapoler au-delà des valeurs vues en entraînement. Pour les grands pays (Allemagne, France, Italie) dont les volumes sont extrêmes dans la distribution, cette limitation génère des erreurs importantes — le RMSE y est trois fois plus élevé que Ridge.
-
-Le R² de 0.9962 est légitime : `passengers_lag1` est naturellement très corrélé à `passengers` (forte autocorrélation temporelle). Il ne s'agit pas d'un data leakage, car la valeur cible de l'année N n'est jamais utilisée comme feature d'entraînement. Par ailleurs, la variable `passengers` varie de 0 à 1 080 000 selon les pays, rendant les RMSE absolus non comparables entre pays : le R², indépendant de l'échelle, est la métrique principale retenue. Le MAE (4 339 k passagers) fournit une erreur concrète en unité métier.
-
-### 10.5 Explicabilité (SHAP + coefficients Ridge)
-
-| Rang | Variable | Coefficient | Interprétation |
-|------|----------|-------------|----------------|
-| 1 | `passengers_lag1` | Très élevé positif | Prédit ~95 % de la valeur N |
-| 2 | `passengers_lag2` | Élevé positif | Capte les inflexions de tendance |
-| 3 | `co2_per_passenger` | Modéré | Qualité et attractivité du réseau |
+Les coefficients Ridge confirment la dominance de `passengers_lag1` (coefficient très largement positif), suivi de `passengers_lag2`. La cohérence entre l'importance SHAP et la logique métier est un indicateur de validité du modèle aussi important que les métriques elles-mêmes : le modèle n'exploite pas de corrélations spurieuses mais bien les signaux temporels et environnementaux pertinents pour ObRail.
 
 ---
 
-## 11. API REST
+## 7. API REST, Frontend et déploiement
 
-### 11.1 Architecture et routes
+### 7.1 Architecture de l'API FastAPI
 
-L'API est organisée en deux couches : le module `predict.py` (logique de prédiction pure : chargement avec cache LRU, preprocessing, inférence) et le router `predict.py` de la plateforme (validation Pydantic, enrichissement métier). Cette séparation garantit une logique de prédiction identique en CLI, en API standalone et en API plateforme — toute modification du modèle n'impacte qu'un seul endroit.
+L'API est organisée en deux couches séparées. Le module `predict.py` encapsule la logique de prédiction pure (chargement avec cache LRU, preprocessing, inférence). Le router de la plateforme assure la validation Pydantic et l'enrichissement métier des réponses. Cette séparation garantit une logique de prédiction identique en CLI, en API standalone et en API plateforme.
 
 | Route | Méthode | Description | Code succès |
 |-------|---------|-------------|:-----------:|
-| `/` | GET | Vérification API active | 200 |
 | `/health` | GET | Health check détaillé | 200 |
 | `/api/predict/classification` | POST | Prédiction déclin ferroviaire | 200 |
 | `/api/predict/regression` | POST | Prévision volume passagers | 200 |
 | `/api/docs` | GET | Documentation Swagger automatique | 200 |
 
-### 11.2 Schéma d'entrée (Pydantic)
+Les réponses de prédiction sont enrichies avec un **niveau de risque** (Faible / Modéré / Élevé / Critique), un **score de confiance**, des **recommandations métier contextualisées**, les **variables les plus influentes** et le **temps d'inférence en millisecondes**. Cette couche d'enrichissement transforme un résultat statistique brut en information actionnelle pour un décideur non-technicien.
 
-```python
-class PredictionInput(BaseModel):
-    country: str = Field(..., min_length=2, max_length=100)
-    year: int    = Field(..., ge=2013, le=2035)
-    co2_emissions:      float = Field(..., ge=0)
-    co2_per_passenger:  float = Field(..., ge=0)
-    co2_lag1:           float = Field(..., ge=0)
-    passengers_lag1:    float = Field(..., ge=0)
-    passengers_lag2:    float = Field(..., ge=0)
+La validation Pydantic (types Python, bornes numériques, cohérence inter-champs) garantit que l'API ne propage jamais d'exception brute vers le client. Un modèle `.joblib` absent retourne un HTTP 503 structuré, non une stack trace.
 
-    @model_validator(mode="after")
-    def check_lag_consistency(self):
-        if self.passengers_lag1 == 0 and self.passengers_lag2 > 0:
-            raise ValueError("passengers_lag1 nul avec passengers_lag2 positif "
-                             "— incohérence temporelle.")
-        return self
+Le cache LRU (`maxsize=4`) sur le chargement des modèles élimine la latence de désérialisation (200–500 ms) après le premier appel : les suivants sont résolus depuis la mémoire.
+
+### 7.2 Déploiement Docker
+
+```mermaid
+graph LR
+    DB["db\nPostgreSQL :5432\nhealthcheck"] --> ETL["etl\none-shot"]
+    ETL --> IA["ia\nentraînement"]
+    IA --> API["api\nFastAPI :8000"]
+    DB --> API
+    API --> FRONT["front\nReact/Nginx :3000"]
+    API --> PROM["prometheus :9090"]
+    PROM --> GRAFANA["grafana :3001"]
+    LOKI["loki :3100"] --> GRAFANA
 ```
 
-### 11.3 Exemple complet — Classification
-
-**Requête :**
-```json
-{
-    "country": "France",
-    "year": 2024,
-    "co2_emissions": 24800.0,
-    "co2_per_passenger": 1.75,
-    "co2_lag1": 25100.0,
-    "passengers_lag1": 88000.0,
-    "passengers_lag2": 86500.0
-}
-```
-
-**Réponse (HTTP 200) :**
-```json
-{
-    "country": "France",
-    "year": 2024,
-    "prediction": 0,
-    "label": "En croissance",
-    "probability_decline": 0.0287,
-    "confidence_score": 94.3,
-    "risk_level": "Faible",
-    "risk_description": "Très faible risque de déclin. Dynamique historique favorable.",
-    "business_message": "Probabilité de déclin estimée à 2.9% — trajectoire favorable.",
-    "recommendations": [
-        "Maintenir les investissements dans les infrastructures ferroviaires.",
-        "Surveiller co2_per_passenger pour anticiper un retournement.",
-        "Documenter les bonnes pratiques pour d'autres marchés européens."
-    ],
-    "key_drivers": [
-        {"variable": "passengers_lag1", "value": "88,000 k passagers",
-         "influence": "Forte", "direction": "Favorable"}
-    ],
-    "metadata": {
-        "model_name": "XGBoost Classifier (optimisé RandomizedSearchCV)",
-        "axis": "classification"
-    },
-    "inference_ms": 12.4
-}
-```
-
-### 11.4 Gestion des erreurs et cache
-
-| Code HTTP | Cause |
-|-----------|-------|
-| 422 | Données invalides (Pydantic) |
-| 503 | Modèle `.joblib` absent du disque |
-| 500 | Erreur interne inattendue |
-
-L'API ne propage jamais les exceptions brutes : un `FileNotFoundError` retourne un HTTP 503 avec message et procédure de résolution.
-
-```python
-@lru_cache(maxsize=4)
-def _load_artifacts_cached(model_path_str: str, prep_path_str: str):
-    model = joblib.load(model_path_str)
-    preprocessor = joblib.load(prep_path_str)
-    return model, preprocessor
-```
-
-Le chargement initial (200-500 ms) n'est effectué qu'une seule fois par modèle ; les appels suivants sont résolus depuis la mémoire. FastAPI génère automatiquement la documentation Swagger à `http://localhost:8000/api/docs`. Chaque prédiction est journalisée structurellement et collectée par Promtail vers Loki. L'API émet un avertissement si le pays soumis n'a pas été vu à l'entraînement (`handle_unknown="ignore"` retourne des colonnes OHE à zéro, la prédiction reste possible avec fiabilité réduite).
+| Service | Port hôte | Rôle |
+|---------|:---------:|------|
+| Frontend React | 3000 | Interface utilisateur |
+| API FastAPI + Swagger | 8000 | Inférence et documentation |
+| PostgreSQL | 5432 | Entrepôt de données |
+| Prometheus | 9090 | Collecte des métriques |
+| Grafana | 3001 | Dashboards |
+| Loki | 3100 | Agrégation des logs |
 
 ---
 
-## 12. Frontend
+## 8. Monitoring et observabilité
 
-Le frontend est une application React servie par Nginx sur le port 3000. Il propose un formulaire de prédiction (country, year, indicateurs CO₂ et lag), la sélection de l'axe (classification ou régression), et l'affichage des résultats enrichis retournés par l'API (niveau de risque, score de confiance, message métier, recommandations, variables influentes).
+La stack de supervision comprend Prometheus (collecte des métriques API), Grafana (dashboards provisionnés automatiquement au démarrage) et Loki/Promtail (agrégation et requête des logs structurés en production).
 
-```javascript
-const response = await fetch('/api/predict/classification', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData)
-});
-if (!response.ok) {
-    const error = await response.json();
-    setError(error.detail?.message || 'Erreur de prédiction');
-    return;
-}
-setPrediction(await response.json());
-```
+| Catégorie | Métriques surveillées |
+|-----------|----------------------|
+| Techniques | Latence des requêtes, taux d'erreur 4xx/5xx, temps d'inférence par modèle |
+| Métier ML | Distribution des prédictions (ratio déclin/croissance), confiance moyenne par période |
+| Drift ML | Dérive des inputs vs distribution d'entraînement (data drift), dégradation sur nouvelles données réelles (model drift) |
 
-Les codes d'erreur HTTP sont interceptés et traduits en messages lisibles (422 → détails de validation Pydantic, 503 → modèles non disponibles).
+Chaque prédiction produit une ligne de log structurée collectée par Promtail, permettant une traçabilité complète des décisions du modèle en production.
 
 ---
 
-## 13. Docker et déploiement
+## 9. Conformité RGPD et AI Act
 
-### 13.1 Démarrage en une commande
+### 9.1 RGPD
 
-```bash
-git clone https://github.com/Oggye/MSPR_1_B3
-cd MSPR_1_B3
-docker compose up --build
-```
+Le projet ne traite aucune donnée personnelle — les données sont agrégées par pays et par année. La conformité s'articule autour des quatre principes cardinaux :
 
-Cette commande construit les images, démarre PostgreSQL (avec healthcheck), exécute l'ETL, entraîne les modèles ML, démarre l'API FastAPI une fois les artefacts disponibles, puis lance le frontend et la stack de monitoring.
+| Principe | Mesure appliquée |
+|----------|-----------------|
+| Finalité | Prédiction ferroviaire uniquement, objectif défini et documenté |
+| Minimisation | 6 variables numériques + pays — aucune donnée superflue |
+| Sécurité | Données locales, non versionnées, non transmises vers des services cloud tiers |
+| Transparence | SHAP, importance des variables, documentation complète de chaque décision de modélisation |
 
-### 13.2 Dépendances entre services
+### 9.2 AI Act (UE 2024/1689)
+
+Les modèles ObRail relèvent de la **catégorie à risque limité** : ils constituent des outils d'aide à la décision pour des institutions partenaires, sans effet contraignant sur des personnes physiques, et n'entrent dans aucune pratique interdite par l'article 5 (manipulation subliminale, notation sociale, reconnaissance biométrique, police prédictive, etc.).
+
+L'**article 50** impose, à partir du **2 août 2026**, d'informer les utilisateurs qu'ils interagissent avec un système IA. Une notice de conformité devra être intégrée aux interfaces avant cette date. La sanction potentielle est de 15 M€ ou 3 % du chiffre d'affaires mondial.
+
+---
+
+## 10. Incident Data Leakage — Chronologie complète
+
+Cet incident est l'événement méthodologique le plus significatif du projet. Sa documentation transparente démontre la capacité à identifier une erreur grave, en comprendre le mécanisme et apporter une correction fondée sur l'analyse rigoureuse des données disponibles.
+
+### 10.1 Sujet initial et symptôme
+
+Le sujet initial portait sur **l'identification automatique des lignes ferroviaires candidates à la substitution avion/train**, à partir de la table `facts_night_trains`. La variable cible `candidate_substitution` avait été construite par des règles métier fondées sur des seuils de distance et de durée.
+
+Lors de l'évaluation des premiers modèles, **tous ont atteint une accuracy de 1,0** quelle que soit l'architecture testée (Logistic Regression, Random Forest, XGBoost, MLP). Une précision parfaite sur l'ensemble de test est le signal d'alerte classique d'un leakage — jamais un signe de succès.
+
+### 10.2 Mécanisme du data leakage
 
 ```mermaid
 graph TD
-    subgraph Compose["Docker Compose"]
-        DB[db\nPostgreSQL 15\n:5432]
-        ETL[etl\nno-restart\nrequiert db healthy]
-        IA[ia\nno-restart\nrequiert etl completed]
-        API[api\nFastAPI\n:8000\nrequiert ia completed + db healthy]
-        FRONT[front\nNginx + React\n:3000\nrequiert api]
-        PROM[prometheus\n:9090]
-        GRAFANA[grafana\n:3001]
-        LOKI[loki\n:3100]
-        PROMTAIL[promtail]
-    end
-
-    DB -->|healthy| ETL
-    ETL -->|completed| IA
-    IA -->|completed| API
-    DB -->|healthy| API
-    PROM -->|started| API
-    API --> FRONT
-    PROM --> GRAFANA
-    LOKI --> GRAFANA
-    LOKI --> PROMTAIL
+    A["Règle métier :\nsi distance_km ≤ 1 200 ET duration_min ≤ 480\n→ candidate_substitution = 1"] --> B["Variables distance_km et duration_min\nprésentes dans les features d'entraînement"]
+    B --> C["Le modèle mémorise :\nif distance_km ≤ 1 200 → predict 1"]
+    C --> D["Accuracy = 1,0\nRésultat invalide — le modèle n'a rien appris"]
 ```
 
-### 13.3 Ports, volumes et configuration
+Les modèles n'ont pas appris une relation statistique réelle : ils ont mémorisé une fonction déterministe équivalente à la règle de construction de la cible.
 
-| Service | Port hôte |
-|---------|:---------:|
-| Frontend React | 3000 |
-| API FastAPI + Swagger | 8000 |
-| PostgreSQL | 5432 |
-| Prometheus | 9090 |
-| Grafana | 3001 |
-| Loki | 3100 |
+### 10.3 Trois tentatives de résolution documentées
 
-Le répertoire `./data` est monté dans les conteneurs ETL, IA et API : l'ETL y écrit les CSV du warehouse, le service IA y écrit les datasets ML et les preprocesseurs, l'API y lit les artefacts. Les credentials sont stockés dans `.env` (non versionné) et injectés via `${VAR}` dans le compose.
+| Tentative | Cible construite | Problème identifié | Résultat |
+|-----------|-----------------|-------------------|---------|
+| 1 | `candidate_substitution` via seuils distance/durée | Leakage direct : les features d'entraînement sont les règles de la cible | Accuracy = 1,0 |
+| 2 | `ligne_fragile` via agrégats pays (`passengers < médiane` ET `co2 > médiane`) | 42 pays → le modèle mémorise 42 étiquettes pays, pas de variation intra-pays | Scores quasi-parfaits persistants |
+| 3 | `ligne_fragile` via vitesse moyenne (`avg_speed = distance / durée`) | `distance_category` et `duration_category` encodaient les mêmes seuils sous forme catégorielle → leakage indirect via features dérivées | Accuracy encore proche de 1,0 |
 
----
+### 10.4 Diagnostic fondamental
 
-## 14. Monitoring
+L'audit approfondi a révélé la limite structurelle de `facts_night_trains` : cette table ne contient que des variables descriptives du trajet (distance, durée, type de train). Toute cible de classification métier imaginable sera nécessairement liée à ces variables, rendant le leakage inévitable quelle que soit la formulation choisie. Il est impossible de construire une cible de classification crédible à partir de cette table seule.
 
-La stack de supervision comprend Prometheus (collecte des métriques API), Grafana (dashboards provisionnés automatiquement au démarrage), Loki (agrégation des logs) et Promtail (collecte et envoi vers Loki).
+### 10.5 Solution retenue — Pivot de sujet
 
-| Catégorie | Métrique |
-|-----------|----------|
-| Technique | Latence des requêtes, taux d'erreur 4xx/5xx, volume par route et par période |
-| Technique | Temps d'inférence mesuré via `perf_counter`, inclus dans chaque réponse API |
-| Métier | Distribution des prédictions (ratio déclin/croissance), confiance moyenne |
-| ML | Data drift (dérive des inputs vs distribution d'entraînement) |
-| ML | Model drift (dégradation des métriques sur nouvelles données avec labels connus) |
+L'audit complet du warehouse a révélé que `facts_country_stats` contenait des données exploitables pour un sujet ML rigoureux : 15 années × 42 pays = 630 observations, avec une vraie variation temporelle continue et des variables numériques non redondantes. Le sujet a été recentré sur la **prévision de la fréquentation ferroviaire par pays** (régression) et la **détection des pays en déclin** (classification), qui répondent directement aux enjeux formulés dans le cahier des charges d'ObRail.
 
-Chaque prédiction produit une ligne de log structurée collectée par Promtail :
-```
-2025-01-01 12:00:00 | obrail.predict | INFO |
-[CLF] France 2024 → pred=0 | proba=0.029 | confiance=94.3% | risque=Faible | 12.4ms
-```
+### 10.6 Validation de l'absence de leakage
+
+| Critère | Vérification | Résultat |
+|---------|-------------|---------|
+| La cible dépend-elle d'une feature ? | `passengers[N]` est absent des features de classification | ✓ Propre |
+| Les lags introduisent-ils un leakage ? | `lag1` et `lag2` sont des valeurs historiques, distinctes de la valeur cible | ✓ Propre |
+| Le preprocesseur fuit-il ? | `fit` exclusivement sur le train, `transform` sur le test | ✓ Propre |
+
+### 10.7 Enseignements transversaux
+
+La construction de la variable cible est la **première étape à auditer** avant toute modélisation — pas la dernière. Une performance parfaite est toujours un signal d'alarme, jamais un signe de succès. La structure complète des données disponibles doit être auditée avant de définir le sujet ML : un sujet mal posé ne peut pas être corrigé par l'optimisation des modèles.
 
 ---
 
-## 15. Sécurité et conformité RGPD
+## 11. Benchmark des services IA
 
-Toutes les données soumises à l'API sont validées par Pydantic avant toute utilisation (types Python, bornes numériques, longueurs de chaîne, cohérence inter-champs). L'API ne propage jamais les exceptions brutes vers le client.
+Le cahier des charges impose une étude comparative des services cloud pour justifier le choix d'une approche interne ou externalisée. Quatre services ont été évalués sur six critères.
 
-| Principe RGPD | Mesure appliquée |
-|---------------|-----------------|
-| Finalité | Prédiction ferroviaire uniquement, objectif défini et explicite |
-| Minimisation | 6 variables numériques + pays — aucune donnée superflue |
-| Sécurité | Données locales, non versionnées, non envoyées vers des services cloud |
-| Transparence | SHAP, importance des variables, documentation de chaque décision |
+| Critère | AWS SageMaker | Azure ML | Google Vertex AI | HuggingFace AutoTrain | **Solution interne** |
+|---------|:-------------:|:--------:|:----------------:|:---------------------:|:--------------------:|
+| Compatible 546 lignes | ⚠️ Limite basse (min ~500) | ❌ Min 1 000 | ❌ Min 1 000 | ✅ Pas de seuil strict | ✅ |
+| Explicabilité | Élevée (notebooks) | Moyenne | Moyenne | Faible | **Totale (SHAP natif)** |
+| Contrôle du modèle | Élevé | Élevé | Élevé | Limité | **Total** |
+| Coût estimé | Modéré (+15–40 % instances) | Modéré | Élevé (surprises documentées) | Gratuit / partiel | **0 €** |
+| Verrouillage fournisseur | Élevé | Élevé | Élevé | Faible | **Nul** |
+| RGPD / données locales | ✗ | ✗ | ✗ | ✗ | **✅ 100 % local** |
+| Reproductibilité | Moyenne | Moyenne | Moyenne | Faible | **Totale (seeds + pipelines)** |
 
-Aucune donnée personnelle n'est traitée (données agrégées par pays et année). Conformité AI Act : risque limité, aucune pratique interdite (article 5). L'obligation de transparence (article 50, AI Act) entre en vigueur le 2 août 2026 — les prédictions devront informer les utilisateurs qu'elles sont générées par une IA.
+**Azure ML** impose un seuil minimum de 1 000 lignes pour la classification tabulaire. Avec 546 observations, le service est inutilisable. Le SDK v1 (AutoML) est par ailleurs déprécié depuis mars 2025 (fin de support juin 2026), imposant une migration vers SDK v2. **Vertex AI** partage le même seuil de 1 000 lignes, avec une tarification fragmentée sur jusqu'à 15 composants distincts pouvant générer des surprises de facturation de plusieurs milliers d'euros. **SageMaker Autopilot** fonctionne techniquement à partir de 500 lignes mais en limite basse, sans garantie de qualité sur les résultats. **HuggingFace AutoTrain** est le seul service cloud compatible en volume, mais son explicabilité insuffisante et son contrôle limité sur les algorithmes ne satisfont pas les exigences de documentation du cahier des charges.
 
----
-
-## 16. Benchmark des services IA
-
-### 16.1 Tableau comparatif
-
-| Critère | AWS SageMaker | Azure ML | Google Vertex AI | HuggingFace AutoTrain | Solution interne |
-|---------|:-------------:|:--------:|:----------------:|:---------------------:|:----------------:|
-| Compatible 546 lignes | Limite basse | Non (min 1 000) | Non (min 1 000) | Oui | Oui |
-| Explicabilité | Élevée | Moyenne | Moyenne | Faible | Élevée (SHAP) |
-| Contrôle du modèle | Élevé | Élevé | Élevé | Limité | Total |
-| Coût | Modéré | Modéré | Élevé | Gratuit partiel | 0 € |
-| Verrouillage fournisseur | Élevé | Élevé | Élevé | Faible | Nul |
-| RGPD / données locales | Non | Non | Non | Non | Oui |
-| Reproductibilité | Moyenne | Moyenne | Moyenne | Faible | Totale |
-
-### 16.2 Analyse et décision
-
-**Azure ML :** le SDK v1 (AutoML) est déprécié depuis mars 2025 (fin de support juin 2026). Le seuil minimum de 1 000 lignes pour la classification est rédhibitoire. **Google Vertex AI :** même seuil de 1 000 lignes, tarification complexe (jusqu'à 15 services facturables séparément), avec des surprises de facturation documentées (plusieurs milliers d'euros par mois pour certaines équipes). **AWS SageMaker :** techniquement compatible (500 lignes min) mais en limite basse, avec majorations de 15-40 % sur les instances EC2. **HuggingFace AutoTrain :** compatible en volume, gratuit jusqu'à 10 modèles/mois, mais explicabilité insuffisante pour les exigences de documentation du cahier des charges.
-
-**Décision :** la solution interne (Scikit-learn + XGBoost) est retenue pour sa compatibilité totale avec la volumétrie, sa reproductibilité garantie par les graines aléatoires et les pipelines joblib, sa conformité RGPD, son coût nul et sa flexibilité maximale.
+**Décision :** la solution interne (Scikit-learn + XGBoost) est retenue pour sa compatibilité totale avec la volumétrie, sa reproductibilité garantie par les graines aléatoires et les pipelines joblib, sa conformité RGPD native et son coût nul.
 
 ---
 
-## 17. Veille technologique
+## 12. Veille technologique
 
-### 17.1 Axes de veille
+La veille couvre trois axes conformément au cahier des charges : algorithmique, réglementaire et sécurité informatique.
 
-**Algorithmique :** une étude de mars 2026 (XGenBoost, arXiv:2603.06904) confirme la pertinence durable des ensembles d'arbres sur données tabulaires de types mixtes. Une étude Nature (janvier 2026) valide des performances d'AUC de 0.95 en validation croisée 10 folds sur des données similaires, cohérentes avec les résultats ObRail. Une étude Applied Soft Computing (mai 2026) propose des ensembles de stacking avec Ridge comme méta-apprenant de LightGBM et Random Forest — piste directement applicable à ObRail pour améliorer la robustesse sur les petits pays.
+### Axe algorithmique
 
-**Réglementaire :** la CNIL (janvier 2026) rappelle l'application des quatre principes RGPD aux données agrégées. L'AI Act (article 50) impose d'informer les utilisateurs d'une prédiction IA à partir du 2 août 2026 (sanction jusqu'à 15 M€ ou 3 % du CA mondial).
+Une étude de mars 2026 (XGenBoost, arXiv:2603.06904) confirme la pertinence durable des ensembles d'arbres sur les données tabulaires de types mixtes, notamment sur les petits datasets — ce qui valide rétrospectivement le choix XGBoost pour ObRail. Une étude Nature (janvier 2026) rapporte des AUC de 0,95 en validation croisée 10-fold sur des problèmes similaires, cohérentes avec les résultats obtenus. Une étude Applied Soft Computing (mai 2026) propose des ensembles de stacking avec Ridge comme méta-apprenant de LightGBM et Random Forest — une piste directement applicable à ObRail pour améliorer la robustesse sur les petits pays.
 
-**Sécurité :** une étude Array (mars 2026) démontre la meilleure résilience adversariale de XGBoost parmi sept modèles benchmarkés (data poisoning, adversarial examples). Le NIST Cyber AI Profile (janvier 2026) pose les bases de la cybersécurité pour les systèmes IA ; la procédure de réentraînement documentée dans `docs/retraining.md` y répond directement.
+### Axe réglementaire
 
-### 17.2 Recommandations
+La CNIL (janvier 2026) rappelle que les quatre principes RGPD s'appliquent pleinement aux données agrégées et insiste sur la documentation des choix de conception — obligation satisfaite par ce rapport et ses annexes GitHub. L'AI Act article 50 impose d'informer les utilisateurs d'une prédiction IA à partir du 2 août 2026.
+
+### Axe sécurité
+
+Une étude Array (mars 2026) benchmark sept modèles ML sous stress adversarial et conclut que XGBoost présente la meilleure résilience aux attaques de type data poisoning parmi tous les modèles testés. Le NIST Cyber AI Profile (janvier 2026) pose les bases de la cybersécurité pour les systèmes IA ; la procédure de réentraînement documentée dans `docs/retraining.md` y répond directement.
+
+### Recommandations issues de la veille
 
 | Horizon | Recommandation | Justification |
-|---------|----------------|---------------|
+|---------|---------------|---------------|
 | Court terme | Rédiger la notice de conformité AI Act (art. 50) | Obligation légale août 2026 |
-| Court terme | Documenter le `GroupShuffleSplit` comme amélioration du split | Rigueur méthodologique |
+| Court terme | Documenter `GroupShuffleSplit` comme amélioration du split | Rigueur méthodologique |
 | Moyen terme | Explorer les modèles hybrides Ridge-XGBoost (stacking) | Robustesse sur petits pays |
-| Moyen terme | Mettre en place une veille réglementaire continue | Évolutions AI Act et CNIL |
 | Long terme | Enrichir avec des indicateurs macroéconomiques | Meilleure prédiction post-COVID |
 
 ---
 
-## 18. Résolution d'incidents — Data Leakage
+## 13. Résultats, analyse critique et limites
 
-### 18.1 Symptôme
-
-Lors de l'évaluation des premiers modèles entraînés sur `facts_night_trains`, tous ont atteint une accuracy de 1.0, quelle que soit l'architecture testée (Logistic Regression, Random Forest, XGBoost, MLP). Une accuracy parfaite sur l'ensemble de test est le signal d'alerte classique d'un data leakage.
-
-### 18.2 Diagnostic — Mécanisme du data leakage
-
-Le sujet initial était l'identification des lignes ferroviaires candidates à la substitution avion/train. La variable cible avait été construite à partir de seuils métier :
-
-```python
-if distance_km <= 1200 and duration_min <= 480:
-    candidate_substitution = 1
-```
-
-Les variables `distance_km` et `duration_min` étaient simultanément présentes dans les features d'entraînement et dans la règle de construction de la cible. Les modèles ont appris une fonction déterministe (if/else) plutôt qu'une relation statistique réelle.
-
-```
-Règle métier → cible via distance_km et duration_min
-                    ↓
-    Ces mêmes variables présentes dans les features
-                    ↓
-    Le modèle apprend : if distance_km ≤ 1200 → predict 1
-                    ↓
-                accuracy = 1.0 → invalide
-```
-
-### 18.3 Tentatives de correction et leurs limites
-
-**Tentative 1 — Cible par pays :** agrégats pays (`passengers < médiane AND co2_per_passenger > médiane`). Avec 42 pays, tous les enregistrements d'un même pays reçoivent la même cible → les modèles mémorisent 42 règles pays.
-
-**Tentative 2 — Cible par vitesse :** cible fondée sur `avg_speed_kmh = distance_km / duration_hours`. Or `distance_category` et `duration_category` encodaient les mêmes seuils sous forme catégorielle → leakage indirect.
-
-### 18.4 Solution retenue
-
-L'audit complet du warehouse a révélé que `facts_country_stats` contenait des données exploitables pour un sujet ML propre : 15 années × 42 pays = 630 observations, avec variation temporelle réelle et variables continues non redondantes. Le sujet a été changé — passage de la classification des trajets individuels à la prédiction temporelle par pays. La cible `en_declin` compare `passengers[N]` avec `passengers[N-2]` ; la valeur N n'est jamais une feature d'entraînement.
-
-### 18.5 Validation de l'absence de leakage
-
-| Critère | Vérification |
-|---------|-------------|
-| La cible dépend-elle d'une feature ? | Non — `passengers[N]` n'est pas une feature de classification |
-| Les lags introduisent-ils un leakage ? | Non — `lag1` et `lag2` sont des valeurs historiques, pas la valeur cible |
-| Le preprocesseur fuite-t-il ? | Non — fit uniquement sur le train, transform sur le test |
-
-### 18.6 Enseignements
-
-La construction de la variable cible doit être la première étape vérifiée avant toute modélisation. Une performance parfaite est toujours suspecte et doit déclencher un audit immédiat. La structure complète des données disponibles doit être auditée avant de définir le sujet ML. Sur les séries temporelles, la séparation temporelle stricte entre features et cible est la garantie fondamentale contre le leakage.
-
----
-
-## 19. Résultats et performances
-
-### 19.1 Synthèse des modèles finaux
+### 13.1 Synthèse des performances finales
 
 | Axe | Modèle | Métrique principale | Score |
 |-----|--------|--------------------:|:-----:|
-| Classification | XGBoost optimisé | F1-Score | **0.667** |
-| Classification | XGBoost optimisé | ROC-AUC | **0.826** |
-| Classification | XGBoost optimisé | Accuracy | **0.764** |
-| Régression | Ridge baseline | R² | **0.9962** |
-| Régression | Ridge baseline | MAE | **4 339** k passagers |
-| Régression | Ridge baseline | RMSE | **9 074** k passagers |
+| Classification | XGBoost optimisé | F1-Score | **0,667** |
+| Classification | XGBoost optimisé | ROC-AUC | **0,826** |
+| Classification | XGBoost optimisé | Accuracy | **0,764** |
+| Régression | Ridge baseline | R² | **0,9962** |
+| Régression | Ridge baseline | MAE | **4 339 k passagers** |
+| Régression | Ridge baseline | RMSE | **9 074 k passagers** |
 
-Pour la France en 2024 avec données historiques disponibles : classification → En croissance (probabilité de déclin 2,9 %, confiance 94,3 %) ; régression → 114 583 k passagers prévus (+30,2 % vs N-1). Résultats cohérents avec la réalité historique de l'un des pays ferroviaires les plus actifs d'Europe.
+### 13.2 Interprétation métier
 
-### 19.2 Limites identifiées
+Pour la **France en 2024** (données historiques disponibles) : le classifieur retourne "En croissance" avec une probabilité de déclin de 2,9 % et un score de confiance de 94,3 %. Le régresseur prédit 114 583 k passagers, en hausse cohérente avec la trajectoire historique. Ces résultats sont vérifiables par comparaison avec les données Eurostat réelles publiées ultérieurement — c'est un critère de validation externe que les modèles réussissent à ce stade.
 
-**Classification :** un recall de 0.619 signifie que 38 % des pays réellement en déclin ne sont pas détectés — limitation inhérente à la taille du dataset (546 observations).
+### 13.3 Limites identifiées et assumées
 
-**Régression :** l'erreur de 4 339 k passagers représente ~30 % d'erreur relative pour les petits pays (médiane = 14 178). L'impact du COVID-19 en 2020 constitue un outlier structurel difficile à modéliser.
+**Classification :** un recall de 0,619 signifie que 38 % des pays réellement en déclin ne sont pas détectés. Cette limite est inhérente à la taille du dataset (436 observations d'entraînement) et ne peut pas être résolue par la seule optimisation des hyperparamètres.
 
-**Générales :** le split aléatoire peut permettre à des données d'un même pays d'apparaître simultanément en train et en test (amélioration proposée en section 20). Le dataset de 546 observations reste modeste pour 42 pays sur 15 ans.
+**Régression :** le MAE de 4 339 k passagers représente une erreur relative d'environ 30 % pour les petits pays (médiane = 14 178 k). L'impact du COVID-19 en 2020 constitue un outlier structurel difficile à modéliser avec les seuls indicateurs disponibles.
 
----
-
-## 20. Perspectives d'amélioration
-
-### 20.1 Méthodologiques
-
-- **Split temporel :** remplacer `train_test_split` par `GroupShuffleSplit(groups=country_id)` pour garantir qu'un même pays n'apparaît que dans un seul ensemble.
-- **Enrichissement des données :** indicateurs macroéconomiques (PIB, investissement ferroviaire), données trimestrielles pour une granularité plus fine, nouvelles données Eurostat au fil de leur publication.
-- **Modèles hybrides :** stacking Ridge/XGBoost/LightGBM pour améliorer la robustesse sur les petits pays.
-
-### 20.2 Techniques
-
-- **Tests unitaires :** compléter `tests/test_predict.py` (types de sortie, valeurs limites, cas d'erreur) et intégrer dans un pipeline CI/CD GitHub Actions.
-- **Monitoring ML :** détection automatique du data drift (distribution des inputs vs entraînement) et du model drift (dégradation des métriques sur nouvelles données réelles).
-- **Déploiement cloud :** résoudre le conflit de dépendances (`geopandas`, `psycopg2`) qui bloque le déploiement sur Railway, via un `requirements.txt` spécifique à l'API ML.
-
-### 20.3 Fonctionnelles
-
-- Prédiction multi-pays en batch (tableau comparatif sur une seule requête API).
-- Carte interactive dans le frontend, coloriant les pays européens selon leur niveau de risque prédit.
-- Persistance des prédictions en base pour suivi longitudinal et alimentation automatique du monitoring.
+**Méthodologiques :** le split aléatoire peut permettre à des données d'un même pays d'apparaître simultanément en train et en test. Un `GroupShuffleSplit(groups=country_id)` serait plus rigoureux mais réduirait drastiquement les données d'entraînement avec seulement 41 pays. Ce compromis est documenté et assumé.
 
 ---
 
-## 21. Conclusion
+## 14. Perspectives d'amélioration
 
-Ce projet a couvert l'intégralité du cycle de vie d'un projet ML : de la collecte et l'harmonisation des données à l'exposition des prédictions via une API REST intégrée dans une application web conteneurisée.
+**Méthodologiques :** remplacer `train_test_split` par `GroupShuffleSplit(groups=country_id)` pour garantir qu'un même pays n'apparaît que dans un seul ensemble. Enrichir les données avec des indicateurs macroéconomiques (PIB, investissement ferroviaire) et des données trimestrielles. Explorer le stacking Ridge/XGBoost/LightGBM pour améliorer la robustesse sur les petits pays.
 
-Les deux modèles finaux répondent directement aux enjeux d'ObRail : le classifieur XGBoost optimisé (F1 = 0.667, ROC-AUC = 0.826) détecte les pays en fragilisation ferroviaire et alimente les décisions institutionnelles ; le régresseur Ridge (R² = 0.9962, MAE = 4 339 k passagers) anticipe la demande en mobilité et soutient la planification des capacités.
+**Techniques :** compléter `tests/test_predict.py` (types de sortie, valeurs limites, cas d'erreur) et intégrer dans un pipeline CI/CD GitHub Actions complet. Implémenter la détection automatique du data drift et du model drift en production.
 
-L'incident de data leakage, détecté et résolu de manière méthodique après trois tentatives documentées, constitue un enseignement majeur sur la rigueur nécessaire à la construction des variables cibles. Sa documentation transparente démontre la capacité à identifier une erreur grave, en comprendre le mécanisme et apporter une correction fondée sur une analyse rigoureuse des données disponibles.
-
-L'architecture (FastAPI, Docker, Prometheus, Grafana) s'inscrit dans une logique MLOps : modèles versionnés, API monitorée, logs centralisés, procédure de réentraînement documentée. La conformité RGPD et AI Act est assurée par l'absence de données personnelles, la traçabilité des décisions et l'explicabilité via SHAP.
-
-Les seules exigences non satisfaites — tests unitaires complets et pipeline CI/CD — sont identifiées comme améliorations prioritaires pour une mise en production.
+**Fonctionnelles :** prédiction multi-pays en batch (tableau comparatif sur une seule requête API). Carte interactive des pays européens colorée par niveau de risque prédit. Persistance des prédictions en base pour suivi longitudinal.
 
 ---
 
-## 22. Matrice de conformité au cahier des charges
+## 15. Conclusion
+
+Ce projet a couvert l'intégralité du cycle de vie d'un système ML, de la collecte et l'harmonisation de données hétérogènes à l'exposition des prédictions dans une interface web opérationnelle, en passant par la résolution d'un incident méthodologique majeur.
+
+Les deux modèles finaux répondent directement aux enjeux stratégiques d'ObRail Europe. Le classifieur XGBoost optimisé (F1 = 0,667, ROC-AUC = 0,826) fournit aux institutions partenaires un outil d'alerte précoce sur les pays en fragilisation ferroviaire. Le régresseur Ridge (R² = 0,9962, MAE = 4 339 k passagers) anticipe la demande en mobilité et soutient la planification des capacités des opérateurs.
+
+L'incident de data leakage, résolu après trois tentatives documentées, est l'enseignement central de ce projet : la rigueur méthodologique dans la construction des variables cibles conditionne la validité de l'ensemble de la chaîne ML. Sa résolution a exigé un audit complet du warehouse, un pivot de sujet et une refonte de l'architecture des données. Cet épisode démontre la capacité à naviguer dans l'incertitude technique et à prendre des décisions fondées sur l'analyse des données disponibles plutôt que sur les hypothèses initiales — une compétence plus précieuse que l'optimisation de quelques points de F1.
+
+L'architecture MLOps adoptée (FastAPI, Docker, Prometheus, Grafana, procédure de réentraînement documentée dans `docs/retraining.md`) inscrit le projet dans une logique de maintenabilité à long terme. La conformité RGPD et AI Act est assurée dès la conception par l'absence de données personnelles, la traçabilité des décisions et l'explicabilité SHAP.
+
+---
+
+## 16. Matrice de conformité au cahier des charges
 
 | Exigence du cahier des charges | Réalisation | Emplacement | Statut |
 |-------------------------------|-------------|-------------|:------:|
-| Identifier valeurs aberrantes, données manquantes | Audit ETL, suppression NaN lag (84 lignes), EDA | `01_eda.ipynb`, `build_dataset.py` | ✓ |
-| Transformations : encodage, normalisation, feature engineering | StandardScaler, OHE, variables lag temporelles | `train_utils.py` | ✓ |
-| Construire ensembles train/validation/test | Split 80/20, stratify=y, random_state=42 | `train_utils.py` | ✓ |
-| Configurer environnement de développement | Docker, requirements.txt, PYTHONPATH | `docker-compose.yml`, `ia/src/requirements.txt` | ✓ |
+| Identifier valeurs aberrantes, données manquantes | Audit ETL, suppression NaN lag (84 lignes), EDA | `build_dataset.py`, `01_eda.ipynb` | ✓ |
+| Encodage, normalisation, feature engineering | StandardScaler, OHE, variables lag temporelles | `train_utils.py` | ✓ |
+| Construire ensembles train/test | Split 80/20, stratify=y, random_state=42 | `train_utils.py` | ✓ |
+| Configurer environnement de développement | Docker, requirements.txt, PYTHONPATH | `docker-compose.yml` | ✓ |
 | Tester plusieurs modèles (régression, RF, boosting, MLP) | 4 classifieurs + 3 régresseurs comparés | `ia/src/ml/models/train_*.py` | ✓ |
 | Justifier les choix retenus | Analyse comparative, rapport d'évaluation | `docs/rapport_evaluation.md` | ✓ |
 | Tableau comparatif des modèles | CSV comparatifs classification et régression | `ia/reports/comparison_*.csv` | ✓ |
 | Recherche d'hyperparamètres | RandomizedSearchCV XGBoost, GridSearchCV Ridge | `optimize_xgboost_ridge.py` | ✓ |
-| Cross-validation | cv=5 dans les deux recherches | `optimize_xgboost_ridge.py` | ✓ |
+| Cross-validation | cv=5 dans les deux recherches d'hyperparamètres | `optimize_xgboost_ridge.py` | ✓ |
 | Métriques pertinentes selon le type de tâche | F1 + ROC-AUC (clf), R² + MAE (reg) | `rapport_evaluation.md` | ✓ |
 | Sélectionner le modèle final et documenter | XGBoost clf + Ridge reg sélectionnés et justifiés | `rapport_evaluation.md` | ✓ |
-| API REST exposant une route /predict | POST /api/predict/classification et /regression | `platform/server/app/routers/predict.py` | ✓ |
-| Intégrer l'API dans l'application | Router FastAPI intégré, frontend connecté | `docker-compose.yml`, `platform/front/` | ✓ |
+| API REST exposant /predict | POST /api/predict/classification et /regression | `platform/server/routers/predict.py` | ✓ |
+| Intégrer l'API dans l'application | Router FastAPI, frontend connecté, Docker | `docker-compose.yml`, `platform/front/` | ✓ |
 | Identifier métriques de monitoring | Latence, taux d'erreur, data drift, model drift | Prometheus, `rapport_evaluation.md` | ✓ |
-| Comparer au moins 3 services IA cloud | SageMaker, Azure ML, Vertex AI, HuggingFace | `docs/benchmark_cloud.md` | ✓ |
-| Justifier choix modèle interne ou non | Justification volumétrie, RGPD, coûts | `docs/benchmark_cloud.md` | ✓ |
+| Comparer ≥ 3 services IA cloud | SageMaker, Azure ML, Vertex AI, HuggingFace | `docs/benchmark_cloud.md` | ✓ |
+| Justifier choix modèle interne | Volumétrie, RGPD, coûts, reproductibilité | `docs/benchmark_cloud.md` | ✓ |
 | Sauvegarder le modèle final (joblib) | 2 modèles + 2 preprocesseurs en .joblib | `ia/models/`, `data/ml/` | ✓ |
 | Créer script predict.py | CLI + module Python avec cache LRU | `ia/src/ml/predict.py` | ✓ |
 | Documenter procédure de réentraînement | Étapes, déclencheurs, matrice de décision | `docs/retraining.md` | ✓ |
 | Mener une veille technique | 3 axes, 11 sources 2026 | `docs/veille.md` | ✓ |
-| Synthétiser risques, limites et biais | Section Limites, perspectives d'amélioration | `docs/rapport_evaluation.md` | ✓ |
+| Synthétiser risques, limites et biais | §13 + perspectives d'amélioration | Ce rapport | ✓ |
 | Rapport technique final | Ce document | `docs/rapport_technique.md` | ✓ |
-| Résoudre les incidents techniques | Data leakage documenté et résolu | `docs/incident_data_leakage.md` | ✓ |
-| Tests unitaires automatisés | Structure définie, tests à compléter | `tests/test_predict.py` | Partiel |
-| CI/CD | CI implémenté | `.github/workflows/ci.yml`  | ✓ |
+| Résoudre les incidents techniques | Data leakage documenté, 3 tentatives, résolu | §10 + `docs/incident_data_leakage.md` | ✓ |
+| Tests unitaires automatisés | Structure définie, à compléter | `tests/test_predict.py` | ⚠ Partiel |
+| CI/CD | CI implémenté | `.github/workflows/ci.yml` | ✓ |
 
 ---
 
-## 23. Matrice de compétences RNCP36581
+## 17. Matrice de compétences RNCP36581
 
-| Compétence évaluée | Section(s) | Éléments du projet | Démonstration |
-|-------------------|------------|-------------------|---------------|
-| Générer des données d'entrée adaptées au modèle | §7, §8 | `build_dataset.py`, variables lag, `en_declin` | Feature engineering temporel, 546 observations utilisables produites |
-| Paramétrer un environnement de codage | §5, §13 | Docker, `requirements.txt`, Dockerfiles | Environnement conteneurisé, reproductible via une commande |
-| Coder le modèle d'apprentissage | §9, §10 | `train_*.py`, `optimize_xgboost_ridge.py` | 7 modèles candidats implémentés, comparés et documentés |
-| Réaliser une procédure d'entraînement | §8, §9, §10 | `run_training.py`, split stratifié | Split 80/20, preprocessing fit sur train, random_state=42 |
-| Ajuster l'apprentissage (optimisation) | §9.3, §10.3 | RandomizedSearchCV, GridSearchCV | Gain F1 +9,3 % après optimisation XGBoost, paramètres documentés |
-| Réaliser une phase de test | §9.4, §10.4 | `evaluate_model.py`, `ia/reports/` | Tableaux comparatifs produits, métriques justifiées |
-| Analyser la performance du modèle | §9, §10, §19 | `rapport_evaluation.md` | Analyse de chaque modèle, limites identifiées et expliquées |
-| Mettre en œuvre une méthodologie de réalisation | §18 | 17 phases documentées, résolution leakage | Démarche structurée, incident documenté, pivot argumenté |
-| Rendre compte de l'avancement | §2, §22 | Rapports de phases, matrice de conformité | Documentation par phase avec livrables et statuts |
-| Auto-contrôler ses actions | §18, §22 | Détection data leakage, matrice de conformité | Accuracy 1.0 détectée comme anomalie, audit des données, correction appliquée |
-| Définir un système de veille | §17 | `docs/veille.md` | 3 axes (algo, réglementaire, sécurité), 11 sources 2026 |
-| Améliorer le potentiel via la veille | §17, §20 | Recommandations issues de la veille | Plan court/moyen/long terme basé sur les sources de veille |
-| Analyser le besoin | §1, §2 | Cahier des charges, contexte ObRail | 9 besoins fonctionnels analysés, correspondances établies |
-| Concevoir le cadre technique | §3, §5, §13 | Architecture Docker, stack technique | Diagrammes Mermaid, justification de chaque technologie |
-| Développer les composants techniques | §9, §10, §11 | Scripts ML, API FastAPI, router enrichi | Code fonctionnel, cache LRU, enrichissement métier |
-| Automatiser les phases de tests | §20.2 | `tests/test_predict.py` (partiel) | Structure définie, CI/CD identifié comme amélioration prioritaire |
-| Surveiller l'application | §14 | Prometheus, Grafana, Loki, Promtail | Stack complète, métriques identifiées, logging structuré |
-| Résoudre les incidents techniques | §18 | `docs/incident_data_leakage.md` | Data leakage détecté, 3 tentatives documentées, pivot vers nouveau sujet |
-| Coordonner la réalisation | §7, §13 | Chaîne ETL → IA → API → Frontend | Architecture en couches avec dépendances strictes |
-| Benchmark des services IA | §16 | `docs/benchmark_cloud.md` | 4 services, 6 critères, recommandation argumentée, coûts cachés documentés |
+| Compétence évaluée | Section(s) | Démonstration dans le projet |
+|-------------------|:----------:|------------------------------|
+| Générer des données d'entrée adaptées | §3 | Feature engineering temporel (lag), 546 observations utilisables produites à partir de 630 brutes |
+| Paramétrer un environnement de codage | §2, §7 | Environnement conteneurisé, reproductible via une seule commande Docker |
+| Coder le modèle d'apprentissage | §4, §5 | 7 modèles candidats implémentés, comparés et documentés |
+| Réaliser une procédure d'entraînement | §3, §4, §5 | Split 80/20, preprocessing fit sur train uniquement, random_state=42 |
+| Ajuster l'apprentissage (optimisation) | §4.5 | Gain F1 +9,3 % après RandomizedSearchCV sur XGBoost |
+| Réaliser une phase de test | §4, §5 | Tableaux comparatifs CSV produits, métriques justifiées par type de tâche |
+| Analyser la performance du modèle | §4, §5, §13 | Analyse individuelle de chaque modèle, limites identifiées et expliquées |
+| Mettre en œuvre une méthodologie | §10 | 17 phases documentées, incident data leakage résolu, pivot argumenté |
+| Rendre compte de l'avancement | §2, §16 | Documentation par phase avec livrables, statuts et emplacements |
+| Auto-contrôler ses actions | §10 | Accuracy 1,0 détectée comme anomalie, audit des données, trois tentatives documentées |
+| Définir un système de veille | §12 | 3 axes (algorithmique, réglementaire, sécurité), 11 sources datées 2026 |
+| Améliorer via la veille | §12, §14 | Plan court/moyen/long terme directement issu des sources de veille |
+| Analyser le besoin | §1 | Contexte ObRail, 9 besoins fonctionnels analysés et mis en correspondance |
+| Concevoir le cadre technique | §2 | Architecture Docker en couches, justification de chaque technologie retenue |
+| Développer les composants techniques | §4, §5, §7 | Scripts ML, API FastAPI avec enrichissement métier, cache LRU |
+| Automatiser les phases de tests | §14 | CI/CD identifié comme priorité, tests partiels en place |
+| Surveiller l'application | §8 | Prometheus, Grafana, Loki, Promtail, métriques ML et métier identifiées |
+| Résoudre les incidents techniques | §10 | Data leakage : diagnostic, 3 tentatives, pivot de sujet, validation |
+| Coordonner la réalisation | §2, §7 | Architecture en couches avec dépendances strictes, séquence Docker orchestrée |
+| Benchmark des services IA | §11 | 4 services évalués sur 6 critères, recommandation argumentée, coûts cachés documentés |
 
 ---
 
 *Document produit dans le cadre de la MSPR — Bloc E6.2 / E6.4 — Certification RNCP36581.*
 *Dépôt GitHub : https://github.com/Oggye/MSPR_1_B3*
+*Mini-rapports et documentation complémentaire : https://github.com/Oggye/MSPR_1_B3/tree/main/docs/ia*
 *Frontend : http://localhost:3000 — API Swagger : http://localhost:8000/api/docs*
