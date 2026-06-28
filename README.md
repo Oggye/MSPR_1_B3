@@ -15,12 +15,12 @@ ObRail Europe est un observatoire indépendant spécialisé dans l'analyse des f
 
 | Document | Contenu |
 |----------|---------|
-| [`docs/rapport_technique.md`](docs/rapport_technique.md) | Rapport technique complet — architecture, modèles, incident data leakage, conformité |
+| [`docs/ia/rapport_technique.md`](docs/ia/rapport_technique.md) | Rapport technique complet — architecture, modèles, incident data leakage, conformité |
 | [`docs/ia/`](docs/ia/) | Mini-rapports par phase (EDA, preprocessing, entraînement, optimisation, explicabilité, API) |
-| [`docs/benchmark_cloud.md`](docs/benchmark_cloud.md) | Comparaison SageMaker / Azure ML / Vertex AI / HuggingFace |
-| [`docs/veille.md`](docs/veille.md) | Veille algorithmique, réglementaire et sécurité (sources 2026) |
-| [`docs/retraining.md`](docs/retraining.md) | Procédure de réentraînement des modèles |
-| [`docs/incident_data_leakage.md`](docs/incident_data_leakage.md) | Chronologie et résolution de l'incident data leakage |
+| [`docs/ia/benchmark_cloud.md`](docs/ia/benchmark_cloud.md) | Comparaison SageMaker / Azure ML / Vertex AI / HuggingFace |
+| [`docs/ia/veille.md`](docs/ia/veille.md) | Veille algorithmique, réglementaire et sécurité (sources 2026) |
+| [`docs/ia/retraining.md`](docs/ia/phase/retraining.md) | Procédure de réentraînement des modèles |
+| [`docs/ia/incident_data_leakage.md`](docs/ia/incident_data_leakage.md) | Chronologie et résolution de l'incident data leakage |
 
 ---
 
