@@ -29,23 +29,23 @@ Le projet a traversé un incident critique de data leakage, résolu après trois
 
 ## Table des matières
 
-1. Introduction et contexte
-2. Architecture générale
-3. Données, entrepôt et feature engineering
-4. Modélisation ML — Classification
-5. Modélisation ML — Régression
-6. Explicabilité (SHAP)
-7. API REST, Frontend et déploiement
-8. Monitoring et observabilité
-9. Conformité RGPD et AI Act
-10. Incident Data Leakage — Chronologie complète
-11. Benchmark des services IA
-12. Veille technologique
-13. Résultats, analyse critique et limites
-14. Perspectives d'amélioration
-15. Conclusion
-16. Matrice de conformité au cahier des charges
-17. Matrice de compétences RNCP36581
+1. [Introduction et contexte](#1-introduction-et-contexte)
+2. [Architecture générale](#2-architecture-générale)
+3. [Données, entrepôt et feature engineering](#3-données-entrepôt-et-feature-engineering)
+4. [Modélisation ML — Classification](#4-modélisation-ml--classification)
+5. [Modélisation ML — Régression](#5-modélisation-ml--régression)
+6. [Explicabilité (SHAP)](#6-explicabilité-shap)
+7. [API REST, Frontend et déploiement](#7-api-rest-frontend-et-déploiement)
+8. [Monitoring et observabilité](#8-monitoring-et-observabilité)
+9. [Conformité RGPD et AI Act](#9-conformité-rgpd-et-ai-act)
+10. [Incident Data Leakage — Chronologie complète](#10-incident-data-leakage--chronologie-complète)
+11. [Benchmark des services IA](#11-benchmark-des-services-ia)
+12. [Veille technologique](#12-veille-technologique)
+13. [Résultats, analyse critique et limites](#13-résultats-analyse-critique-et-limites)
+14. [Perspectives d'amélioration](#14-perspectives-damélioration)
+15. [Conclusion](#15-conclusion)
+16. [Matrice de conformité au cahier des charges](#16-matrice-de-conformité-au-cahier-des-charges)
+17. [Matrice de compétences RNCP36581](#17-matrice-de-compétences-rncp36581)
 
 ---
 
