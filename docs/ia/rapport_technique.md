@@ -79,40 +79,46 @@ La réponse architecturale adoptée est celle d'un pipeline ML intégré : extra
 ### 2.1 Vue d'ensemble du système
 
 ```mermaid
-graph TB
-    subgraph Sources["Sources de données"]
+graph LR
+    subgraph SRC["Sources de données"]
         E1["Eurostat CSV"]
-        E2["ADEME"]
+        E2["ADEME *"]
     end
+
     subgraph ETL["Conteneur ETL"]
         T1["run_full_etl.py\nNettoyage · Harmonisation · Chargement"]
     end
+
     subgraph DB["PostgreSQL :5432"]
         D1[("facts_country_stats")]
         D2[("facts_night_trains")]
         D3[("dim_countries · dim_years")]
     end
+
     subgraph IA["Conteneur IA"]
         M1["build_dataset.py"]
         M2["run_training.py"]
-        M3["optimize_xgboost_ridge.py"]
+        M3["optimize_*.py"]
         M4["Modèles .joblib"]
     end
+
     subgraph API["Conteneur FastAPI :8000"]
         A1["/predict/classification"]
         A2["/predict/regression"]
         A3["/health · /api/docs"]
     end
+
     subgraph FRONT["Conteneur React/Nginx :3000"]
         F1["Interface utilisateur\nFormulaire · Résultats enrichis"]
     end
+
     subgraph MON["Stack Monitoring"]
         P1["Prometheus :9090"]
         P2["Grafana :3001"]
         P3["Loki + Promtail"]
     end
 
-    Sources --> ETL --> DB --> IA --> M4 --> API --> FRONT
+    SRC --> ETL --> DB --> IA --> API --> FRONT
     API --> MON
 ```
 
