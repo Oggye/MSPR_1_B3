@@ -1,3 +1,5 @@
+// fichier : platform/front/app/src/services/api.test.js
+
 const mockGet = jest.fn();
 
 jest.mock('axios', () => ({

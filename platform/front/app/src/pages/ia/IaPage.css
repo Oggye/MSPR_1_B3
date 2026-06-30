@@ -1,0 +1,691 @@
+/* fichier : platform/front/app/src/pages/ia/IaPage.css
+ *
+ * Design : moderne, minimaliste, cohérent avec HomePage (#1f6feb, #f4f7fb, #172033).
+ * Signature visuelle : bordure gauche animée sur le panneau résultat, évoquant
+ * le flux de données ferroviaires qui "arrivent en gare".
+ */
+
+/* ============================================================
+   VARIABLES (reprises du projet pour cohérence)
+   ============================================================ */
+.ia-page {
+  --c-bg:       #f4f7fb;
+  --c-surface:  #ffffff;
+  --c-border:   #e2e8f0;
+  --c-text:     #172033;
+  --c-muted:    #526070;
+  --c-accent:   #1f6feb;
+  --c-accent-h: #1a5fc7;
+  --c-success:  #16a34a;
+  --c-warning:  #d97706;
+  --c-danger:   #dc2626;
+  --c-critical: #7c3aed;
+
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+
+  --font-mono:  'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+.ia-page {
+  min-height: 100vh;
+  background: var(--c-bg);
+  color: var(--c-text);
+  padding: 40px 32px 80px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ============================================================
+   EN-TÊTE
+   ============================================================ */
+.ia-header {
+  max-width: 900px;
+  margin: 0 auto 40px;
+}
+
+.ia-header__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  margin-bottom: 8px;
+}
+
+.ia-header__title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin: 0 0 12px;
+  color: var(--c-text);
+}
+
+.ia-header__desc {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--c-muted);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ============================================================
+   GRID DEUX COLONNES
+   ============================================================ */
+.ia-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .ia-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   PANNEAUX (form + result)
+   ============================================================ */
+.ia-panel {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 28px;
+}
+
+/* Panneau résultat : signature — bordure gauche animée */
+.ia-panel--result {
+  min-height: 320px;
+  position: relative;
+  border-left: 3px solid transparent;
+  background-image: linear-gradient(var(--c-surface), var(--c-surface)),
+                    linear-gradient(180deg, var(--c-accent) 0%, #60a5fa 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  transition: border-color .3s;
+}
+
+/* ============================================================
+   SÉLECTEUR D'AXE
+   ============================================================ */
+.ia-axis-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: var(--c-bg);
+  border-radius: var(--radius-md);
+  padding: 4px;
+}
+
+.ia-axis-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+
+.ia-axis-btn--active {
+  background: var(--c-surface);
+  color: var(--c-accent);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.ia-axis-btn:hover:not(.ia-axis-btn--active) {
+  color: var(--c-text);
+  background: rgba(0,0,0,.04);
+}
+
+.ia-axis-desc {
+  font-size: 12px;
+  color: var(--c-muted);
+  line-height: 1.6;
+  margin: 0 0 24px;
+  padding: 10px 12px;
+  background: #f0f6ff;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--c-accent);
+}
+
+/* ============================================================
+   FORMULAIRE
+   ============================================================ */
+.ia-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ia-field-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ia-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ia-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ia-field__hint {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.ia-field__input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--c-text);
+  background: var(--c-bg);
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ia-field__input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px rgba(31,111,235,.12);
+  background: var(--c-surface);
+}
+
+select.ia-field__input {
+  cursor: pointer;
+}
+
+/* ============================================================
+   BOUTON SUBMIT
+   ============================================================ */
+.ia-submit {
+  margin-top: 8px;
+  width: 100%;
+  padding: 11px 20px;
+  background: var(--c-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background .15s, transform .1s, opacity .15s;
+  letter-spacing: .01em;
+}
+
+.ia-submit:hover:not(:disabled) {
+  background: var(--c-accent-h);
+}
+
+.ia-submit:active:not(:disabled) {
+  transform: scale(.98);
+}
+
+.ia-submit:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+/* Spinner dans le bouton */
+.ia-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ia-spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ia-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   ÉTAT VIDE
+   ============================================================ */
+.ia-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--c-muted);
+}
+
+.ia-empty__icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  opacity: .25;
+}
+
+.ia-empty__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text);
+  margin: 0 0 8px;
+}
+
+.ia-empty__sub {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================================
+   ÉTAT CHARGEMENT
+   ============================================================ */
+.ia-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--c-muted);
+  font-size: 14px;
+  gap: 20px;
+}
+
+/* Trois ronds animés en "ping" */
+.ia-pulse-ring {
+  display: flex;
+  gap: 8px;
+}
+
+.ia-pulse-ring div {
+  width: 10px;
+  height: 10px;
+  background: var(--c-accent);
+  border-radius: 50%;
+  animation: ia-pulse 1.2s ease-in-out infinite;
+}
+
+.ia-pulse-ring div:nth-child(2) { animation-delay: .2s; }
+.ia-pulse-ring div:nth-child(3) { animation-delay: .4s; }
+
+@keyframes ia-pulse {
+  0%, 100% { opacity: .25; transform: scale(.8); }
+  50%       { opacity: 1;   transform: scale(1); }
+}
+
+/* ============================================================
+   ÉTAT ERREUR
+   ============================================================ */
+.ia-error {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  color: var(--c-danger);
+}
+
+.ia-error__icon {
+  width: 32px;
+  height: 32px;
+  background: var(--c-danger);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ia-error strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.ia-error p {
+  margin: 0;
+  font-size: 13px;
+  color: #991b1b;
+  line-height: 1.55;
+}
+
+/* ============================================================
+   WARNINGS
+   ============================================================ */
+.ia-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.ia-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: #92400e;
+  line-height: 1.55;
+}
+
+.ia-warning__icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ============================================================
+   RÉSULTAT — STRUCTURE COMMUNE
+   ============================================================ */
+.ia-result {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Animation d'apparition de chaque bloc */
+.ia-anim {
+  animation: ia-reveal .3s ease-out both;
+}
+
+@keyframes ia-reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ia-anim { animation: none; }
+}
+
+/* ============================================================
+   RÉSULTAT — EN-TÊTE (prédiction + confiance / tendance)
+   ============================================================ */
+.ia-result__header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f6ff 0%, #fafcff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: var(--radius-md);
+}
+
+.ia-result__prediction {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ia-result__label {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c-text);
+  letter-spacing: -.01em;
+}
+
+/* Barre de confiance */
+.ia-result__confidence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.ia-progress {
+  flex: 1;
+  min-width: 100px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ia-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-accent), #60a5fa);
+  border-radius: 99px;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+
+.ia-result__pct {
+  font-weight: 600;
+  color: var(--c-accent);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Tendance (régression) */
+.ia-result__trend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ia-trend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.ia-trend--up   { background: #dcfce7; color: #15803d; }
+.ia-trend--down { background: #fee2e2; color: #b91c1c; }
+
+/* ============================================================
+   RÉSULTAT — MESSAGE MÉTIER
+   ============================================================ */
+.ia-result__message {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--c-text);
+  margin: 0;
+  padding: 16px;
+  background: var(--c-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+}
+
+.ia-result__prob {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+/* ============================================================
+   RÉSULTAT — SECTIONS GÉNÉRIQUES
+   ============================================================ */
+.ia-result__section {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+.ia-result__section h4 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.ia-result__section p {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--c-text);
+  margin: 0;
+}
+
+/* ============================================================
+   DRIVERS (variables influentes)
+   ============================================================ */
+.ia-drivers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ia-driver {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 12px;
+  padding: 10px 12px;
+  background: var(--c-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+  align-items: start;
+}
+
+.ia-driver__name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-accent);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ia-driver__value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text);
+  font-family: var(--font-mono);
+}
+
+.ia-driver__dir {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.ia-driver__dir--up      { background: #dcfce7; color: #15803d; }
+.ia-driver__dir--down    { background: #fee2e2; color: #b91c1c; }
+.ia-driver__dir--neutral { background: #f1f5f9; color: var(--c-muted); }
+
+.ia-driver__expl {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--c-muted);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   RECOMMANDATIONS
+   ============================================================ */
+.ia-recs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ia-recs li {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--c-text);
+  padding-left: 20px;
+  position: relative;
+}
+
+.ia-recs li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+/* ============================================================
+   MÉTADONNÉES TECHNIQUES
+   ============================================================ */
+.ia-result__meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #94a3b8;
+  padding-top: 4px;
+  border-top: 1px solid var(--c-border);
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.ia-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.ia-badge--success  { background: #dcfce7; color: #15803d; }
+.ia-badge--warning  { background: #fef3c7; color: #92400e; }
+.ia-badge--danger   { background: #fee2e2; color: #b91c1c; }
+.ia-badge--critical { background: #ede9fe; color: #6d28d9; }
+.ia-badge--neutral  { background: #f1f5f9; color: var(--c-muted); }
+
+/* ============================================================
+   CURSEUR STREAMING
+   ============================================================ */
+.ia-stream-cursor {
+  font-size: 18px;
+  color: var(--c-accent);
+  animation: ia-blink .9s step-end infinite;
+}
+
+@keyframes ia-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}

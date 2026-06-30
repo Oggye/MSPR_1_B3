@@ -1,3 +1,5 @@
+// fichier : platform/front/app/src/pages/HomePage.js
+
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 import { useEffect } from 'react';
@@ -5,15 +7,12 @@ import { getHealth } from '../services/api';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  // useEffect s'exécute une fois au chargement de la page
+
   useEffect(() => {
-    // J'appelle getHealth() qui va checker l'API
     getHealth()
-      // Si ça réussit, j'affiche un message vert dans la console
       .then(res => console.log('✅ API connectée :', res.data))
-      // Si ça échoue, j'affiche une erreur rouge
       .catch(err => console.error('❌ API indisponible :', err.message));
-  }, []); // Le [] vide = "exécute cette fonction une seule fois"
+  }, []);
 
   return (
     <div className="home-page">
@@ -26,6 +25,9 @@ export default function HomePage() {
           </button>
           <button type="button" onClick={() => navigate('/interne/HomePage')}>
             Admin
+          </button>
+          <button type="button" className="home-page__btn--ia" onClick={() => navigate('/interne/IA')}>
+            IA
           </button>
         </div>
       </div>

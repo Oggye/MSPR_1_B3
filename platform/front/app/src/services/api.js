@@ -1,4 +1,6 @@
-// services/api.js (ajouter les nouvelles fonctions)
+// fichier : platform/front/app/src/services/api.js     (ajouter les nouvelles fonctions)
+
+
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -155,6 +157,18 @@ export const getOperators = (skip = 0, limit = null) => {
 
 export const getOperatorById = (id) => {
   return api.get(`/operators/${id}/stats`);
+};
+
+// Prédictions IA — Classification (déclin ferroviaire)
+// payload : { country, year, co2_emissions, co2_per_passenger, co2_lag1, passengers_lag1, passengers_lag2 }
+export const predictClassification = (payload) => {
+  return api.post('/predict/classification', payload);
+};
+
+// Prédictions IA — Régression (volume de passagers)
+// payload : identique à predictClassification
+export const predictRegression = (payload) => {
+  return api.post('/predict/regression', payload);
 };
 
 export const getHealth = () => {
